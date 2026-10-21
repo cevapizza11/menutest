@@ -372,10 +372,10 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
 <!-- POPUP SUGGESTION FORMULE (non-bloquant) -->
 <div class="modal-overlay" id="modalSuggestionFormule">
   <div class="modal-box" style="text-align:center">
-    <div style="font-size:44px;margin-bottom:10px">🐚</div>
-    <h3>Pensez à commander vos formules !</h3>
-    <div class="modal-sub">Un équipier peut tout apporter en même temps — boissons et contenants pour vos moules</div>
-    <button class="btn btn-or" onclick="allerVersFormulesDepuisPopup()" style="margin-bottom:8px">🐚 Voir les formules</button>
+    <div style="font-size:44px;margin-bottom:10px">🍽️</div>
+    <h3>Pensez à commander vos plats !</h3>
+    <div class="modal-sub">Un équipier peut tout vous apporter en même temps : boissons et plats</div>
+    <button class="btn btn-or" onclick="allerVersFormulesDepuisPopup()" style="margin-bottom:8px">🍽️ Voir les plats</button>
     <button class="modal-close" onclick="ignorerSuggestionFormule()">Non merci, valider quand même</button>
     <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:12px;color:#888;cursor:pointer">
       <input type="checkbox" id="checkboxJusteBoire" style="width:16px;height:16px;flex-shrink:0">
@@ -393,7 +393,7 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
   </div>
 </div>
 
-<div class="version">v.21/10/2026 11:55 TEST — Le Menu</div>
+<div class="version">v.21/10/2026 16:55 TEST — Le Menu</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -1099,6 +1099,25 @@ function appliquerRegleEnfant(){
 // Compte le nombre total de formules (adultes payantes + enfants gratuits) déjà
 // commandées pour cette table (panier en cours + commandes déjà envoyées à Firestore)
 const IDS_FORMULES=['p1','ca1','fc1','fc2','en1','en2'];
+// Catégories qui ne sont PAS des plats (boissons, sauces, digestifs) — tout le reste compte comme un plat
+const CATS_NON_PLATS=GROUPE_BOISSONS_IDS_DEFAUT.concat(['sauces','digestifs']);
+function idsPlatsCarte(){
+  const c=carte||carteDefaut; const ids=new Set();
+  (c.categories||[]).forEach(cat=>{ if(!CATS_NON_PLATS.includes(cat.id)) (cat.produits||[]).forEach(p=>ids.add(p.id)); });
+  return ids;
+}
+function premiereCategoriePlats(){
+  const c=carte||carteDefaut;
+  const cat=(c.categories||[]).find(x=>!CATS_NON_PLATS.includes(x.id)&&(x.produits||[]).some(p=>p.actif!==false));
+  return cat?cat.id:'formules';
+}
+// Nombre de plats (panier + commandes déjà envoyées pour la table), quelle que soit la carte importée
+function nbPlatsTotalTable(){
+  const ids=idsPlatsCarte();
+  let nb=panier.filter(p=>ids.has(String(p.id||'').replace('_inclus',''))).length;
+  mesCommandesEnvoyees.forEach(cmd=>(cmd.items||[]).forEach(item=>{ if(ids.has(String(item.id||'').replace('_inclus',''))) nb++; }));
+  return nb+nbFormulesTotalTable();
+}
 function nbFormulesTotalTable(){
   const nbPanier=panier.filter(p=>IDS_FORMULES.includes(p.id)||estAdultePayant(p.id)||estEnfantGratuit(p.id)).length;
   let nbEnvoyees=0;
@@ -1361,9 +1380,9 @@ function retirerUnite(id){
 function intercepterCommande(){
   if(!panier.length){showToast('⚠️ Panier vide');return;}
 
-  // Suggestion formule (non-bloquant) : uniquement si le client n'a JAMAIS commandé de formule
-  // pour cette table, et n'a pas déjà refusé la suggestion pour cette session
-  if(!refuserSuggestionFormule && nbFormulesTotalTable()===0){
+  // Suggestion plats (non-bloquant) : uniquement si la table n'a commandé QUE des boissons
+  // (aucun plat dans le panier ni dans les commandes déjà envoyées), et n'a pas refusé la suggestion
+  if(!refuserSuggestionFormule && nbPlatsTotalTable()===0){
     document.getElementById('checkboxJusteBoire').checked=false;
     document.getElementById('modalSuggestionFormule').classList.add('visible');
     return;
@@ -1375,7 +1394,7 @@ function intercepterCommande(){
 function allerVersFormulesDepuisPopup(){
   if(document.getElementById('checkboxJusteBoire').checked) refuserSuggestionFormule=true;
   document.getElementById('modalSuggestionFormule').classList.remove('visible');
-  selectCat('formules');
+  selectCat(premiereCategoriePlats());
 }
 
 function ignorerSuggestionFormule(){
