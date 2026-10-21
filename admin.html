@@ -421,7 +421,7 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
     🔗 <strong style="color:#4ABA80">Colonne "ID Hiboutik"</strong> : si elle est remplie (dernière colonne de chaque onglet produit, et de l'onglet Familles Options), la Correspondance Hiboutik est mise à jour automatiquement à l'import — plus besoin de la ressaisir à la main dans l'écran "🔗 Correspondance Hiboutik".<br><br>
     🧒 <strong style="color:#D4AF37">Colonne M "Enfant gratuit"</strong> (facultative) : <b>ADULTE</b> = ce menu ouvre droit à 1 enfant gratuit · <b>GRATUIT</b> = menu enfant gratuit (1 par menu adulte) · <b>NON</b> = hors règle · <b>case vide</b> = on garde le réglage de l'admin (Réglages → Règle « enfant gratuit »).<br><br>
     🗂️ <strong style="color:#D4AF37">Onglet "Catégories"</strong> (fichiers créés par l'Import de carte IA) : s'il est présent, il fixe les tuiles du client, leurs titres, leurs emojis et leur ordre (ex. 🍕 Pizzas, 🥞 Galettes). Sans cet onglet, les catégories habituelles de Le Menu sont utilisées.<br><br>
-    ⚠️ <strong style="color:#C0392B">L'import remplace toute la carte.</strong> Utilisez MouleSmile_Carte_Admin.xlsx comme base.
+    ⚠️ <strong style="color:#C0392B">L'import remplace toute la carte.</strong> Utilisez <b>Carte_Modele.xlsx</b> comme base (bouton « Charger la carte de démo » dans ⚡ Actions).
   </div>
   <div class="import-zone" id="importZone" onclick="document.getElementById('importInput').click()"
     ondragover="event.preventDefault();this.classList.add('dragover')"
@@ -443,7 +443,18 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
 
 <!-- ACTIONS -->
 <div id="navActions" class="content" style="display:none">
-  <div class="section">
+  <div class="section" style="border:1px solid #d6332a">
+    <h2>🎬 Démo — restaurant de test</h2>
+    <div style="color:#aaa;font-size:12px;margin-bottom:12px;line-height:1.6">
+      • <b>Charger la carte de démo</b> : ouvre l'aperçu d'import avec <b>Carte_Modele.xlsx</b> (brasserie : entrées, plats, menu enfant, desserts, boissons). Il reste à cliquer « Confirmer ». Les photos déjà envoyées sont gardées.<br>
+      • <b>Remettre la démo à zéro</b> : supprime les commandes, additions, alertes, notifications, recharges, visites et l'historique d'essai, et <b>libère tous les jetons</b> (les QR imprimés restent valables). La carte et les réglages ne sont pas touchés.
+    </div>
+    <div class="actions-grid">
+      <button class="btn-vert btn-full" onclick="chargerCarteDemo()">📥 Charger la carte de démo</button>
+      <button class="btn-rouge btn-full" onclick="remettreDemoAZero()">🧹 Remettre la démo à zéro</button>
+    </div>
+  </div>
+  <div class="section" style="margin-top:14px">
     <h2>⚡ Actions rapides</h2>
     <div class="actions-grid">
       <button class="btn-vert" onclick="toutActiver()">✅ Tout activer</button>
@@ -476,7 +487,7 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
   </div>
 </div>
 
-<div class="version">v.21/10/2026 17:10 TEST — Le Menu Admin</div>
+<div class="version">v.21/10/2026 17:40 TEST — Le Menu Admin</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -1237,6 +1248,42 @@ function toutActiver(){if(!carte)return;carte.categories.forEach(c=>(c.produits|
 function toutDesactiver(catId){if(!carte)return;const cat=carte.categories.find(c=>c.id===catId);if(!cat)return;(cat.produits||[]).forEach(p=>p.actif=false);sauvegarder();render();showToast('❌ Désactivé');}
 function activerCat(catId){if(!carte)return;const cat=carte.categories.find(c=>c.id===catId);if(!cat)return;(cat.produits||[]).forEach(p=>p.actif=true);sauvegarder();render();showToast('✅ Activé');}
 
+// ============================================================
+// DÉMO (restaurant de test uniquement)
+// ============================================================
+async function chargerCarteDemo(){
+  try{
+    const rep=await fetch('Carte_Modele.xlsx?v='+Date.now());
+    if(!rep.ok) throw new Error('HTTP '+rep.status);
+    const blob=await rep.blob();
+    const onglet=[...document.querySelectorAll('.nav-tab')].find(t=>(t.getAttribute('onclick')||'').includes("'Importer'"));
+    if(onglet) switchNav('Importer',onglet);
+    handleFile(new File([blob],'Carte_Modele.xlsx'));
+    showToast('👀 Vérifiez l\'aperçu puis cliquez « Confirmer »');
+  }catch(e){ console.error('Carte démo',e); showToast('❌ Carte_Modele.xlsx introuvable dans le dépôt'); }
+}
+async function supprimerCollection(nom){
+  const snap=await db.collection(nom).get(); let n=0;
+  for(let i=0;i<snap.docs.length;i+=400){
+    const b=db.batch(); snap.docs.slice(i,i+400).forEach(d=>{b.delete(d.ref);n++;}); await b.commit();
+  }
+  return n;
+}
+async function remettreDemoAZero(){
+  if(!window.MODE_TEST){ showToast('⛔ Réservé au restaurant de test'); return; }
+  if(!confirm('Remettre la démo à zéro ?\n\nSupprime commandes, additions, alertes, notifications, recharges, visites et historique, et libère tous les jetons.\nLa carte et les réglages sont conservés.'))return;
+  showToast('🧹 Remise à zéro en cours…');
+  try{
+    let total=0;
+    for(const nom of ['commandes','additions','alertes','notifications','recharges','visites','historique']) total+=await supprimerCollection(nom);
+    const jetons=await db.collection('jetons').get(); const b=db.batch(); let nj=0;
+    jetons.forEach(d=>{ if(d.data().jetable) b.delete(d.ref); else b.update(d.ref,{statut:'libre',table:null,couverts:null,unites:null}); nj++; });
+    if(nj) await b.commit();
+    showToast(`✅ Démo remise à zéro — ${total} élément(s) supprimé(s), ${nj} jeton(s) libéré(s)`);
+    if(typeof loadStats==='function') loadStats();
+  }catch(e){ console.error('Remise à zéro',e); showToast('❌ Erreur : voir console'); }
+}
+
 async function resetJour(){
   if(!confirm('Supprimer toutes les commandes ? Irréversible.'))return;
   const snap=await db.collection('commandes').get();const b=db.batch();snap.forEach(d=>b.delete(d.ref));
@@ -1530,11 +1577,11 @@ function changerRegleEnfant(catId,idx,type,coche){
   sauvegarder(); renderRegleEnfant();
   showToast(`✅ ${p.nom} : ${p.regleEnfant==='adulte'?'ouvre droit à 1 enfant gratuit':p.regleEnfant==='gratuit'?'menu enfant gratuit':'hors règle'}`);
 }
-// La carte contient-elle un menu enfant ? (produit réglé « enfant gratuit », catégorie « enfants » ou nom avec « enfant »)
+// La carte a-t-elle un menu enfant GRATUIT ? (produit réglé « enfant gratuit ») — un menu enfant payant est un produit normal
 // Sinon l'onglet 🧒 Enfant et la section Menu Ado sont masqués : inutiles pour ce restaurant.
 function carteAEnfant(){
   if(!carte) return false;
-  return (carte.categories||[]).some(c=>c.id==='enfants'||/enfant/i.test(c.nom||'')||(c.produits||[]).some(p=>regleEnfantEffective(p)==='gratuit'||/enfant|kid/i.test(p.nom||'')));
+  return (carte.categories||[]).some(c=>(c.produits||[]).some(p=>regleEnfantEffective(p)==='gratuit'));
 }
 function appliquerVisibiliteEnfant(){
   const avec=carteAEnfant();
@@ -1556,7 +1603,7 @@ function renderRegleEnfant(){
   if(!carteAEnfant()){
     zone.innerHTML=`
     <div style="color:#ccc;font-size:12px;line-height:1.7;margin-bottom:10px">
-      <strong style="color:#D4AF37">Aucun menu enfant dans cette carte</strong> → l'onglet <b>🧒 Enfant</b> et la section <b>Menu Ado</b> sont masqués, et aucune règle « enfant gratuit » n'est appliquée au client.<br>
+      <strong style="color:#D4AF37">Aucun menu enfant gratuit dans cette carte</strong> → l'onglet <b>🧒 Enfant</b> et la section <b>Menu Ado</b> sont masqués, et aucune règle « enfant gratuit » n'est appliquée au client.<br>
       Pour en créer un : coche <b>👧 Enfant gratuit</b> sur un produit ci-dessous (ou mets <b>GRATUIT</b> en colonne M de l'Excel). L'onglet réapparaît aussitôt.
     </div>
     ${lignes.map(x=>`
