@@ -916,7 +916,7 @@ main {
     <div class="logo-icon">🐚</div>
     <div>
       <h1>Restaurant TEST</h1>
-      <p>HACCP — Étiquettes DLC · <span style="opacity:.7">v.21/10/2026 22:45 TEST</span></p>
+      <p>HACCP — Étiquettes DLC · <span style="opacity:.7">v.21/10/2026 23:00 TEST</span></p>
     </div>
   </div>
   <div class="header-actions">
@@ -924,7 +924,7 @@ main {
       📂 Importer Excel
     </label>
     <input type="file" id="excelFile" accept=".xlsx,.xls" style="display:none" onchange="importExcel()">
-    <button class="btn btn-primary" onclick="creerDepuisCarte()" title="Crée une étiquette DLC pour chaque plat et sauce de la carte du restaurant">🍽️ Créer depuis la carte</button>
+    <button class="btn btn-primary" onclick="creerDepuisCarte()" title="Décompose chaque plat de la carte en composants (pain, viande, salade…) et crée leurs étiquettes DLC">🍽️ Créer depuis la carte</button>
     <button class="btn btn-navy" onclick="showAddManual()">+ Saisie manuelle</button>
     <button class="btn btn-outline" onclick="clearAll()" style="color:#c0392b;border-color:#e0b0b0">🗑 Vider</button>
     <button class="btn btn-navy" onclick="openSettings()">⚙️ Paramètres</button>
@@ -1330,68 +1330,102 @@ async function saveToFirestore(){
 
 // ============================================================
 // CRÉER LES ÉTIQUETTES DEPUIS LA CARTE DU RESTAURANT (config/carte_v2, même projet Firebase)
-// Une étiquette par plat (hors boissons) + une par sauce maison. DLC proposées selon le type
-// de préparation — À VÉRIFIER par le restaurateur selon son plan HACCP.
+// Les plats (hors boissons) sont décomposés en composants par l'IA ; DLC et allergènes proposés
+// — À VÉRIFIER par le restaurateur selon son plan HACCP.
 // ============================================================
 const CATS_SANS_ETIQUETTE=["softs","bieres","vins","vins_blancs","vins_roses","vins_rouges","cocktails","sangria","chauds","digestifs"];
-// Règles de DLC (la première qui correspond s'applique) : [motif, durée, unité]
-const REGLES_DLC=[
-  [/mayo|a[iï]oli|tartare|b[ée]arnaise|hollandaise|sauce tartare|carpaccio|cru\b|crue\b/i, 24, "heures"],
-  [/hach[ée]|burger|steak hach/i, 24, "heures"],
-  [/moule|hu[iî]tre|coquillage|fruits de mer|crevette|gambas|langoustine/i, 24, "heures"],
-  [/thon|saumon|cabillaud|poisson|dorade|bar\b|merlu|lieu|fish/i, 2, "jours"],
-  [/chantilly|mousse|tiramisu|cr[èe]me anglaise|p[âa]te [àa] cr[êe]pe|panna cotta|crème pâtissière/i, 2, "jours"],
-  [/salade|cru|tomate|burrata|velout[ée]|soupe|gaspacho/i, 2, "jours"],
-  [/fondant|tarte|g[âa]teau|brownie|cookie|cr[èe]me br[ûu]l[ée]e|flan|clafoutis/i, 3, "jours"],
-];
-const ALLERGENES_MOTS=[
-  ["Gluten",/fondant|moelleux|pain|burger|p[âa]te|pan[ée]|cro[ûu]ton|farine|tarte|cr[êe]pe|pizza|bun|biscuit|brioche|chapelure|fish & chips|fish and chips|cookie|brownie|g[âa]teau/i],
-  ["Lait",/fromage|cr[èe]me|beurre|parmesan|mozzarella|cheddar|burrata|chantilly|lait|ch[èe]vre|roquefort|comt[ée]|emmental|raclette|yaourt|mascarpone/i],
-  ["Œufs",/césar|cesar|[œo]euf|mayo|a[iï]oli|cr[èe]me br[ûu]l[ée]e|mousse|tiramisu|cr[êe]pe|flan|b[ée]arnaise|hollandaise|tartare|carbonara|cookie|brownie|g[âa]teau|fondant/i],
-  ["Poisson",/thon|saumon|cabillaud|poisson|anchois|dorade|merlu|fish/i],
-  ["Crustacés",/crevette|homard|langoustine|gambas|crabe/i],
-  ["Mollusques",/moule|hu[iî]tre|calamar|encornet|poulpe|seiche|coquille/i],
-  ["Fruits à coque",/noix|noisette|amande|pistache|pesto|praline|cajou/i],
-  ["Moutarde",/moutarde|vinaigrette|mayo/i],
-  ["Céleri",/c[ée]leri/i],["Sésame",/s[ée]same/i],["Soja",/soja/i],["Arachide",/cacahu[èe]te|arachide/i],["Sulfites",/vin\b|vin blanc|vin rouge|marini[èe]re/i]
-];
-function dlcPour(texte){
-  const r=REGLES_DLC.find(([m])=>m.test(texte));
-  return r?{dlc:r[1],unite:r[2]}:{dlc:3,unite:"jours"};
+// ---------- Décomposition des plats en composants (IA Claude) ----------
+// Chaque plat est découpé en ses composants de mise en place (ex. burger poulet → pain burger,
+// poulet pané, salade, tomate…). Un composant commun à plusieurs plats = UNE seule étiquette.
+// La clé API est celle de l'Import de carte (gardée seulement sur cet appareil, jamais dans les fichiers).
+const CLE_API_STOCKAGE="importcarte_cle";
+const MODELE_IA="claude-sonnet-5-5";
+const CONSIGNES_ETIQ=`Tu es chef de cuisine et responsable HACCP en France. On te donne la carte d'un restaurant.
+Décompose CHAQUE plat (pas les boissons) en ses composants de mise en place qui seront stockés en chambre froide ou en réserve et recevront une étiquette DLC.
+Exemple « Burger poulet » : Pain burger, Poulet pané, Salade, Tomate, Oignons rouges, Cheddar, Sauce burger.
+Règles :
+- Un composant utilisé dans plusieurs plats n'apparaît qu'UNE fois, avec la liste des plats dans "plats".
+- Noms courts et concrets, au singulier quand c'est naturel (« Tomate », « Salade », « Steak haché », « Pain burger »).
+- "preparation" : l'état de mise en place si utile (« lavée », « tranchée », « émincé », « cuit », « décongelé », « entamé »), sinon chaîne vide.
+- Les sauces, garnitures et accompagnements maison sont des composants (« Sauce tartare », « Frites blanchies », « Oignons confits »).
+- Ignore sel, poivre, huile, sucre et épices sèches.
+- "dlc" et "unite" : durée de conservation usuelle en restauration APRÈS préparation ou ouverture (ex. viande hachée 24 heures, mayonnaise maison 24 heures, crudités lavées 2 jours, fromage entamé 5 jours, pain 2 jours). Reste prudent.
+- "temperature" : « 0-3°C » pour le frais, « -18°C » pour le surgelé, « Ambiante » pour le sec ou le pain.
+- "allergenes" : parmi les 14 allergènes réglementaires (Gluten, Crustacés, Œufs, Poisson, Arachides, Soja, Lait, Fruits à coque, Céleri, Moutarde, Sésame, Sulfites, Lupin, Mollusques), séparés par des virgules, chaîne vide si aucun.
+- "categorie" : Viandes · Poissons & fruits de mer · Légumes & herbes · Fromages & crèmerie · Pains & pâtes · Sauces & condiments · Accompagnements · Desserts & pâtisserie · Autres.`;
+const OUTIL_ETIQ={name:"enregistrer_composants",description:"Enregistre les composants de mise en place à étiqueter.",
+  input_schema:{type:"object",properties:{composants:{type:"array",items:{type:"object",properties:{
+    categorie:{type:"string"},produit:{type:"string"},preparation:{type:"string"},
+    dlc:{type:"number"},unite:{type:"string",enum:["heures","jours"]},temperature:{type:"string"},
+    allergenes:{type:"string"},plats:{type:"array",items:{type:"string"}}},
+    required:["categorie","produit","dlc","unite","temperature","allergenes","plats"]}}},required:["composants"]}};
+
+function texteCarte(carte){
+  const fam=carte.famillesOptions||{}, liens=carte.optionsProduits||{};
+  const lignes=[];
+  carte.categories.forEach(c=>{
+    if(CATS_SANS_ETIQUETTE.includes(c.id)) return;
+    const prods=(c.produits||[]).filter(p=>p.actif!==false); if(!prods.length) return;
+    lignes.push("## "+(c.nom||c.id));
+    prods.forEach(p=>{
+      const opts=(liens[p.id]||[]).map(l=>fam[l.idFamille]).filter(Boolean)
+        .filter(f=>!/cuisson/i.test(f.nom||"")).map(f=>(f.nom||"")+" : "+(f.options||[]).filter(o=>o.actif!==false).map(o=>o.nom).join(" / "));
+      lignes.push("- "+p.nom+(p.desc?" — "+p.desc:"")+(opts.length?" [choix : "+opts.join(" ; ")+"]":""));
+    });
+  });
+  return lignes.join("\n");
 }
-function allergenesPour(texte){
-  return ALLERGENES_MOTS.filter(([,m])=>m.test(texte)).map(([n])=>n).join(", ");
-}
+
 async function creerDepuisCarte(){
   if(!firebaseReady){ alert("Firebase non disponible."); return; }
   let carte;
   try{ const d=await db.collection("config").doc("carte_v2").get(); carte=d.exists?d.data():null; }
   catch(e){ console.error(e); alert("Impossible de lire la carte du restaurant : "+(e.code||e.message)); return; }
   if(!carte||!(carte.categories||[]).length){ alert("Aucune carte trouvée. Importez d'abord la carte dans l'admin."); return; }
+  let cle=""; try{ cle=localStorage.getItem(CLE_API_STOCKAGE)||""; }catch(e){}
+  if(!cle){
+    cle=(prompt("Clé API Claude (la même que pour l'Import de carte).\nElle reste uniquement sur cet appareil.")||"").trim();
+    if(!cle) return;
+    try{ localStorage.setItem(CLE_API_STOCKAGE,cle); }catch(e){}
+  }
+  const texte=texteCarte(carte);
+  setFbStatus(null,"🍽️ Décomposition des plats en cours… (20 à 60 secondes)");
+  let composants;
+  try{
+    const rep=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",
+      headers:{"content-type":"application/json","x-api-key":cle,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify({model:MODELE_IA,max_tokens:16000,system:CONSIGNES_ETIQ,tools:[OUTIL_ETIQ],
+        tool_choice:{type:"tool",name:"enregistrer_composants"},messages:[{role:"user",content:"Voici la carte :\n\n"+texte}]})});
+    const json=await rep.json().catch(()=>({}));
+    if(!rep.ok){
+      if(rep.status===401){ try{localStorage.removeItem(CLE_API_STOCKAGE);}catch(e){} throw new Error("Clé API refusée — recliquez pour en saisir une autre."); }
+      throw new Error(json?.error?.message||("erreur "+rep.status));
+    }
+    const bloc=(json.content||[]).find(b=>b.type==="tool_use");
+    composants=(bloc&&bloc.input&&bloc.input.composants)||[];
+  }catch(e){
+    console.error(e);
+    const m=String(e.message||e);
+    setFbStatus(false,"❌ "+(/Failed to fetch|NetworkError|Load failed/i.test(m)?"Pas de connexion à l'API Claude":m));
+    return;
+  }
+  const deja=new Set(allData.map(r=>((r["Produit"]||"")+"|"+(r["Sous-produit / Saveur"]||"")).toLowerCase()));
   const nouvelles=[];
-  const deja=new Set(allData.map(r=>((r["Catégorie"]||"")+"|"+(r["Produit"]||"")).toLowerCase()));
-  const ajouter=(cat,nom,desc)=>{
-    const cle=(cat+"|"+nom).toLowerCase(); if(deja.has(cle)) return; deja.add(cle);
-    const texte=nom+" "+(desc||"");
-    const {dlc,unite}=dlcPour(texte);
-    nouvelles.push({"Catégorie":cat,"Produit":nom,"Sous-produit / Saveur":"","DLC":dlc,"Unité DLC":unite,"Température":"0-3°C","Allergènes":allergenesPour(texte)});
-  };
-  carte.categories.forEach(c=>{
-    if(CATS_SANS_ETIQUETTE.includes(c.id)) return;
-    const titre=String(c.nom||c.id).replace(/^[^\p{L}\p{N}]+/u,"").trim()||c.id;
-    (c.produits||[]).forEach(p=>{ if(p.actif!==false) ajouter(titre,p.nom,p.desc); });
+  composants.forEach(c=>{
+    const prod=String(c.produit||"").trim(); if(!prod) return;
+    const prep=String(c.preparation||"").trim();
+    const cle2=(prod+"|"+prep).toLowerCase(); if(deja.has(cle2)) return; deja.add(cle2);
+    nouvelles.push({"Catégorie":String(c.categorie||"Autres").trim(),"Produit":prod,"Sous-produit / Saveur":prep,
+      "DLC":Number(c.dlc)||1,"Unité DLC":c.unite==="heures"?"heures":"jours","Température":String(c.temperature||"0-3°C").trim(),
+      "Allergènes":String(c.allergenes||"").trim(),"Utilisé dans":(c.plats||[]).join(", ")});
   });
-  // Sauces maison (familles d'options dont le nom contient « sauce »)
-  Object.values(carte.famillesOptions||{}).forEach(f=>{
-    if(!/sauce/i.test(f.nom||"")) return;
-    (f.options||[]).forEach(o=>{ if(o.actif!==false) ajouter("Sauces", /sauce/i.test(o.nom)?o.nom:"Sauce "+o.nom, ""); });
-  });
-  if(!nouvelles.length){ alert("Toutes les préparations de la carte ont déjà une étiquette."); return; }
-  if(!confirm(nouvelles.length+" étiquette(s) vont être créées depuis la carte (DLC et allergènes proposés automatiquement, À VÉRIFIER selon votre plan HACCP).\n\nContinuer ?")) return;
+  if(!nouvelles.length){ setFbStatus(true,"Tous les composants de la carte ont déjà une étiquette."); return; }
+  const apercu=nouvelles.slice(0,12).map(r=>"• "+r["Produit"]+(r["Sous-produit / Saveur"]?" ("+r["Sous-produit / Saveur"]+")":"")+" — "+r["DLC"]+" "+r["Unité DLC"]).join("\n");
+  if(!confirm(nouvelles.length+" composant(s) à étiqueter trouvés dans la carte :\n\n"+apercu+(nouvelles.length>12?"\n…":"")+"\n\nDLC et allergènes proposés automatiquement : À VÉRIFIER selon votre plan HACCP.\nAjouter ces étiquettes ?")){ setFbStatus(true,"Ajout annulé."); return; }
   allData=allData.concat(nouvelles);
   buildCategoryFilter(); filterTable(); showGrid();
   await saveToFirestore();
-  setFbStatus(true, "✅ "+nouvelles.length+" étiquette(s) créée(s) depuis la carte — DLC et allergènes à vérifier");
+  setFbStatus(true,"✅ "+nouvelles.length+" étiquette(s) de composants créées depuis la carte — DLC et allergènes à vérifier");
 }
 
 async function clearAll(){
