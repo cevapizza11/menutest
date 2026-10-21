@@ -281,6 +281,15 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
   </div>
 
   <div class="section" style="margin-top:14px">
+    <h2>🍽️ Type de restaurant</h2>
+    <div class="item-row">
+      <div class="item-info" style="cursor:default"><div class="item-nom">Restaurant à volonté</div>
+        <div class="item-detail" style="white-space:normal;line-height:1.5">Si la table ne commande <b>que des boissons</b>, le client voit « 🍽️ Pensez à commander vos plats ! Un équipier peut tout vous apporter en même temps » avec un bouton vers les plats (et la case « C'est juste pour boire, ne plus me demander »).<br>Décoché = restaurant classique : la commande part directement.</div></div>
+      <label class="toggle"><input type="checkbox" id="toggleAVolonte" onchange="toggleAVolonte(this.checked)"><span class="toggle-slider"></span></label>
+    </div>
+  </div>
+
+  <div class="section" style="margin-top:14px">
     <h2>🧒 Règle « enfant gratuit »</h2>
     <div id="regleEnfantInfo"></div>
   </div>
@@ -467,7 +476,7 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
   </div>
 </div>
 
-<div class="version">v.21/10/2026 16:45 TEST — Le Menu Admin</div>
+<div class="version">v.21/10/2026 17:10 TEST — Le Menu Admin</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -1099,6 +1108,7 @@ function confirmerImport(){
     newCarte.boissonsMenu=carte.boissonsMenu;
     newCarte.enfantMenu=carte.enfantMenu;
     newCarte.dessertsMenu=carte.dessertsMenu;
+    newCarte.aVolonte=carte.aVolonte; // réglage du restaurant, jamais écrasé par l'import
 
     // Réappliquer l'ordre des catégories personnalisé par l'admin (sinon l'import
     // reconstruit toujours dans l'ordre fixe de CATS et écrase le réordonnancement)
@@ -1601,6 +1611,7 @@ function renderReglages(){
     </div>`;
   }).join('');
 
+  const tav=document.getElementById('toggleAVolonte'); if(tav) tav.checked=carte.aVolonte===true;
   if(!carte.categoriesConsultationSeule) carte.categoriesConsultationSeule={};
   document.getElementById('consultationReglagesList').innerHTML=carte.categories.map(c=>{
     const consultationSeule=carte.categoriesConsultationSeule[c.id]===true;
@@ -1693,6 +1704,13 @@ function toggleCategorieActive(catId,val){
   showToast(`${cat?cat.nom:catId} ${val?'✅ visible':'❌ masquée'} côté client`);
 }
 
+// Restaurant à volonté → suggestion « Pensez à commander vos plats » côté client (index.html lit carte.aVolonte)
+function toggleAVolonte(val){
+  if(!carte)return;
+  carte.aVolonte=!!val;
+  sauvegarder();
+  showToast(val?'✅ Restaurant à volonté : suggestion des plats activée':'✅ Restaurant classique : pas de suggestion des plats');
+}
 function toggleConsultationSeule(catId,val){
   if(!carte)return;
   if(!carte.categoriesConsultationSeule) carte.categoriesConsultationSeule={};
