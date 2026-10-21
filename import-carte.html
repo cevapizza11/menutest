@@ -134,7 +134,7 @@
 <div class="wrap">
 <header>
   <div class="marque">Import de carte <span>· IA</span></div>
-  <div class="version">v.21/10/2026 17:40 TEST</div>
+  <div class="version">v.21/10/2026 17:50 TEST</div>
 </header>
 
 <h2><span class="num">1</span>Clé API Claude</h2>
@@ -186,6 +186,7 @@
     <div class="cats-edit" id="categoriesEdit"></div>
     <div class="ligne" style="margin-bottom:14px">
       <button class="btn-ligne btn-petit" id="btnPropCat" type="button">✨ Proposer des catégories adaptées</button>
+      <button class="btn-ligne btn-petit" id="btnCuissons" type="button">🔥 Ajouter les cuissons (viandes, thon)</button>
       <button class="btn-ligne btn-petit" id="btnNouvCat" type="button">+ Nouvelle catégorie</button>
     </div>
     <p class="aide" style="margin:0 0 6px">Les lignes surlignées en jaune sont celles où l'IA a un doute : vérifie le prix ou le nom. Tout se corrige directement dans le tableau.</p>
@@ -380,6 +381,7 @@ Règles :
 - "description" : la description de la carte, raccourcie à 80 caractères maximum, sinon chaîne vide.
 - "emoji" : un seul emoji pertinent.
 - Les choix proposés à l'intérieur d'un plat (sauce au choix, cuisson, accompagnement, nappage, parfum) deviennent des familles d'options dans "familles_options" (avec le supplément éventuel, 0 sinon), et chaque produit concerné est relié à sa famille dans "liens_options" (nom du produit exactement comme dans "produits"). Ne crée pas de produit séparé pour ces choix, sauf s'ils sont aussi vendus seuls avec un prix.
+- Cuisson : pour chaque viande à cuire à la demande (entrecôte, bavette, steak, burger de bœuf, magret, agneau…) et le thon en pavé ou mi-cuit, relie le plat à une famille dont le nom contient « Cuisson », même si la carte ne le précise pas (ex. Bleu, Saignant, À point, Bien cuit ; Mi-cuit, Cuit pour le thon).
 - Respecte l'ordre de la carte.
 - "regle_enfant" : si la carte annonce un menu enfant offert avec un menu adulte (ex. « enfant de moins de 6 ans gratuit pour un adulte »), mets "gratuit" sur ce menu enfant et "adulte" sur chaque menu adulte qui y donne droit. Un menu enfant ou ado payant ne donne pas droit. Sinon chaîne vide.
 - "doute" : chaîne vide si tout est sûr, sinon une courte phrase (prix illisible, nom coupé, catégorie incertaine…).
@@ -516,6 +518,34 @@ function trierProduitsParCategorie(){
   produits=produits.map((p,i)=>({p,i})).sort((a,b)=>ordre(a.p.cat)-ordre(b.p.cat)||a.i-b.i).map(x=>x.p);
 }
 
+// ============================================================
+// CUISSON AUTOMATIQUE : viandes rouges, burgers de bœuf, canard/agneau, thon
+// Le client choisit la cuisson dans un popup au moment de l'ajout (comme une famille d'options).
+// ============================================================
+const CUISSONS_AUTO=[
+  {famille:"Cuisson viande", options:["Bleu","Saignant","À point","Bien cuit"],
+   test:t=>/\b(entrec[oô]te|bavette|onglet|faux[- ]?filet|filet de b(?:œ|oe)uf|rumste[ac]k|rump ?steak|pav[ée] de b(?:œ|oe)uf|c[oô]te de b(?:œ|oe)uf|tournedos|chateaubriand|t[- ]?bone|steak|cheeseburger|hamburger|burger|smash)/i.test(t)
+          && !/(poulet|chicken|veggie|v[ée]g[ée]|fish|poisson|saumon|thon|crispy|falafel|tartare|hach[ée] de thon)/i.test(t)},
+  {famille:"Cuisson canard / agneau", options:["Rosé","À point","Bien cuit"],
+   test:t=>/\b(magret|filet de canard|carr[ée] d'agneau|c[oô]telettes? d'agneau|gigot|selle d'agneau)/i.test(t) && !/confit/i.test(t)},
+  {famille:"Cuisson poisson", options:["Mi-cuit","Cuit"],
+   test:t=>/\bthon\b/i.test(t) && /(steak|pav[ée]|mi[- ]?cuit|tataki|grill|snack|plancha|filet|longe|saisi)/i.test(t)}
+];
+const CATS_SANS_CUISSON=["softs","bieres","vins","cocktails","chauds","digestifs","desserts","sauces","crepes","glaces","gaufres"];
+function ajouterCuissonsAuto(){
+  const ajouts=[];
+  produits.forEach(p=>{
+    if(CATS_SANS_CUISSON.includes(p.cat)) return;
+    if(famillesDe(p.nom).some(f=>/cuisson/i.test(f.nom))) return; // déjà une cuisson (lue sur la carte)
+    const regle=CUISSONS_AUTO.find(c=>c.test(p.nom+" "+(p.desc||"")));
+    if(!regle) return;
+    if(!familles.some(f=>f.nom===regle.famille)) familles.push({nom:regle.famille,options:regle.options.map(nom=>({nom,supplement:0}))});
+    liens.push({produit:p.nom,famille:regle.famille});
+    ajouts.push(p.nom);
+  });
+  return ajouts;
+}
+
 function chargerResultat(r){
   categories=[];
   (r.categories||[]).forEach(c=>{
@@ -535,7 +565,9 @@ function chargerResultat(r){
   assurerCategories();
   if(!iaACategorise) proposerCategories();
   trierProduitsParCategorie();
-  const rq=(r.remarques||"").trim();
+  const cuits=ajouterCuissonsAuto();
+  const rqIA=(r.remarques||"").trim();
+  const rq=[rqIA, cuits.length?`🔥 Choix de la cuisson ajouté automatiquement (popup client) : ${cuits.join(", ")}.`:""].filter(Boolean).join(" · ");
   $("remarques").textContent = rq ? "À vérifier : "+rq : "";
   $("remarques").classList.toggle("cache",!rq);
   tel={ecran:"accueil",cat:null,panier:[],modal:null,toast:""};
@@ -615,6 +647,7 @@ function dessinerCategories(){
   });
   $("categoriesEdit").querySelectorAll("[data-cs]").forEach(b=>b.onclick=()=>{ categories.splice(+b.dataset.cs,1); dessinerTableau(); });
 }
+$("btnCuissons").onclick = ()=>{ const c=ajouterCuissonsAuto(); renderApercu(); etat(c.length?`🔥 Cuisson ajoutée à ${c.length} plat(s) : ${esc(c.join(", "))}. Le client la choisira dans un popup.`:"Aucun nouveau plat à cuisson trouvé (viandes rouges, burgers de bœuf, magret, agneau, thon).", c.length?"ok":""); };
 $("btnPropCat").onclick = ()=>{ proposerCategories(); trierProduitsParCategorie(); dessinerTableau(); etat("✨ Catégories proposées selon les plats. Vérifie les titres et l'ordre.","ok"); };
 $("btnNouvCat").onclick = ()=>{
   let n=1, id="categorie_"+n; while(categories.some(c=>c.id===id)) id="categorie_"+(++n);
