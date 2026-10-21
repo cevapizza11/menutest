@@ -916,7 +916,7 @@ main {
     <div class="logo-icon">🐚</div>
     <div>
       <h1>Restaurant TEST</h1>
-      <p>HACCP — Étiquettes DLC · <span style="opacity:.7">v.21/10/2026 11:20 TEST</span></p>
+      <p>HACCP — Étiquettes DLC · <span style="opacity:.7">v.21/10/2026 22:45 TEST</span></p>
     </div>
   </div>
   <div class="header-actions">
@@ -924,6 +924,7 @@ main {
       📂 Importer Excel
     </label>
     <input type="file" id="excelFile" accept=".xlsx,.xls" style="display:none" onchange="importExcel()">
+    <button class="btn btn-primary" onclick="creerDepuisCarte()" title="Crée une étiquette DLC pour chaque plat et sauce de la carte du restaurant">🍽️ Créer depuis la carte</button>
     <button class="btn btn-navy" onclick="showAddManual()">+ Saisie manuelle</button>
     <button class="btn btn-outline" onclick="clearAll()" style="color:#c0392b;border-color:#e0b0b0">🗑 Vider</button>
     <button class="btn btn-navy" onclick="openSettings()">⚙️ Paramètres</button>
@@ -1325,6 +1326,72 @@ async function saveToFirestore(){
   } catch(err){
     setFbStatus(false, "Erreur sauvegarde : " + err.message);
   }
+}
+
+// ============================================================
+// CRÉER LES ÉTIQUETTES DEPUIS LA CARTE DU RESTAURANT (config/carte_v2, même projet Firebase)
+// Une étiquette par plat (hors boissons) + une par sauce maison. DLC proposées selon le type
+// de préparation — À VÉRIFIER par le restaurateur selon son plan HACCP.
+// ============================================================
+const CATS_SANS_ETIQUETTE=["softs","bieres","vins","vins_blancs","vins_roses","vins_rouges","cocktails","sangria","chauds","digestifs"];
+// Règles de DLC (la première qui correspond s'applique) : [motif, durée, unité]
+const REGLES_DLC=[
+  [/mayo|a[iï]oli|tartare|b[ée]arnaise|hollandaise|sauce tartare|carpaccio|cru\b|crue\b/i, 24, "heures"],
+  [/hach[ée]|burger|steak hach/i, 24, "heures"],
+  [/moule|hu[iî]tre|coquillage|fruits de mer|crevette|gambas|langoustine/i, 24, "heures"],
+  [/thon|saumon|cabillaud|poisson|dorade|bar\b|merlu|lieu|fish/i, 2, "jours"],
+  [/chantilly|mousse|tiramisu|cr[èe]me anglaise|p[âa]te [àa] cr[êe]pe|panna cotta|crème pâtissière/i, 2, "jours"],
+  [/salade|cru|tomate|burrata|velout[ée]|soupe|gaspacho/i, 2, "jours"],
+  [/fondant|tarte|g[âa]teau|brownie|cookie|cr[èe]me br[ûu]l[ée]e|flan|clafoutis/i, 3, "jours"],
+];
+const ALLERGENES_MOTS=[
+  ["Gluten",/fondant|moelleux|pain|burger|p[âa]te|pan[ée]|cro[ûu]ton|farine|tarte|cr[êe]pe|pizza|bun|biscuit|brioche|chapelure|fish & chips|fish and chips|cookie|brownie|g[âa]teau/i],
+  ["Lait",/fromage|cr[èe]me|beurre|parmesan|mozzarella|cheddar|burrata|chantilly|lait|ch[èe]vre|roquefort|comt[ée]|emmental|raclette|yaourt|mascarpone/i],
+  ["Œufs",/césar|cesar|[œo]euf|mayo|a[iï]oli|cr[èe]me br[ûu]l[ée]e|mousse|tiramisu|cr[êe]pe|flan|b[ée]arnaise|hollandaise|tartare|carbonara|cookie|brownie|g[âa]teau|fondant/i],
+  ["Poisson",/thon|saumon|cabillaud|poisson|anchois|dorade|merlu|fish/i],
+  ["Crustacés",/crevette|homard|langoustine|gambas|crabe/i],
+  ["Mollusques",/moule|hu[iî]tre|calamar|encornet|poulpe|seiche|coquille/i],
+  ["Fruits à coque",/noix|noisette|amande|pistache|pesto|praline|cajou/i],
+  ["Moutarde",/moutarde|vinaigrette|mayo/i],
+  ["Céleri",/c[ée]leri/i],["Sésame",/s[ée]same/i],["Soja",/soja/i],["Arachide",/cacahu[èe]te|arachide/i],["Sulfites",/vin\b|vin blanc|vin rouge|marini[èe]re/i]
+];
+function dlcPour(texte){
+  const r=REGLES_DLC.find(([m])=>m.test(texte));
+  return r?{dlc:r[1],unite:r[2]}:{dlc:3,unite:"jours"};
+}
+function allergenesPour(texte){
+  return ALLERGENES_MOTS.filter(([,m])=>m.test(texte)).map(([n])=>n).join(", ");
+}
+async function creerDepuisCarte(){
+  if(!firebaseReady){ alert("Firebase non disponible."); return; }
+  let carte;
+  try{ const d=await db.collection("config").doc("carte_v2").get(); carte=d.exists?d.data():null; }
+  catch(e){ console.error(e); alert("Impossible de lire la carte du restaurant : "+(e.code||e.message)); return; }
+  if(!carte||!(carte.categories||[]).length){ alert("Aucune carte trouvée. Importez d'abord la carte dans l'admin."); return; }
+  const nouvelles=[];
+  const deja=new Set(allData.map(r=>((r["Catégorie"]||"")+"|"+(r["Produit"]||"")).toLowerCase()));
+  const ajouter=(cat,nom,desc)=>{
+    const cle=(cat+"|"+nom).toLowerCase(); if(deja.has(cle)) return; deja.add(cle);
+    const texte=nom+" "+(desc||"");
+    const {dlc,unite}=dlcPour(texte);
+    nouvelles.push({"Catégorie":cat,"Produit":nom,"Sous-produit / Saveur":"","DLC":dlc,"Unité DLC":unite,"Température":"0-3°C","Allergènes":allergenesPour(texte)});
+  };
+  carte.categories.forEach(c=>{
+    if(CATS_SANS_ETIQUETTE.includes(c.id)) return;
+    const titre=String(c.nom||c.id).replace(/^[^\p{L}\p{N}]+/u,"").trim()||c.id;
+    (c.produits||[]).forEach(p=>{ if(p.actif!==false) ajouter(titre,p.nom,p.desc); });
+  });
+  // Sauces maison (familles d'options dont le nom contient « sauce »)
+  Object.values(carte.famillesOptions||{}).forEach(f=>{
+    if(!/sauce/i.test(f.nom||"")) return;
+    (f.options||[]).forEach(o=>{ if(o.actif!==false) ajouter("Sauces", /sauce/i.test(o.nom)?o.nom:"Sauce "+o.nom, ""); });
+  });
+  if(!nouvelles.length){ alert("Toutes les préparations de la carte ont déjà une étiquette."); return; }
+  if(!confirm(nouvelles.length+" étiquette(s) vont être créées depuis la carte (DLC et allergènes proposés automatiquement, À VÉRIFIER selon votre plan HACCP).\n\nContinuer ?")) return;
+  allData=allData.concat(nouvelles);
+  buildCategoryFilter(); filterTable(); showGrid();
+  await saveToFirestore();
+  setFbStatus(true, "✅ "+nouvelles.length+" étiquette(s) créée(s) depuis la carte — DLC et allergènes à vérifier");
 }
 
 async function clearAll(){
