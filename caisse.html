@@ -265,7 +265,7 @@ body.cuisine-plein{overflow:hidden}
 
 <!-- HEADER -->
 <div class="header">
-  <h1>🐚 <span id="motCaisse" onclick="tapMotCaisse()" style="cursor:default;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent">CAISSE</span> — Le Menu<span class="build-tag">v.21/10/2026 11:55 TEST</span></h1>
+  <h1>🐚 <span id="motCaisse" onclick="tapMotCaisse()" style="cursor:default;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent">CAISSE</span> — Le Menu<span class="build-tag">v.21/10/2026 17:15 TEST</span></h1>
   <div class="stats-row">
     <div class="stat"><div class="num" id="statNouv">0</div><div class="lbl">Nouvelles</div></div>
     <div class="stat"><div class="num" id="statAdd">0</div><div class="lbl">Additions</div></div>
@@ -555,7 +555,7 @@ body.cuisine-plein{overflow:hidden}
   </div>
 </div>
 
-<div class="version">v.21/10/2026 11:55 TEST — Le Menu Caisse</div>
+<div class="version">v.21/10/2026 17:15 TEST — Le Menu Caisse</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -578,8 +578,15 @@ const fonctions=firebase.app().functions('europe-west3');
 // de retaper le mot de passe à chaque ouverture, sauf déconnexion explicite).
 // ============================================================
 const EMAIL_EQUIPE='tmjumeaux@gmail.com'; // compte équipe du projet de test menutest
+// Les écoutes Firestore (commandes, jetons, additions, alertes…) démarrent à l'ouverture de la page.
+// Si on n'était pas encore connecté, Firebase les refuse et elles ne redémarrent jamais seules
+// → la caisse restait vide. Donc : dès que l'équipe se connecte sur une page ouverte sans session,
+// on recharge la page une fois (la session est gardée, tout redémarre correctement).
+let etatAuthInitial=null; // null = pas encore connu
 firebase.auth().onAuthStateChanged(user=>{
   const estEquipeConnectee=user && !user.isAnonymous;
+  if(etatAuthInitial===null){ etatAuthInitial=!!estEquipeConnectee; }
+  else if(estEquipeConnectee && !etatAuthInitial){ location.reload(); return; }
   document.getElementById('screenLoginEquipe').classList.toggle('masque', !!estEquipeConnectee);
   if(estEquipeConnectee){
     // Ne se lance qu'une fois identifié — avant, les requêtes Firestore seraient refusées.
