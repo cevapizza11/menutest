@@ -1,7 +1,7 @@
 {
   "name": "Planning TEST",
   "short_name": "Planning TEST",
-  "description": "Planification du personnel de La Marmite Bleue",
+  "description": "Planification du personnel — Le Menu",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0EA5E9",

@@ -1,5 +1,5 @@
-// La Marmite Bleue – Planning · Service Worker
-const CACHE = 'menutest-planning-v1';
+// Le Menu – Planning · Service Worker
+const CACHE = 'menutest-planning-v2';
 const CORE = ['./', './index.html', './manifest.json'];
 
 self.addEventListener('install', e => {

@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Marmite Planning">
+<meta name="apple-mobile-web-app-title" content="Le Menu Planning">
 <meta name="theme-color" content="#0EA5E9">
 <link rel="manifest" href="manifest.json">
-<title>[TEST] La Marmite Bleue – Planning</title>
+<title>[TEST] Le Menu – Planning</title>
 <link rel="icon" type="image/png" href="icon-planning.png">
 <link rel="apple-touch-icon" href="icon-planning-180.png">
 <style>
@@ -102,7 +102,7 @@ button,input,select,textarea{font-family:inherit;cursor:pointer}
 <div id="login" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,#0EA5E9,#0369A1);z-index:9000;align-items:center;justify-content:center;padding:16px">
   <div style="background:#fff;border-radius:16px;padding:22px;width:100%;max-width:360px;box-shadow:0 10px 40px rgba(0,0,0,.25)">
     <div style="text-align:center;font-size:36px">🫙</div>
-    <div style="text-align:center;font-weight:800;font-size:17px;color:#0F172A">La Marmite Bleue</div>
+    <div style="text-align:center;font-weight:800;font-size:17px;color:#0F172A">Le Menu</div>
     <div style="text-align:center;font-size:11px;color:#64748B;margin-bottom:16px">🔒 Accès gérant — Planning &amp; RH</div>
     <label class="fld-lbl">Email</label>
     <input class="fld-inp" id="lg-email" type="email" autocomplete="username" style="margin-bottom:10px">
@@ -121,11 +121,11 @@ button,input,select,textarea{font-family:inherit;cursor:pointer}
   <div class="hdr">
     <div style="width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0">🫙</div>
     <div style="flex:1">
-      <div style="font-weight:800;font-size:15px">La Marmite Bleue</div>
+      <div style="font-weight:800;font-size:15px">Le Menu</div>
       <div style="font-size:9px;opacity:.7;letter-spacing:.8px">PLANIFICATION DU PERSONNEL</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px">
-      <div style="font-size:9px;opacity:.55;white-space:nowrap">v.21/10/2026 10:45 TEST</div>
+      <div style="font-size:9px;opacity:.55;white-space:nowrap">v.21/10/2026 11:50 TEST</div>
       <div id="sync-dot" style="width:8px;height:8px;border-radius:50%;background:#FCD34D;transition:background .3s" title="Sync Firebase"></div>
     </div>
   </div>
@@ -1192,7 +1192,7 @@ function renderTableau(){
 function printTableau(){
   const tbl=document.getElementById('pos-table');if(!tbl)return;
   const d=new Date(SEL+'T12:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  doPrint(`<div class="print-page"><div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #0EA5E9"><div style="font-size:28px">🫙</div><div><div style="font-size:12px;font-weight:700;color:#0EA5E9">LA MARMITE BLEUE</div><div style="font-size:18px;font-weight:800">Tableau de positionnement</div><div style="font-size:12px;color:#64748B;text-transform:capitalize">${d}</div></div></div>${tbl.outerHTML}</div>`);
+  doPrint(`<div class="print-page"><div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #0EA5E9"><div style="font-size:28px">🫙</div><div><div style="font-size:12px;font-weight:700;color:#0EA5E9">LE MENU</div><div style="font-size:18px;font-weight:800">Tableau de positionnement</div><div style="font-size:12px;color:#64748B;text-transform:capitalize">${d}</div></div></div>${tbl.outerHTML}</div>`);
 }
 
 // ═══════════════════════════════════
@@ -1237,7 +1237,7 @@ function renderPosition(){
     <div id="pos-plan" class="card" style="padding:12px">
       <div style="display:flex;align-items:stretch;gap:8px;margin-bottom:10px;padding-bottom:10px;border-bottom:2px solid #0EA5E9">
         <div style="background:linear-gradient(135deg,#0EA5E9,#0369A1);border-radius:9px;padding:10px 13px;color:#fff;min-width:100px;display:flex;flex-direction:column;justify-content:center">
-          <div style="font-size:20px;margin-bottom:2px">🫙</div><div style="font-weight:800;font-size:14px;line-height:1.2">La Marmite<br>Bleue</div>
+          <div style="font-size:20px;margin-bottom:2px">🫙</div><div style="font-weight:800;font-size:14px;line-height:1.2">Le<br>Menu</div>
           <div style="font-size:8px;opacity:.7;margin-top:3px;text-transform:uppercase">${fDate}</div>
         </div>
         <div style="flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
@@ -1618,7 +1618,7 @@ function renderExport(){
 function buildPrintEmp(emp){
   const ds=days(),PS_=getPS(),totH=Math.round(ds.reduce((s,d)=>s+dayMin(iso(d),emp.id),0)/60*10)/10,ps=PS_[mainP(emp)]||{};
   return`<div class="print-page"><div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid #0EA5E9">
-    <div style="font-size:28px">🫙</div><div style="flex:1"><div style="font-size:12px;font-weight:700;color:#0EA5E9">LA MARMITE BLEUE</div><div style="font-size:18px;font-weight:800;color:#0F172A">${emp.prenom} ${emp.nom}</div><div style="font-size:12px;color:#64748B">${mainP(emp)} · ${fWk(MON)}</div></div>
+    <div style="font-size:28px">🫙</div><div style="flex:1"><div style="font-size:12px;font-weight:700;color:#0EA5E9">LE MENU</div><div style="font-size:18px;font-weight:800;color:#0F172A">${emp.prenom} ${emp.nom}</div><div style="font-size:12px;color:#64748B">${mainP(emp)} · ${fWk(MON)}</div></div>
     <div style="text-align:right"><div style="font-size:10px;color:#64748B">Contrat</div><div style="font-size:16px;font-weight:800">${emp.heures}h/sem</div></div>
   </div>
   <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px">
@@ -1830,7 +1830,7 @@ function generateContract(empId){
   </style></head><body>
 
   <div class="header">
-    <div class="logo-name">🫙 La Marmite Bleue</div>
+    <div class="logo-name">🫙 Le Menu</div>
     <div class="logo-sub">Restaurant — Saint-Pierre-la-Mer</div>
     <div style="font-size:9pt;color:#777;margin-top:2mm">SIRET : ___________________________ · APE : 5610A</div>
   </div>
@@ -1840,7 +1840,7 @@ function generateContract(empId){
   <div class="section">
     <div class="section-title">Article 1 — Parties au contrat</div>
     <div class="article-body">
-      <p style="margin-bottom:3mm"><strong>L'employeur :</strong> La Marmite Bleue, restaurant, dont le siège social est situé à Saint-Pierre-la-Mer (Aude), représenté par son gérant, ci-après dénommé « l'Employeur ».</p>
+      <p style="margin-bottom:3mm"><strong>L'employeur :</strong> Le Menu, restaurant, dont le siège social est situé à [ville] (test), représenté par son gérant, ci-après dénommé « l'Employeur ».</p>
       <p><strong>Le salarié :</strong></p>
     </div>
     <div style="margin-top:3mm">
@@ -1867,7 +1867,7 @@ function generateContract(empId){
     <div class="article-body">
       <div class="field-line"><span class="field-label">Poste occupé :</span><span class="field-value">${(emp.postes||[]).join(', ')||'_______________'}</span></div>
       <div class="field-line"><span class="field-label">Classification CCN HCR :</span><span class="field-value">Niveau ___ / Échelon ___</span></div>
-      <p style="margin-top:3mm">Le salarié exercera ses fonctions principalement au sein de l'établissement La Marmite Bleue. Des déplacements ponctuels pourront être demandés.</p>
+      <p style="margin-top:3mm">Le salarié exercera ses fonctions principalement au sein de l'établissement Le Menu. Des déplacements ponctuels pourront être demandés.</p>
     </div>
   </div>
 
@@ -1916,7 +1916,7 @@ function generateContract(empId){
   <div class="signatures">
     <div class="sig-block">
       <div class="sig-label">L'Employeur</div>
-      <div class="sig-name">La Marmite Bleue</div>
+      <div class="sig-name">Le Menu</div>
       <div class="sig-line">Signature et cachet</div>
       <div class="mention-lu">« Lu et approuvé »</div>
     </div>
@@ -1930,7 +1930,7 @@ function generateContract(empId){
 
   <div class="footer">
     Convention Collective Nationale HCR n°3292 · IDCC 1979 · Code NAF : 5610A<br>
-    Document généré le ${today} par La Marmite Bleue – Planning RH
+    Document généré le ${today} par Le Menu – Planning RH
   </div>
 
   </body></html>`;
@@ -1967,7 +1967,7 @@ function listenTemplates(){
       Object.entries(DEFAULT_TEMPLATES).forEach(([type,b64])=>{
         db.collection('contrats-modeles').doc(type).set({
           nom:TEMPLATE_LABELS[type],
-          fileName:`Modele_Contrat_${type.charAt(0).toUpperCase()+type.slice(1)}_LaMarmiteBleue.docx`,
+          fileName:`Modele_Contrat_${type.charAt(0).toUpperCase()+type.slice(1)}_LeMenu.docx`,
           base64:b64,
           uploadedAt:firebase.firestore.Timestamp.now(),
           isDefault:true
@@ -2091,7 +2091,7 @@ async function generateContractWord(empId){
     '{{EMAIL}}':emp.email||'',
     '{{NUM_SECU}}':emp.nir?fmtNIR(emp.nir):'_______________',
     '{{MODELE}}':TEMPLATE_LABELS[tplType]||'',
-    '{{EMPLOYEUR}}':'La Marmite Bleue',
+    '{{EMPLOYEUR}}':'Le Menu',
     '{{VILLE}}':'Saint-Pierre-la-Mer',
   };
 
@@ -2363,7 +2363,7 @@ function openDispoTable(){
 }
 function dtWeek(n){changeWeek(n);openDispoTable();}
 function printDispoTable(){
-  const html=`<div class="print-page"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #0EA5E9"><div style="font-size:26px">🫙</div><div><div style="font-size:12px;font-weight:700;color:#0EA5E9">LA MARMITE BLEUE</div><div style="font-size:17px;font-weight:800">Disponibilités de l'équipe</div><div style="font-size:12px;color:#64748B">${fWk(MON)}</div></div></div>${buildDispoTable(true)}</div>`;
+  const html=`<div class="print-page"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #0EA5E9"><div style="font-size:26px">🫙</div><div><div style="font-size:12px;font-weight:700;color:#0EA5E9">LE MENU</div><div style="font-size:17px;font-weight:800">Disponibilités de l'équipe</div><div style="font-size:12px;color:#64748B">${fWk(MON)}</div></div></div>${buildDispoTable(true)}</div>`;
   closeModal();doPrint(html);openDispoTable();
 }
 

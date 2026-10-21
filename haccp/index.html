@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="HACCP Moule">
+<meta name="apple-mobile-web-app-title" content="HACCP Le Menu">
 <meta name="theme-color" content="#185FA5">
-<title>[TEST] HACCP — Moule & Smile</title>
+<title>[TEST] HACCP — Le Menu</title>
 <link rel="icon" type="image/png" href="icon-haccp.png">
 <link rel="apple-touch-icon" href="icon-haccp-180.png">
 <style>
@@ -341,7 +341,7 @@ body.is-admin .admin-only-flex{display:flex}
 <!-- LOGIN / INSCRIPTION -->
 <div id="login-screen">
   <div class="login-logo">🐚</div>
-  <div class="login-title">HACCP — Moule & Smile</div>
+  <div class="login-title">HACCP — Le Menu</div>
   <div class="login-sub">Saint-Pierre-la-Mer · Fleury, Aude</div>
 
   <!-- Panneau connexion -->
@@ -390,7 +390,7 @@ body.is-admin .admin-only-flex{display:flex}
     <div class="topbar-left">
       <div class="topbar-logo">🐚</div>
       <div>
-        <div class="topbar-title">Moule & Smile</div>
+        <div class="topbar-title">Le Menu</div>
         <div class="topbar-sub">Classeur HSA — lecture seule</div>
       </div>
     </div>
@@ -406,7 +406,7 @@ body.is-admin .admin-only-flex{display:flex}
     <div class="topbar-left">
       <div class="topbar-logo">🐚</div>
       <div>
-        <div class="topbar-title">Moule & Smile <span style="font-size:10px;font-weight:400;opacity:.6">v.21/10/2026 10:45 TEST</span></div>
+        <div class="topbar-title">Le Menu <span style="font-size:10px;font-weight:400;opacity:.6">v.21/10/2026 11:50 TEST</span></div>
         <div class="topbar-sub" id="topbar-date">—</div>
       </div>
     </div>
@@ -750,7 +750,7 @@ body.is-admin .admin-only-flex{display:flex}
       <div class="doc-card" onclick="downloadHACCPDoc()">
         <div class="doc-card-icon icon-blue"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg></div>
         <div class="doc-card-body">
-          <div class="doc-card-title">Plan HACCP complet — Moule & Smile</div>
+          <div class="doc-card-title">Plan HACCP complet — Le Menu</div>
           <div class="doc-card-sub">Document Word (.docx) · 12 chapitres · Analyse des dangers, CCP, procédures, allergènes, traçabilité</div>
           <div class="doc-card-badge" style="background:#E6F1FB;color:#185FA5">⬇ Télécharger .docx</div>
         </div>
@@ -1651,7 +1651,7 @@ function scheduleNotifChecks() {
         const deadline = s.heure * 60 + s.minute;
         // Déclencher dans les 10 min suivant la deadline
         if(hNow >= deadline && hNow < deadline + 10 && !sessions.includes(s.session)) {
-          new Notification('⚠ HACCP — Moule & Smile', {
+          new Notification('⚠ HACCP — Le Menu', {
             body: `Relevé de températures "${s.session}" non effectué !`,
             icon: '/favicon.ico',
             tag: 'haccp-' + s.session
@@ -1721,7 +1721,7 @@ async function exportRapportPDF() {
   showToast('⏳ Génération PDF...');
   const ok = await loadJsPDF();
   if(!ok) { showToast('Erreur chargement PDF'); return; }
-  const doc = buildPDFContent(_rapportRecs, `Rapport HACCP — Moule & Smile`, `${from} → ${to}`);
+  const doc = buildPDFContent(_rapportRecs, `Rapport HACCP — Le Menu`, `${from} → ${to}`);
   doc.save(`Rapport_HACCP_${from}_${to}.pdf`);
   showToast('✓ PDF exporté !');
 }
@@ -1805,7 +1805,7 @@ async function exportRapportWord() {
   let body = '';
 
   // Titre
-  body += wPar(wRun('RAPPORT HACCP — MOULE & SMILE', {bold:true, size:32, color:'185FA5'}), {center:true, after:100});
+  body += wPar(wRun('RAPPORT HACCP — LE MENU', {bold:true, size:32, color:'185FA5'}), {center:true, after:100});
   body += wPar(wRun(`Période : ${from} → ${to}`, {italic:true, size:22, color:'6B6B65'}), {center:true, after:80});
   body += wPar(wRun(`Généré le ${new Date().toLocaleDateString('fr-FR')} · ${_rapportRecs.length} enregistrements · ${ncCount} NC · ${days} jours couverts`, {size:18, color:'6B6B65'}), {center:true, after:200});
 
@@ -1879,7 +1879,7 @@ async function exportRapportWord() {
   });
 
   // Pied
-  body += wPar(wRun('Moule & Smile · Saint-Pierre-la-Mer · Rapport HACCP · Conserver 3 ans minimum', {size:16, color:'9B9B95', italic:true}), {center:true, before:400});
+  body += wPar(wRun('Le Menu · Restaurant test · Rapport HACCP · Conserver 3 ans minimum', {size:16, color:'9B9B95', italic:true}), {center:true, before:400});
 
   // ── Assemblage XML OOXML ─────────────────────────────────────────────
   const docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -1957,7 +1957,7 @@ async function loadFournisseurs() {
     if(snap.exists() && snap.data().list) {
       _fournisseurs = snap.data().list;
     } else {
-      // Fournisseurs par défaut Moule & Smile
+      // Fournisseurs par défaut Le Menu
       _fournisseurs = [
         { nom: 'La Noisette d\'Oc', produits: 'Moules de Bouzigues' },
         { nom: 'V and B Narbonne', produits: 'Boissons, bières' },
@@ -2485,7 +2485,7 @@ function downloadHACCPDoc(){
   const DOCX_URL = 'Plan_HACCP_MouleSmile.docx';
   const a = document.createElement('a');
   a.href = DOCX_URL;
-  a.download = 'Plan_HACCP_MouleSmile.docx';
+  a.download = 'Plan_HACCP_LeMenu.docx';
   a.click();
   showToast('⬇ Téléchargement du plan HACCP...');
 }
@@ -2662,7 +2662,7 @@ function buildPDFContent(recs, titre, periode){
     doc.setFillColor(24,95,165); doc.rect(0,0,W,18,'F');
     doc.setTextColor(255,255,255);
     doc.setFontSize(12); doc.setFont('helvetica','bold');
-    doc.text('HACCP — Moule & Smile', M, 8);
+    doc.text('HACCP — Le Menu', M, 8);
     doc.setFontSize(7.5); doc.setFont('helvetica','normal');
     doc.text('Saint-Pierre-la-Mer · Fleury', M, 13);
     doc.text(titre+' | '+periode+' | '+recs.length+' enreg.', W/2, 13, {align:'center'});
@@ -2789,7 +2789,7 @@ function buildPDFContent(recs, titre, periode){
   for(let i=1;i<=tp;i++){
     doc.setPage(i); drawHeader(i,tp);
     doc.setFontSize(7); doc.setTextColor(150,150,150); doc.setFont('helvetica','normal');
-    doc.text('Moule & Smile — HACCP — Conserver 3 ans minimum', W/2, H-3, {align:'center'});
+    doc.text('Le Menu — HACCP — Conserver 3 ans minimum', W/2, H-3, {align:'center'});
   }
   return doc;
 }
@@ -2816,7 +2816,7 @@ async function exportPDF(){
   const titre = 'Registre HACCP — ' + typeStr;
   const periode = (from||'—') + ' → ' + (to||'—');
   const doc = buildPDFContent(_filteredRecs, titre, periode);
-  doc.save('HACCP_MouleSmile_' + (from||'') + '_' + (to||'') + '.pdf');
+  doc.save('HACCP_LeMenu_' + (from||'') + '_' + (to||'') + '.pdf');
   showToast('✓ PDF exporté !');
 }
 window.exportPDF = exportPDF;
@@ -3138,7 +3138,7 @@ async function downloadClasseurBinder(){
     const zip = new window.JSZip();
     const byCat = {};
     _classeurDocs.forEach(d => { (byCat[d.category] = byCat[d.category]||[]).push(d); });
-    let sommaire = "CLASSEUR HSA — MOULE & SMILE\nGénéré le " + new Date().toLocaleDateString('fr-FR') + "\n" + "=".repeat(50) + "\n";
+    let sommaire = "CLASSEUR HSA — LE MENU\nGénéré le " + new Date().toLocaleDateString('fr-FR') + "\n" + "=".repeat(50) + "\n";
     for(const cat of Object.keys(byCat)){
       const folder = zip.folder(classeurSanitizeFilename(cat));
       sommaire += `\n\n${cat.toUpperCase()}\n${'-'.repeat(cat.length)}\n`;
@@ -3179,7 +3179,7 @@ async function saveRapportToClasseur(){
   const ok = await loadJsPDF();
   if(!ok){ showToast('Erreur chargement PDF'); return; }
   try{
-    const pdfDoc = buildPDFContent(_rapportRecs, `Rapport HACCP — Moule & Smile`, `${from} → ${to}`);
+    const pdfDoc = buildPDFContent(_rapportRecs, `Rapport HACCP — Le Menu`, `${from} → ${to}`);
     const blob = pdfDoc.output('blob');
     const fileName = `Rapport_HACCP_${from}_${to}.pdf`;
     const storagePath = `classeur/${Date.now()}_${fileName}`;
