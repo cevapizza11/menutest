@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>[TEST] Moule & Smile — Jetons QR</title>
+<link rel="icon" type="image/png" href="icon-jetons.png">
+<link rel="apple-touch-icon" href="icon-jetons-180.png">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #1A1A1A; color: #fff; padding: 16px; }
+
+  .topbar { display:flex; justify-content:space-between; align-items:center; gap:10px; max-width:1000px; margin:0 auto 16px; }
+  .topbar a { color:#D4AF37; text-decoration:none; font-size:13px; font-weight:bold; }
+  .version { color:#777; font-size:11px; white-space:nowrap; }
+  .btn-deco { background:none; border:1px solid #555; color:#aaa; border-radius:6px; padding:4px 8px; font-size:11px; cursor:pointer; }
+
+  h1 { color: #D4AF37; text-align: center; margin-bottom: 6px; font-size: 20px; }
+  .intro { color: #999; text-align: center; font-size: 13px; margin: 0 auto 18px; max-width: 700px; line-height: 1.5; }
+
+  .resume { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; max-width:1000px; margin:0 auto 20px; }
+  .carte-resume { background:#242424; border:1px solid #333; border-radius:12px; padding:12px; text-align:center; }
+  .carte-resume .chiffre { font-size:26px; font-weight:bold; }
+  .carte-resume .libelle { font-size:12px; color:#aaa; margin-top:2px; }
+  .c-lot .chiffre { color:#D4AF37; }
+  .c-table .chiffre { color:#4ABA80; }
+  .c-attente .chiffre { color:#E8A33D; }
+  .c-employe .chiffre { color:#C89EDB; }
+
+  .section { max-width:1000px; margin:0 auto 26px; background:#222; border:1px solid #333; border-radius:14px; padding:16px; }
+  .section h2 { font-size:16px; color:#D4AF37; margin-bottom:6px; }
+  .section .aide { font-size:12.5px; color:#999; line-height:1.5; margin-bottom:12px; }
+
+  .controls { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+  .btn { padding: 10px 16px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 13px; }
+  .btn-or { background: #D4AF37; color: #1A1A1A; }
+  .btn-outline { background: transparent; border: 2px solid #D4AF37; color: #D4AF37; }
+  .btn-rouge { background: transparent; border: 2px solid #C0392B; color: #ff8a8a; }
+  .btn-petit { padding:5px 9px; font-size:12px; border-radius:6px; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  select, input[type=number] { background:#2A2A2A; border:1px solid #D4AF37; border-radius:8px; color:#fff; padding:9px 10px; font-size:13px; }
+  input[type=number] { width:80px; text-align:center; font-weight:bold; color:#D4AF37; }
+  .adresse { font-size:12px; color:#aaa; }
+  .adresse code { color:#D4AF37; }
+
+  .statut-bar { max-width:1000px; margin:0 auto 16px; text-align:center; font-size:13px; color:#4ABA80; min-height:18px; }
+
+  .qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .qr-card { background: #fff; border-radius: 12px; padding: 10px; text-align: center; position:relative; }
+  .qr-card .jeton-num { color: #1A1A1A; font-size: 14px; font-weight: bold; margin-bottom: 6px; }
+  .qr-card .marque { color:#1A1A1A; font-size:10px; font-weight:bold; margin-bottom:4px; }
+  .qr-card .qr { display:flex; justify-content:center; }
+  .qr-card .etat { font-size:10px; margin-top:6px; font-weight:bold; }
+  .etat-libre { color:#888; }
+  .etat-actif { color:#1E8449; }
+  .qr-card .reimp { position:absolute; top:6px; right:6px; background:#eee; border:none; border-radius:6px; font-size:12px; padding:2px 5px; cursor:pointer; }
+
+  table.liste { width:100%; border-collapse:collapse; font-size:13px; }
+  table.liste th { text-align:left; color:#aaa; font-weight:normal; font-size:12px; padding:6px; border-bottom:1px solid #333; }
+  table.liste td { padding:8px 6px; border-bottom:1px solid #2c2c2c; }
+  .vide { color:#777; font-size:13px; font-style:italic; padding:6px 0; }
+  .pastille { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:bold; }
+  .p-actif { background:#1E3A2E; color:#4ABA80; }
+  .p-attente { background:#3A2E1E; color:#E8A33D; }
+  .p-employe { background:#2E1E3A; color:#C89EDB; }
+
+  .actions { display:grid; grid-template-columns:1fr; gap:10px; max-width:1000px; margin:0 auto 20px; }
+  @media (min-width:700px){ .actions { grid-template-columns:repeat(3,1fr); } }
+  .btn-action { padding:16px; border:none; border-radius:12px; font-weight:bold; font-size:15px; cursor:pointer; color:#fff; text-align:left; line-height:1.3; }
+  .btn-action small { display:block; font-weight:normal; font-size:12px; opacity:.85; margin-top:3px; }
+  .a-table { background:#D4AF37; color:#1A1A1A; }
+  .a-avance { background:#2A6FB5; }
+  .a-employe { background:#8E44AD; }
+  .btn-vert { background:transparent; border:2px solid #4ABA80; color:#4ABA80; }
+  .btn-bleu { background:transparent; border:2px solid #2A6FB5; color:#8ac4ff; }
+
+  .modal { position:fixed; inset:0; background:rgba(0,0,0,.75); display:none; align-items:center; justify-content:center; z-index:40; padding:16px; }
+  .modal.visible { display:flex; }
+  .modal-boite { background:#242424; border:1px solid #D4AF37; border-radius:16px; padding:20px; width:100%; max-width:360px; }
+  .modal-boite h3 { color:#D4AF37; font-size:17px; margin-bottom:12px; text-align:center; }
+  .modal-boite label { display:block; font-size:12px; color:#D4AF37; font-weight:bold; margin:10px 0 4px; }
+  .modal-boite input { width:100%; background:#1A1A1A; border:1px solid #555; border-radius:8px; color:#fff; padding:12px; font-size:18px; }
+  .modal-boite .boutons { display:flex; gap:10px; margin-top:16px; }
+  .modal-boite .boutons .btn { flex:1; }
+
+  /* Écran de connexion */
+  #ecranLogin { position:fixed; inset:0; background:#1A1A1A; display:flex; align-items:center; justify-content:center; z-index:50; padding:20px; }
+  #ecranLogin.masque { display:none; }
+  .boite-login { background:#242424; border:1px solid #D4AF37; border-radius:16px; padding:24px; width:100%; max-width:340px; text-align:center; }
+  .boite-login h2 { color:#D4AF37; font-size:18px; margin-bottom:6px; }
+  .boite-login p { color:#999; font-size:12.5px; margin-bottom:14px; }
+  .boite-login input { width:100%; background:#1A1A1A; border:1px solid #555; border-radius:8px; color:#fff; padding:12px; font-size:16px; margin-bottom:10px; }
+  .boite-login .erreur { color:#ff8a8a; font-size:12.5px; min-height:16px; margin-bottom:8px; }
+
+  @media print {
+    body { background: white; padding:0; }
+    .topbar, h1, .intro, .actions, .modal, .resume, .statut-bar, .controls, .aide, .section h2, .section.ecran-seul, .reimp, .etat, #ecranLogin { display: none !important; }
+    .section { border:none; background:none; padding:0; margin:0; max-width:none; }
+    .qr-grid { grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .qr-card { border: 1px solid #ccc; break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div id="bandeauModeTest" style="position:fixed;top:3px;left:50%;transform:translateX(-50%);z-index:2147483647;pointer-events:none;background:#d6332a;color:#fff;font:bold 11px/1 Arial,sans-serif;letter-spacing:1px;padding:5px 12px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,.5);opacity:.93;white-space:nowrap">🧪 MODE TEST · base menutest · rien n'est réel</div>
+<script>window.MODE_TEST=true;</script>
+
+<!-- Connexion équipe (même mot de passe que la caisse) -->
+<div id="ecranLogin">
+  <div class="boite-login">
+    <h2>🔐 Connexion équipe</h2>
+    <p>Même mot de passe que la caisse.</p>
+    <input type="password" id="loginPwd" placeholder="Mot de passe" onkeydown="if(event.key==='Enter')connexion()">
+    <div class="erreur" id="loginErreur"></div>
+    <button class="btn btn-or" style="width:100%" onclick="connexion()">Se connecter</button>
+  </div>
+</div>
+
+<div class="topbar">
+  <a href="outils.html">← Outils</a>
+  <div style="display:flex;gap:10px;align-items:center">
+    <button class="btn-deco" onclick="deconnexion()">Déconnexion</button>
+    <span class="version">v.21/10/2026 10:15 TEST</span>
+  </div>
+</div>
+
+<h1>🎫 Jetons QR — Moule & Smile</h1>
+<p class="intro">Créez et imprimez les jetons de table et les repas employés, attribuez une table aux jetons en attente, et gardez un œil sur tous les jetons ouverts. Même fonctionnement que l'onglet Jetons de la caisse.</p>
+
+<div class="resume">
+  <div class="carte-resume c-lot"><div class="chiffre" id="nbLot">–</div><div class="libelle">Jetons plastifiés</div></div>
+  <div class="carte-resume c-table"><div class="chiffre" id="nbTables">–</div><div class="libelle">Tables en cours</div></div>
+  <div class="carte-resume c-attente"><div class="chiffre" id="nbAttente">–</div><div class="libelle">Jetons en attente de table</div></div>
+  <div class="carte-resume c-employe"><div class="chiffre" id="nbEmployes">–</div><div class="libelle">Repas employés en cours</div></div>
+</div>
+
+<div class="actions">
+  <button class="btn-action a-table" onclick="ouvrirModalTable(null)">🖨️ Nouvelle table<small>Imprime un jeton déjà actif pour une table</small></button>
+  <button class="btn-action a-avance" onclick="ouvrirModalAvance()">🖨️ Imprimer à l'avance<small>Jetons sans table, à attribuer ensuite</small></button>
+  <button class="btn-action a-employe" onclick="ouvrirModalEmploye()">🍽️ Repas employé<small>Jeton avec 10 points offerts</small></button>
+</div>
+
+<div class="statut-bar" id="statutBar"></div>
+
+<!-- Modal : nouvelle table / attribuer une table à un jeton en attente -->
+<div class="modal" id="modalTable">
+  <div class="modal-boite">
+    <h3 id="modalTableTitre">🖨️ Nouvelle table</h3>
+    <label>Numéro de table (1 à 150)</label>
+    <input type="number" id="mtTable" inputmode="numeric" min="1" max="150" placeholder="Ex : 12">
+    <label>Nombre de tables 90×90 assemblées</label>
+    <input type="number" id="mtUnites" inputmode="numeric" min="1" max="15" placeholder="Ex : 2 (1 par défaut)">
+    <label>Nombre de couverts</label>
+    <input type="number" id="mtCouverts" inputmode="numeric" min="1" max="30" placeholder="Ex : 4">
+    <div class="boutons">
+      <button class="btn btn-outline" onclick="fermerModal('modalTable')">Annuler</button>
+      <button class="btn btn-or" id="mtValider" onclick="validerModalTable()">✅ Valider</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal : jetons à l'avance -->
+<div class="modal" id="modalAvance">
+  <div class="modal-boite">
+    <h3>🖨️ Imprimer à l'avance</h3>
+    <label>Combien de jetons ? (1 à 50)</label>
+    <input type="number" id="maNombre" inputmode="numeric" min="1" max="50" value="1">
+    <div class="boutons">
+      <button class="btn btn-outline" onclick="fermerModal('modalAvance')">Annuler</button>
+      <button class="btn btn-or" onclick="validerAvance()">🖨️ Imprimer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal : ticket créé (QR à l'écran + impression) -->
+<div class="modal" id="modalPret">
+  <div class="modal-boite" style="text-align:center">
+    <h3 id="pretTitre">✅ Jeton créé</h3>
+    <div id="pretTexte" style="color:#ccc;font-size:14px;margin-bottom:10px"></div>
+    <div id="pretQr" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;background:#fff;border-radius:12px;padding:12px"></div>
+    <div class="boutons">
+      <button class="btn btn-outline" onclick="fermerModal('modalPret')">Fermer</button>
+      <button class="btn btn-or" onclick="imprimerPret()">🖨️ Imprimer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal : repas employé -->
+<div class="modal" id="modalEmploye">
+  <div class="modal-boite">
+    <h3>🍽️ Repas employé</h3>
+    <label>Prénom de l'employé</label>
+    <input type="text" id="meNom" placeholder="Ex : Julie" style="font-size:16px" onkeydown="if(event.key==='Enter')validerEmploye()">
+    <div class="boutons">
+      <button class="btn btn-outline" onclick="fermerModal('modalEmploye')">Annuler</button>
+      <button class="btn btn-or" onclick="validerEmploye()">🖨️ Créer et imprimer</button>
+    </div>
+  </div>
+</div>
+
+<!-- 1. Jetons jetables en cours (tables + en attente) -->
+<div class="section ecran-seul">
+  <h2>🧾 Jetons jetables en cours</h2>
+  <div class="aide">Ils se suppriment tout seuls à l'encaissement. Un jeton « En attente » doit recevoir une table (bouton ✅ Table) avant que le client puisse commander. S'il en reste en fin de journée, ils ont été oubliés : vous pouvez les supprimer.</div>
+  <div id="listeJetables"></div>
+  <div class="controls" style="margin-top:12px;margin-bottom:0">
+    <button class="btn btn-rouge" onclick="purgerJetables()">🧹 Purger tous les jetons jetables (restaurant fermé)</button>
+  </div>
+</div>
+
+<!-- 2. Repas employés -->
+<div class="section ecran-seul">
+  <h2>🍽️ Repas employés en cours</h2>
+  <div class="aide">Budget de 10 points par repas (points de chaque article à renseigner dans l'Admin carte). Ils se suppriment tout seuls une fois le repas clôturé en caisse.</div>
+  <div id="listeEmployes"></div>
+</div>
+
+<!-- 3. Lot plastifié réutilisable -->
+<div class="section">
+  <h2>♻️ Jetons plastifiés réutilisables</h2>
+  <div class="aide">Optionnel : un lot de jetons imprimés une fois, plastifiés, et remis en circulation après chaque encaissement. Seuls ces jetons sont imprimés par le bouton « Imprimer le lot ».</div>
+
+  <div class="controls">
+    <label class="adresse">Adresse dans les QR :
+      <select id="choixAdresse" onchange="changerAdresse(this.value)">
+        <option value="firebase">page client de TEST (même dépôt)</option>
+        <option value="github">GitHub (ancienne adresse)</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="controls">
+    <input type="number" id="nbJetons" value="10" min="1" max="150">
+    <button class="btn btn-or" id="btnGenerer" onclick="genererLot()">➕ Ajouter des jetons au lot</button>
+    <button class="btn btn-outline" onclick="window.print()">🖨️ Imprimer le lot</button>
+    <button class="btn btn-rouge" onclick="supprimerLot()">🗑️ Supprimer tout le lot</button>
+  </div>
+
+  <div class="qr-grid" id="qrGrid"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const firebaseConfig={apiKey:"AIzaSyCRZDRNtVF95yX7qYCvc__9NjGa41JTdMQ",authDomain:"menutest-f4629.firebaseapp.com",projectId:"menutest-f4629",storageBucket:"menutest-f4629.firebasestorage.app",messagingSenderId:"834088175472",appId:"1:834088175472:web:d45de5bc283c205608b1b5"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+
+// ============================================================
+// CONNEXION — même compte équipe que caisse.html (les règles Firestore
+// refusent l'accès aux jetons sans être connecté).
+// ============================================================
+const EMAIL_EQUIPE='tmjumeaux@gmail.com'; // compte équipe du projet de test menutest
+let ecouteJetons=null;
+
+firebase.auth().onAuthStateChanged(user=>{
+  const connecte=user && !user.isAnonymous;
+  document.getElementById('ecranLogin').classList.toggle('masque', !!connecte);
+  if(connecte){ demarrerEcoute(); }
+  else if(ecouteJetons){ ecouteJetons(); ecouteJetons=null; }
+});
+
+async function connexion(){
+  const pwd=document.getElementById('loginPwd').value;
+  const err=document.getElementById('loginErreur');
+  err.textContent='';
+  if(!pwd){err.textContent='Entrez le mot de passe';return;}
+  try{ await firebase.auth().signInWithEmailAndPassword(EMAIL_EQUIPE,pwd); }
+  catch(e){ err.textContent='❌ Mot de passe incorrect'; }
+}
+function deconnexion(){ firebase.auth().signOut(); }
+
+// ============================================================
+// ADRESSE DES QR CODES — partagée avec la caisse (même réglage)
+// ============================================================
+const URLS_APP={
+  github:new URL('index.html',location.href).href,   // MODE TEST : page client du dépôt de test
+  firebase:new URL('index.html',location.href).href
+};
+let adresseChoisie='firebase';
+try{const v=localStorage.getItem('adresseApp'); if(v&&URLS_APP[v]) adresseChoisie=v;}catch(e){}
+document.getElementById('choixAdresse').value=adresseChoisie;
+function baseUrl(){ return URLS_APP[adresseChoisie]||URLS_APP.firebase; }
+function changerAdresse(v){
+  if(!URLS_APP[v]) return;
+  adresseChoisie=v;
+  try{localStorage.setItem('adresseApp',v);}catch(e){}
+  afficherLot(dernierLot);
+}
+
+// ============================================================
+// LECTURE EN TEMPS RÉEL DE TOUS LES JETONS
+// ============================================================
+let dernierLot=[];
+let tousJetons={};
+
+function demarrerEcoute(){
+  if(ecouteJetons) return;
+  setStatut('⏳ Chargement des jetons...');
+  ecouteJetons=db.collection('jetons').orderBy('numero').onSnapshot(snap=>{
+    const tous=snap.docs.map(d=>({id:d.id, ...d.data()}));
+    tousJetons={}; tous.forEach(j=>tousJetons[j.id]=j);
+    const lot=tous.filter(j=>!j.jetable);
+    const jetables=tous.filter(j=>j.jetable && j.type!=='employe');
+    const employes=tous.filter(j=>j.type==='employe');
+
+    document.getElementById('nbLot').textContent=lot.length;
+    document.getElementById('nbTables').textContent=
+      tous.filter(j=>j.statut==='actif' && j.type!=='employe').length;
+    document.getElementById('nbAttente').textContent=jetables.filter(j=>j.statut==='en_attente').length;
+    document.getElementById('nbEmployes').textContent=employes.length;
+
+    afficherJetables(jetables);
+    afficherEmployes(employes);
+    dernierLot=lot;
+    afficherLot(lot);
+    setStatut(`✅ ${tous.length} jeton(s) au total — mise à jour en direct`);
+  }, e=>{
+    console.error(e);
+    setStatut('❌ Accès refusé ou erreur de chargement — reconnectez-vous');
+  });
+}
+
+function setStatut(t){ document.getElementById('statutBar').textContent=t; }
+
+function heureDe(ts){
+  if(!ts||!ts.toDate) return '—';
+  const d=ts.toDate();
+  return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+}
+
+function afficherJetables(liste){
+  const zone=document.getElementById('listeJetables');
+  if(!liste.length){ zone.innerHTML='<div class="vide">Aucun jeton jetable en cours.</div>'; return; }
+  zone.innerHTML=`<table class="liste"><tr><th>Jeton</th><th>État</th><th>Table</th><th>Créé</th><th></th></tr>`+
+    liste.map(j=>`<tr>
+      <td>n°${j.numero}</td>
+      <td>${j.statut==='en_attente'?'<span class="pastille p-attente">En attente</span>':'<span class="pastille p-actif">À table</span>'}</td>
+      <td>${j.table?('Table '+j.table+(j.couverts?' ('+j.couverts+'p)':'')):'—'}</td>
+      <td>${heureDe(j.timestamp)}</td>
+      <td style="text-align:right;white-space:nowrap">
+        ${j.statut==='en_attente'
+          ? `<button class="btn btn-vert btn-petit" onclick="ouvrirModalTable('${j.id}')">✅ Table</button>
+             <button class="btn btn-bleu btn-petit" onclick="reimprimer('${j.id}')">🖨️</button>`
+          : `<button class="btn btn-bleu btn-petit" onclick="reimprimer('${j.id}')">🖨️</button>`}
+        <button class="btn btn-rouge btn-petit" onclick="supprimerUn('${j.id}',${j.numero},'${j.statut}')">🗑️</button>
+      </td>
+    </tr>`).join('')+`</table>`;
+}
+
+function afficherEmployes(liste){
+  const zone=document.getElementById('listeEmployes');
+  if(!liste.length){ zone.innerHTML='<div class="vide">Aucun repas employé en cours.</div>'; return; }
+  zone.innerHTML=`<table class="liste"><tr><th>Employé</th><th>Budget</th><th>Jeton</th><th>Créé</th><th></th></tr>`+
+    liste.map(j=>`<tr>
+      <td><span class="pastille p-employe">🍽️ ${echapper(j.employeNom||'?')}</span></td>
+      <td>${j.pointsBudget||10} points</td>
+      <td>n°${j.numero}</td>
+      <td>${heureDe(j.timestamp)}</td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="btn btn-bleu btn-petit" onclick="reimprimer('${j.id}')">🖨️</button>
+        <button class="btn btn-rouge btn-petit" onclick="supprimerUn('${j.id}',${j.numero},'employe')">🗑️</button>
+      </td>
+    </tr>`).join('')+`</table>`;
+}
+
+function echapper(t){ return String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function afficherLot(lot){
+  const grid=document.getElementById('qrGrid');
+  grid.innerHTML='';
+  if(!lot.length){ grid.innerHTML='<div class="vide">Aucun jeton plastifié. Ce lot est optionnel : la caisse imprime des jetons jetables à la demande.</div>'; return; }
+  const base=baseUrl();
+  lot.forEach(j=>{
+    const card=document.createElement('div');
+    card.className='qr-card';
+    const actif=j.statut==='actif';
+    card.innerHTML=`
+      <button class="reimp" title="Imprimer ce jeton seul" onclick="imprimerUnJeton(${j.numero},'${j.token}')">🖨️</button>
+      <div class="marque">🐚 MOULE & SMILE</div>
+      <div class="jeton-num">Jeton n°${j.numero}</div>
+      <div class="qr" id="qr_${j.numero}"></div>
+      <div class="etat ${actif?'etat-actif':'etat-libre'}">${actif?('À table — Table '+j.table):'Libre'}</div>`;
+    grid.appendChild(card);
+    new QRCode(document.getElementById(`qr_${j.numero}`), {
+      text:`${base}?j=${j.token}`, width:110, height:110,
+      colorDark:"#1A1A1A", colorLight:"#ffffff", correctLevel:QRCode.CorrectLevel.H
+    });
+  });
+}
+
+// ============================================================
+// ACTIONS
+// ============================================================
+function genererToken(){
+  const bytes=new Uint8Array(9);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes,b=>b.toString(36).padStart(2,'0')).join('').slice(0,12);
+}
+
+async function prochainNumero(){
+  // Numérotation commune avec la caisse : jamais de doublon entre lot, jetables et repas employés.
+  const snap=await db.collection('jetons').orderBy('numero','desc').limit(1).get();
+  if(snap.empty) return 1;
+  return (snap.docs[0].data().numero||0)+1;
+}
+
+async function genererLot(){
+  const nb=parseInt(document.getElementById('nbJetons').value)||0;
+  if(nb<1||nb>150){ alert('Entre 1 et 150 jetons à la fois.'); return; }
+  if(!confirm(`Ajouter ${nb} jeton(s) plastifié(s) réutilisable(s) au lot ?`)) return;
+  const btn=document.getElementById('btnGenerer');
+  btn.disabled=true;
+  setStatut('⏳ Création en cours...');
+  try{
+    const depart=await prochainNumero();
+    const jetons=[];
+    for(let i=0;i<nb;i++) jetons.push({numero:depart+i, token:genererToken()});
+    for(let i=0;i<jetons.length;i+=400){
+      const batch=db.batch();
+      jetons.slice(i,i+400).forEach(j=>{
+        batch.set(db.collection('jetons').doc(j.token),{numero:j.numero, token:j.token, statut:'libre', table:null, jetable:false});
+      });
+      await batch.commit();
+    }
+    setStatut(`✅ ${nb} jeton(s) ajouté(s) au lot (n°${depart} à n°${depart+nb-1})`);
+  }catch(e){
+    console.error(e);
+    setStatut('❌ Erreur de création — voir console');
+  }
+  btn.disabled=false;
+}
+
+async function supprimerUn(id, numero, statut){
+  const msg = statut==='employe'
+    ? `Supprimer le repas employé (jeton n°${numero}) ? Le QR code ne marchera plus.`
+    : statut==='actif'
+      ? `⚠️ Le jeton n°${numero} est en cours sur une table. Le supprimer bloquera ce client. Continuer ?`
+      : `Supprimer le jeton n°${numero} ?`;
+  if(!confirm(msg)) return;
+  try{ await db.collection('jetons').doc(id).delete(); setStatut(`🗑️ Jeton n°${numero} supprimé`); }
+  catch(e){ console.error(e); setStatut('❌ Erreur de suppression'); }
+}
+
+async function purgerJetables(){
+  const snap=await db.collection('jetons').where('jetable','==',true).get();
+  const docs=snap.docs.filter(d=>d.data().type!=='employe');
+  if(!docs.length){ alert('Aucun jeton jetable à purger.'); return; }
+  const c=prompt(
+    `Vous allez supprimer ${docs.length} jeton(s) jetable(s), y compris ceux encore « à table ».\n\n`+
+    `À faire uniquement restaurant fermé.\nLes repas employés et le lot plastifié ne sont pas touchés.\n\n`+
+    `Tapez PURGER pour confirmer :`);
+  if(c!=='PURGER'){ if(c!==null) alert('Annulé.'); return; }
+  await supprimerDocs(docs, 'jeton(s) jetable(s) purgé(s)');
+}
+
+async function supprimerLot(){
+  const snap=await db.collection('jetons').get();
+  const docs=snap.docs.filter(d=>!d.data().jetable);
+  if(!docs.length){ alert('Aucun jeton plastifié à supprimer.'); return; }
+  const enCours=docs.filter(d=>d.data().statut==='actif').length;
+  const c=prompt(
+    `Vous allez supprimer DÉFINITIVEMENT les ${docs.length} jeton(s) plastifié(s).\n`+
+    (enCours?`⚠️ ${enCours} sont en cours sur une table !\n`:'')+
+    `Les jetons jetables et les repas employés ne sont pas touchés.\n\n`+
+    `Tapez SUPPRIMER pour confirmer :`);
+  if(c!=='SUPPRIMER'){ if(c!==null) alert('Annulé.'); return; }
+  await supprimerDocs(docs, 'jeton(s) plastifié(s) supprimé(s)');
+}
+
+async function supprimerDocs(docs, libelle){
+  setStatut('⏳ Suppression en cours...');
+  try{
+    for(let i=0;i<docs.length;i+=400){
+      const batch=db.batch();
+      docs.slice(i,i+400).forEach(d=>batch.delete(d.ref));
+      await batch.commit();
+    }
+    setStatut(`✅ ${docs.length} ${libelle}`);
+  }catch(e){ console.error(e); setStatut('❌ Erreur de suppression — voir console'); }
+}
+
+// ============================================================
+// CRÉATION ET ACTIVATION — mêmes règles que l'onglet Jetons de la caisse
+// (champs Firestore identiques, pour que caisse et cuisine les traitent pareil).
+// La fenêtre d'impression est ouverte au clic, avant toute attente,
+// sinon le navigateur la bloque.
+// ============================================================
+let jetonAActiver=null;
+
+function fermerModal(id){ document.getElementById(id).classList.remove('visible'); }
+
+function ouvrirModalTable(jetonId){
+  jetonAActiver=jetonId;
+  const j=jetonId?tousJetons[jetonId]:null;
+  document.getElementById('modalTableTitre').textContent=j?`✅ Jeton n°${j.numero} — attribuer une table`:'🖨️ Nouvelle table';
+  document.getElementById('mtValider').textContent=j?'✅ Activer':'🖨️ Créer et imprimer';
+  ['mtTable','mtUnites','mtCouverts'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('modalTable').classList.add('visible');
+  setTimeout(()=>document.getElementById('mtTable').focus(),100);
+}
+
+async function validerModalTable(){
+  const table=parseInt(document.getElementById('mtTable').value);
+  if(!table||table<1||table>150){ alert('Numéro de table invalide (1 à 150).'); return; }
+  const unites=parseInt(document.getElementById('mtUnites').value)||1;
+  const couverts=parseInt(document.getElementById('mtCouverts').value)||null;
+
+  // Activation d'un jeton déjà imprimé (en attente) : pas d'impression
+  if(jetonAActiver){
+    const id=jetonAActiver;
+    fermerModal('modalTable');
+    try{
+      await db.collection('jetons').doc(id).update({
+        statut:'actif', table, couverts, unites,
+        timestamp:firebase.firestore.FieldValue.serverTimestamp()
+      });
+      setStatut(`✅ Jeton activé — Table ${table}`);
+    }catch(e){ console.error(e); setStatut('❌ Erreur activation'); }
+    return;
+  }
+
+  // Nouvelle table : création, puis QR affiché à l'écran avec bouton Imprimer
+  fermerModal('modalTable');
+  setStatut('⏳ Création du jeton...');
+  try{
+    const numero=await prochainNumero();
+    const token=genererToken();
+    await db.collection('jetons').doc(token).set({
+      numero, token, statut:'actif', table, couverts, unites, jetable:true,
+      timestamp:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    setStatut(`✅ Jeton n°${numero} activé — Table ${table}`);
+    montrerPret([{numero, token}], `Table ${table} — jeton n°${numero}`, {table});
+  }catch(e){ erreur('création du jeton', e); }
+}
+
+function ouvrirModalAvance(){
+  document.getElementById('maNombre').value=1;
+  document.getElementById('modalAvance').classList.add('visible');
+}
+
+async function validerAvance(){
+  const nb=parseInt(document.getElementById('maNombre').value)||1;
+  if(nb<1||nb>50){ alert('Entre 1 et 50 jetons à la fois.'); return; }
+  fermerModal('modalAvance');
+  setStatut('⏳ Création des jetons...');
+  try{
+    const depart=await prochainNumero();
+    const jetons=[];
+    for(let i=0;i<nb;i++) jetons.push({numero:depart+i, token:genererToken()});
+    const batch=db.batch();
+    jetons.forEach(j=>batch.set(db.collection('jetons').doc(j.token),{
+      numero:j.numero, token:j.token, statut:'en_attente', table:null, couverts:null, unites:null, jetable:true,
+      timestamp:firebase.firestore.FieldValue.serverTimestamp()
+    }));
+    await batch.commit();
+    setStatut(`✅ ${nb} jeton(s) en attente créé(s) — n°${depart}${nb>1?' à n°'+(depart+nb-1):''}`);
+    montrerPret(jetons, `${nb} jeton(s) en attente — n°${depart}${nb>1?' à n°'+(depart+nb-1):''}<br>Attribuez une table avec ✅ Table quand le client est installé.`, {avance:true});
+  }catch(e){ erreur('création des jetons', e); }
+}
+
+function ouvrirModalEmploye(){
+  document.getElementById('meNom').value='';
+  document.getElementById('modalEmploye').classList.add('visible');
+  setTimeout(()=>document.getElementById('meNom').focus(),100);
+}
+
+async function validerEmploye(){
+  const nom=document.getElementById('meNom').value.trim();
+  if(!nom){ alert('Entrez le prénom de l\'employé.'); return; }
+  fermerModal('modalEmploye');
+  setStatut('⏳ Création du repas employé...');
+  try{
+    const numero=await prochainNumero();
+    const token=genererToken();
+    const tableVirtuelle=500+numero; // bande 500+ : jamais une vraie table (même règle que la caisse)
+    await db.collection('jetons').doc(token).set({
+      numero, token, statut:'actif', table:tableVirtuelle, couverts:1, unites:1, jetable:true,
+      type:'employe', employeNom:nom, pointsBudget:10,
+      timestamp:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    setStatut(`✅ Repas employé activé — ${nom} (10 points)`);
+    montrerPret([{numero, token}], `🍽️ ${echapper(nom)} — 10 points — jeton n°${numero}`, {employe:nom});
+  }catch(e){ erreur('création du repas employé', e); }
+}
+
+// Affiche le(s) QR créé(s) à l'écran ; l'impression se lance ensuite au clic sur "Imprimer"
+// (sur iPhone, ouvrir l'impression avant la création mettait la page en pause).
+let pret=null;
+function montrerPret(jetons, texte, opt){
+  pret={jetons, opt};
+  document.getElementById('pretTitre').textContent=opt.employe?'✅ Repas employé créé':(opt.avance?'✅ Jetons créés':'✅ Jeton créé et activé');
+  document.getElementById('pretTexte').innerHTML=texte;
+  const zone=document.getElementById('pretQr');
+  zone.innerHTML='';
+  jetons.forEach(j=>{
+    const d=document.createElement('div');
+    d.style.cssText='text-align:center;color:#1A1A1A;font-size:11px;font-weight:bold';
+    d.innerHTML=`<div id="pq_${j.numero}"></div>n°${j.numero}`;
+    zone.appendChild(d);
+    new QRCode(document.getElementById(`pq_${j.numero}`),{text:`${baseUrl()}?j=${j.token}`,width:jetons.length>1?100:160,height:jetons.length>1?100:160,colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});
+  });
+  document.getElementById('modalPret').classList.add('visible');
+}
+function imprimerPret(){
+  if(!pret) return;
+  const win=window.open('','_blank','width=420,height=500');
+  if(!win){ alert('Fenêtre d\'impression bloquée : autorisez les popups pour ce site.'); return; }
+  const j=pret.jetons[0];
+  if(pret.opt.avance) imprimerPlusieurs(win, pret.jetons);
+  else imprimerTicket(win, j.numero, j.token, pret.opt.employe?{employe:pret.opt.employe}:{table:pret.opt.table});
+}
+function erreur(quoi, e){
+  console.error(e);
+  const detail=(e&&(e.code||e.message))||'inconnue';
+  setStatut(`❌ Erreur pendant la ${quoi} : ${detail}`);
+  alert(`❌ Le jeton n'a pas pu être créé.\n\nDétail : ${detail}\n\nVérifiez la connexion internet, puis réessayez. Si ça continue, déconnectez-vous et reconnectez-vous.`);
+}
+
+function reimprimer(id){
+  const j=tousJetons[id];
+  if(!j){ alert('Ce jeton n\'existe plus.'); return; }
+  const win=window.open('','_blank','width=420,height=500');
+  if(!win){ alert('Fenêtre d\'impression bloquée : autorisez les popups pour ce site.'); return; }
+  if(j.type==='employe') imprimerTicket(win, j.numero, j.token, {employe:j.employeNom||''});
+  else if(j.statut==='actif') imprimerTicket(win, j.numero, j.token, {table:j.table});
+  else imprimerPlusieurs(win, [j]);
+}
+
+// Ticket 80 mm identique à celui de la caisse
+function imprimerTicket(win, numero, token, opt){
+  const url=`${baseUrl()}?j=${token}`;
+  const employe=opt.employe?echapper(opt.employe):null;
+  const sousTitre=employe?'Repas employé — 10 points offerts':'Scannez pour commander depuis votre table';
+  const ligne=employe?`🍽️ ${employe}`:`Table ${opt.table}`;
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${employe?'Repas employé':'Jeton Table '+opt.table}</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:900;color:#000;background:white;width:80mm;margin:0 auto;padding:8mm;text-align:center}
+.title{font-size:15px;margin-bottom:4px}.sub{font-size:10px;margin-bottom:10px;border-bottom:2px dashed black;padding-bottom:6px}
+.table-num{font-size:18px;margin:10px 0}#qr{display:flex;justify-content:center;margin:10px 0}
+.footer{font-size:10px;margin-top:10px;border-top:2px dashed black;padding-top:6px}
+@media print{body{width:80mm;margin:0;padding:6mm}@page{margin:0;size:80mm auto}}</style></head><body>
+<div class="title">🐚 MOULE & SMILE</div><div class="sub">${sousTitre}</div>
+<div class="table-num">${ligne}</div><div id="qr"></div>
+<div class="footer">Jeton n°${numero}<br>À usage unique — ne pas transférer</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+<script>new QRCode(document.getElementById('qr'),{text:"${url}",width:160,height:160,colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});
+window.onload=function(){setTimeout(function(){window.print();setTimeout(function(){window.close()},1500)},400)};<\/script>
+</body></html>`);
+  win.document.close();
+}
+
+function imprimerPlusieurs(win, jetons){
+  const base=baseUrl();
+  const etiquettes=jetons.map(j=>`<div class="etiquette"><div class="title">🐚 MOULE & SMILE</div>
+<div class="sub">Bienvenue ! Votre table va vous être attribuée</div><div id="qr_${j.numero}" class="qr"></div>
+<div class="footer">Jeton n°${j.numero}<br>À usage unique — ne pas transférer</div></div>`).join('');
+  const scripts=jetons.map(j=>`new QRCode(document.getElementById('qr_${j.numero}'),{text:"${base}?j=${j.token}",width:160,height:160,colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});`).join('');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Jetons à l'avance</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,Helvetica,sans-serif;color:#000;background:white}
+.etiquette{width:80mm;margin:0 auto;padding:8mm;text-align:center;page-break-after:always;font-weight:900}
+.etiquette:last-child{page-break-after:auto}.title{font-size:15px;margin-bottom:4px}
+.sub{font-size:10px;margin-bottom:10px;border-bottom:2px dashed black;padding-bottom:6px}
+.qr{display:flex;justify-content:center;margin:10px 0}.footer{font-size:10px;margin-top:10px;border-top:2px dashed black;padding-top:6px}
+@media print{.etiquette{margin:0;padding:6mm}@page{margin:0;size:80mm auto}}</style></head><body>
+${etiquettes}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+<script>${scripts}
+window.onload=function(){setTimeout(function(){window.print();setTimeout(function(){window.close()},1500)},400)};<\/script>
+</body></html>`);
+  win.document.close();
+}
+
+function imprimerUnJeton(numero, token){
+  const win=window.open('','_blank','width=420,height=500');
+  if(!win){ alert('Fenêtre bloquée : autorisez les popups pour ce site.'); return; }
+  const url=`${baseUrl()}?j=${token}`;
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Jeton n°${numero}</title>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;font-weight:900;width:80mm;margin:0 auto;padding:8mm;text-align:center}
+.t{font-size:15px;margin-bottom:4px}.s{font-size:10px;border-bottom:2px dashed #000;padding-bottom:6px;margin-bottom:10px}
+#qr{display:flex;justify-content:center;margin:10px 0}.f{font-size:10px;border-top:2px dashed #000;padding-top:6px;margin-top:10px}
+@media print{body{margin:0;padding:6mm}@page{margin:0;size:80mm auto}}</style></head><body>
+<div class="t">🐚 MOULE & SMILE</div><div class="s">Scannez pour commander depuis votre table</div>
+<div id="qr"></div><div class="f">Jeton n°${numero}<br>Jeton réutilisable — merci de le laisser sur la table</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+<script>new QRCode(document.getElementById('qr'),{text:"${url}",width:160,height:160,colorDark:"#000",colorLight:"#fff",correctLevel:QRCode.CorrectLevel.H});
+window.onload=function(){setTimeout(function(){window.print();setTimeout(function(){window.close()},1500)},400)};<\/script>
+</body></html>`);
+  win.document.close();
+}
+</script>
+</body>
+</html>

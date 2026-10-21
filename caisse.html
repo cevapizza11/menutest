@@ -1,0 +1,3044 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>[TEST] Moule & Smile — Caisse</title>
+<link rel="icon" type="image/png" href="icon-caisse.png">
+<link rel="apple-touch-icon" href="icon-caisse-180.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#111;color:#fff;min-height:100vh;padding-bottom:20px}
+
+/* HEADER */
+.header{background:#1A1A1A;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #D4AF37;position:sticky;top:0;z-index:100}
+.header h1{color:#D4AF37;font-size:16px}
+.stats-row{display:flex;gap:16px}
+.stat{text-align:center}
+.stat .num{color:#D4AF37;font-size:20px;font-weight:bold}
+.stat .lbl{color:#888;font-size:9px}
+
+/* TABS */
+.nav-tabs{display:flex;background:#1A1A1A;border-bottom:2px solid #333;overflow-x:auto}
+.nav-tab{flex:1;min-width:80px;padding:11px 8px;text-align:center;cursor:pointer;font-size:11px;color:#888;border-bottom:3px solid transparent;font-weight:bold;white-space:nowrap;transition:all .2s}
+.nav-tab.active{color:#D4AF37;border-bottom-color:#D4AF37}
+.badge-r{display:inline-block;background:#C0392B;color:white;font-size:9px;font-weight:bold;padding:1px 5px;border-radius:10px;margin-left:3px;vertical-align:middle}
+
+/* CONTENU */
+.tab-content{display:none;padding:14px;max-width:1200px;margin:0 auto}
+.tab-content.actif{display:block}
+
+/* STATUT */
+.status-bar{background:#1A3A2A;border:1px solid #1A7A50;border-radius:10px;padding:8px 14px;margin-bottom:12px;font-size:12px;color:#4ABA80;display:flex;align-items:center;gap:8px}
+.bandeau-retard{display:none;background:#3A1A1A;border-bottom:2px solid #C0392B;color:#ff8a8a;text-align:center;font-weight:bold;font-size:14px;padding:10px;animation:pulseRetard 1.5s infinite}
+.bandeau-retard.visible{display:block}
+@keyframes pulseRetard{0%,100%{background:#3A1A1A}50%{background:#5A2020}}
+.addition-card.en-retard{border:2px solid #C0392B;animation:pulseCard 1.5s infinite}
+@keyframes pulseCard{0%,100%{box-shadow:0 0 0 rgba(192,57,43,0)}50%{box-shadow:0 0 14px rgba(192,57,43,.7)}}
+.badge-retard{background:#C0392B;color:#fff;font-size:10px;font-weight:bold;padding:3px 8px;border-radius:10px;margin-left:8px}
+.dot{width:8px;height:8px;background:#4ABA80;border-radius:50%;animation:blink 1.5s infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* FILTRE */
+.filtre-bar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.btn-filtre{padding:6px 12px;border-radius:20px;font-size:11px;font-weight:bold;cursor:pointer;border:1px solid #333;background:#2A2A2A;color:#aaa;transition:all .2s}
+.btn-filtre.actif{background:#D4AF37;color:#1A1A1A;border-color:#D4AF37}
+.btn-sm{padding:6px 12px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid #C0392B;background:#2A2A2A;color:#C0392B}
+.recherche-bar{display:flex;gap:8px;margin-bottom:12px}
+.recherche-input{flex:1;background:#1E1E1E;border:2px solid #333;border-radius:10px;padding:12px 14px;color:#fff;font-size:16px;outline:none;transition:border-color .2s}
+.recherche-input:focus{border-color:#D4AF37}
+.recherche-input::placeholder{color:#666}
+
+/* GRILLE COMMANDES */
+.commandes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.cuisine-compteurs{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin:12px 0 18px}
+.cuisine-compteur{background:#242424;border:2px solid #D4AF37;border-radius:14px;padding:14px 10px;text-align:center}
+.cuisine-compteur.zero{border-color:#333;opacity:.55}
+.cuisine-compteur .cc-nb{font-size:48px;font-weight:bold;color:#D4AF37;line-height:1}
+.cuisine-compteur.zero .cc-nb{color:#666}
+.cuisine-compteur .cc-nom{font-size:14px;font-weight:bold;color:#fff;margin-top:6px}
+.btn-plein{background:#D4AF37;color:#1a1a1a;border:none;border-radius:10px;padding:10px 16px;font-weight:bold;font-size:14px;cursor:pointer;margin:10px 0 0}
+#cuisineKiosk{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:99999;background:#111;color:#fff;overflow:auto;padding:10px 12px 16px;-webkit-overflow-scrolling:touch}
+body.cuisine-plein #cuisineKiosk{display:block}
+/* iPad/iPhone Safari : la barre d'état et le bouton ✕ du plein écran recouvrent le haut de l'écran */
+@supports (-webkit-touch-callout:none){
+  #cuisineKiosk{padding-top:calc(env(safe-area-inset-top,0px) + 34px)}
+}
+body.cuisine-plein{overflow:hidden}
+.kiosk-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.kiosk-top .kt{font-size:13px;color:#888}
+.btn-quitter{background:#333;color:#fff;border:1px solid #666;border-radius:10px;padding:8px 14px;font-weight:bold;font-size:14px;cursor:pointer}
+.kiosk-cols{display:flex;gap:12px;align-items:flex-start}
+.kiosk-col{flex:1;min-width:0}
+.kiosk-col:first-child{border-right:1px solid #333;padding-right:12px}
+.kiosk-titre{font-size:13px;font-weight:bold;letter-spacing:1px;margin:10px 0 6px;padding-left:2px}
+.kiosk-titre.faire{color:#D4AF37}
+.kiosk-titre.fait{color:#4ABA80}
+.kiosk-tickets{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;align-items:start}
+.kiosk-ticket{display:flex;flex-direction:column;gap:6px;background:#242424;border:2px solid #555;border-radius:12px;padding:10px 12px}
+.kiosk-ticket.nouvelle{border-color:#E67E22}
+.kiosk-ticket .kt-tete{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid #444;padding-bottom:5px}
+.kiosk-ticket .kt-tete b{color:#D4AF37;font-size:16px}
+.kiosk-ticket .kt-tete span{color:#888;font-size:12px}
+.kiosk-ticket .kt-ligne{display:flex;gap:8px;align-items:baseline;font-size:15px;line-height:1.3;color:#fff}
+.kiosk-ticket .kt-ligne .q{color:#D4AF37;font-weight:bold;min-width:30px}
+.kiosk-ticket .kt-ligne .alerte{color:#ff8a8a;font-size:12px}
+.kiosk-ticket button{background:#1A7A50;color:#fff;border:none;border-radius:8px;padding:10px;font-weight:bold;font-size:16px;cursor:pointer;margin-top:2px}
+.kiosk-grille{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+.kiosk-grille .cuisine-compteur{padding:8px 6px;border-radius:10px}
+.kiosk-grille .cc-nb{font-size:34px}
+.kiosk-grille .cc-nom{font-size:12px;margin-top:3px}
+.kiosk-grille .cc-detail{font-size:10px;margin-top:3px}
+.kiosk-grille.fait .cuisine-compteur{border-color:#1A7A50}
+.kiosk-grille.fait .cc-nb{color:#4ABA80}
+.kiosk-grille.fait .cuisine-compteur.zero{border-color:#333}
+.kiosk-grille.fait .cuisine-compteur.zero .cc-nb{color:#666}
+.cuisine-duo{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-top:6px}
+.cuisine-duo-col{flex:1;min-width:300px}
+.cuisine-duo .cuisine-compteurs{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));margin:6px 0 10px;gap:8px}
+.cuisine-duo .cuisine-compteur{padding:10px 8px}
+.cuisine-duo .cc-nb{font-size:38px}
+.cuisine-compteurs.fait .cuisine-compteur{border-color:#1A7A50}
+.cuisine-compteurs.fait .cuisine-compteur .cc-nb{color:#4ABA80}
+.cuisine-compteurs.fait .cuisine-compteur.zero{border-color:#333}
+.cuisine-compteurs.fait .cuisine-compteur.zero .cc-nb{color:#666}
+.cuisine-histo-titre{font-size:14px;font-weight:bold;color:#aaa;margin:22px 0 8px;letter-spacing:.5px}
+.histo-carte{opacity:.85}
+.histo-carte .cmd-table{font-size:18px}
+.btn-remettre{background:#444;color:#fff;border:1px solid #777;border-radius:8px;padding:8px 12px;font-weight:bold;font-size:13px;cursor:pointer;width:100%}
+.cuisine-compteur .cc-detail{font-size:11px;color:#4ABA80;margin-top:6px;line-height:1.5}
+.jetons-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px;margin-top:14px}
+.jeton-pastille{background:#242424;border:2px solid #444;border-radius:12px;padding:10px 6px;text-align:center;cursor:pointer;transition:transform .1s}
+.jeton-pastille:active{transform:scale(.95)}
+.jeton-pastille.libre{border-color:#555}
+.jeton-pastille.actif{background:#1E3A2E;border-color:#4ABA80}
+.jeton-pastille.jeton-employe{background:#2E1E3A;border-color:#8E44AD}
+.jeton-pastille.jeton-employe .jp-num,.jeton-pastille.jeton-employe .jp-sub{color:#C89EDB}
+.jeton-pastille.en-attente{background:#3A2E1A;border-color:#D4941E}
+.jeton-pastille.en-attente .jp-num{color:#D4941E}
+.jeton-pastille.en-attente .jp-sub{color:#D4941E}
+.jeton-pastille .jp-num{font-weight:bold;font-size:15px;color:#ddd}
+.jeton-pastille.actif .jp-num{color:#4ABA80}
+.jeton-pastille .jp-sub{font-size:10px;color:#888;margin-top:3px}
+.jeton-pastille.actif .jp-sub{color:#4ABA80}
+.jp-print{position:absolute;top:2px;right:2px;background:#1A2A3A;border:1px solid #2a6ab5;border-radius:6px;font-size:12px;padding:2px 5px;cursor:pointer;line-height:1}
+
+/* CARTE COMMANDE */
+.cmd-card{background:#1E1E1E;border:2px solid #333;border-radius:14px;padding:14px;transition:border-color .3s}
+.cmd-card.nouvelle{border-color:#D4AF37;animation:pulse 2s infinite}
+.cmd-card.en_addition{border-color:#1A7A50}
+.cmd-card.regle{opacity:.4;border-color:#333}
+.cmd-card.cmd-prioritaire{box-shadow:0 0 0 2px #4ABAFF inset}
+.badge-prio{display:inline-block;background:#4ABAFF;color:#0A2A3A;font-size:10px;font-weight:bold;padding:2px 8px;border-radius:20px;margin-left:6px;vertical-align:middle}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(212,175,55,.4)}50%{box-shadow:0 0 0 8px rgba(212,175,55,0)}}
+.cmd-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.cmd-table{font-size:24px;font-weight:bold;color:#D4AF37}
+.cmd-meta{text-align:right}
+.cmd-heure{font-size:11px;color:#888;background:#2A2A2A;padding:2px 8px;border-radius:20px;display:inline-block}
+.cmd-statut{font-size:10px;margin-top:3px}
+.cmd-items{margin-bottom:8px}
+.cmd-item-row{padding:3px 0;font-size:13px;color:#ddd;display:flex;justify-content:space-between;border-bottom:1px solid #222}
+.cmd-item-row:last-child{border-bottom:none}
+.cmd-total{color:#D4AF37;font-weight:bold;font-size:15px;padding-top:8px;border-top:1px solid #333;margin-bottom:8px}
+.cmd-actions{display:flex;gap:6px}
+.btn-vu{flex:2;padding:8px;background:#1A7A50;border:none;border-radius:8px;color:white;font-size:12px;font-weight:bold;cursor:pointer}
+.btn-archive{flex:1;padding:8px;background:#2A2A2A;border:1px solid #555;border-radius:8px;color:#aaa;font-size:11px;cursor:pointer}
+
+/* ALERTES */
+.alerte-card{background:#1A0A0A;border:2px solid #C0392B;border-radius:12px;padding:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;animation:pulse-rouge 1.5s infinite}
+@keyframes pulse-rouge{0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,.4)}50%{box-shadow:0 0 0 8px rgba(192,57,43,0)}}
+.alerte-info .alerte-titre{color:#C0392B;font-size:16px;font-weight:bold}
+.alerte-info .alerte-sub{color:#888;font-size:12px;margin-top:2px}
+.btn-ack{background:#C0392B;border:none;border-radius:8px;color:white;padding:10px 16px;font-weight:bold;cursor:pointer;font-size:13px}
+
+/* ADDITIONS */
+.addition-card{background:#1E1E1E;border:2px solid #C0392B;border-radius:14px;padding:16px;margin-bottom:12px}
+.addition-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.addition-table-num{color:#C0392B;font-size:22px;font-weight:bold}
+.addition-total{color:#D4AF37;font-size:30px;font-weight:bold}
+.addition-nb{color:#888;font-size:12px;margin-top:2px}
+.cmd-groupe{background:#2A2A2A;border-radius:8px;padding:10px;margin-bottom:8px}
+.cmd-groupe-heure{color:#D4AF37;font-size:11px;font-weight:bold;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #333}
+.cmd-groupe-item{display:flex;justify-content:space-between;font-size:12px;color:#ddd;padding:3px 0}
+.cmd-groupe-subtotal{text-align:right;font-size:11px;color:#888;margin-top:4px;padding-top:4px;border-top:1px solid #333}
+.addition-actions{display:flex;gap:8px}
+.btn-imprimer{flex:1;padding:10px;background:#2A2A2A;border:2px solid #D4AF37;border-radius:8px;color:#D4AF37;font-weight:bold;font-size:13px;cursor:pointer}
+.btn-encaisser{flex:1;padding:10px;background:#C0392B;border:none;border-radius:8px;color:white;font-weight:bold;font-size:13px;cursor:pointer}
+
+/* HISTORIQUE */
+.histo-card{background:#1E1E1E;border:1px solid #333;border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer;transition:border-color .2s}
+.histo-card:hover{border-color:#D4AF37}
+.histo-header{display:flex;justify-content:space-between;align-items:center}
+.histo-table{color:#D4AF37;font-weight:bold;font-size:14px}
+.histo-total{color:#D4AF37;font-weight:bold;font-size:16px}
+.histo-heure{color:#888;font-size:11px;margin-top:2px}
+.histo-detail{display:none;margin-top:10px;padding-top:10px;border-top:1px solid #333}
+.histo-detail.open{display:block}
+
+/* CA */
+.ca-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.ca-box{background:#1E1E1E;border:2px solid #333;border-radius:12px;padding:16px;text-align:center}
+.ca-box .ca-num{font-size:26px;font-weight:bold;color:#D4AF37}
+.ca-box .ca-lbl{font-size:11px;color:#888;margin-top:4px}
+.ca-table{width:100%;border-collapse:collapse;font-size:12px}
+.ca-table th{background:#1A1A1A;color:#D4AF37;padding:8px;text-align:left}
+.ca-table td{padding:6px 8px;border-bottom:1px solid #222;color:#ddd}
+
+/* UTILS */
+.empty{text-align:center;padding:50px;color:#444}
+.empty .em{font-size:40px;margin-bottom:12px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#D4AF37;color:#1A1A1A;padding:10px 22px;border-radius:30px;font-weight:bold;font-size:13px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+.version{text-align:center;padding:10px;color:#333;font-size:10px}
+
+/* BOUTON EDITER SUR LES CARTES */
+.btn-editer{background:#2A2A2A;border:1px solid #D4AF37;color:#D4AF37;padding:8px;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer}
+
+/* MODAL EDITION ARTICLES */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.75);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.visible{display:flex}
+.modal-box{background:#1E1E1E;border:2px solid #D4AF37;border-radius:16px;padding:20px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto}
+.modal-box h3{color:#D4AF37;font-size:17px;margin-bottom:4px}
+.modal-box .modal-sub{color:#888;font-size:12px;margin-bottom:14px}
+.edit-item-row{display:flex;align-items:center;gap:8px;background:#2A2A2A;border-radius:8px;padding:8px 10px;margin-bottom:6px}
+.edit-item-nom{flex:1;font-size:13px;color:#fff}
+.edit-item-prix{width:70px;background:#111;border:1px solid #444;border-radius:6px;color:#D4AF37;font-weight:bold;text-align:center;padding:5px 4px;font-size:13px}
+.edit-item-del{background:#C0392B;border:none;color:white;border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:13px;flex-shrink:0}
+.edit-total-row{display:flex;justify-content:space-between;align-items:center;background:#2A2A2A;border:1px solid #D4AF37;border-radius:8px;padding:10px 12px;margin:12px 0;font-weight:bold}
+.edit-total-row .val{color:#D4AF37;font-size:18px}
+.add-item-form{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.add-item-form input{background:#2A2A2A;border:1px solid #444;border-radius:8px;color:#fff;padding:8px 10px;font-size:13px}
+.add-item-form input.nom{flex:2;min-width:120px}
+.add-item-form input.prix{flex:1;min-width:70px}
+.btn-add-item{background:#1A7A50;border:none;color:white;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:bold;cursor:pointer;white-space:nowrap}
+.modal-actions{display:flex;gap:8px;margin-top:14px}
+.btn-annuler-modal{flex:1;background:#333;border:none;color:#aaa;padding:12px;border-radius:8px;font-weight:bold;cursor:pointer}
+.btn-valider-modal{flex:2;background:#D4AF37;border:none;color:#1A1A1A;padding:12px;border-radius:8px;font-weight:bold;cursor:pointer}
+
+/* MODAL MOT DE PASSE */
+.pwd-input{width:100%;background:#111;border:2px solid #D4AF37;border-radius:10px;color:#D4AF37;font-size:22px;font-weight:bold;text-align:center;padding:14px;letter-spacing:6px;margin-bottom:14px}
+
+/* ÉCRAN DE CONNEXION ÉQUIPE (ajouté le 20/09/2026 — sécurisation Firestore) */
+#screenLoginEquipe{position:fixed;inset:0;background:#111;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
+#screenLoginEquipe.masque{display:none}
+.login-box{background:#1A1A1A;border:2px solid #D4AF37;border-radius:16px;padding:32px 28px;max-width:340px;width:100%;text-align:center}
+.login-box h2{color:#D4AF37;font-size:18px;margin-bottom:8px}
+.login-box p{color:#888;font-size:12px;margin-bottom:18px}
+.login-box input{width:100%;background:#111;border:2px solid #444;border-radius:10px;color:#fff;font-size:16px;text-align:center;padding:12px;margin-bottom:12px}
+.login-box input:focus{border-color:#D4AF37;outline:none}
+.login-box button{width:100%;background:#D4AF37;border:none;color:#1A1A1A;padding:13px;border-radius:10px;font-weight:bold;font-size:14px;cursor:pointer}
+.login-erreur{color:#ff8a8a;font-size:12px;margin-top:10px;min-height:16px}
+
+/* VERSION DANS L'EN-TÊTE */
+.build-tag{display:block;font-size:9px;color:#777;font-weight:normal;margin-top:2px}
+
+/* MODAL MODE DE PAIEMENT (ajouté le 17/10/2026) */
+.paiement-total{color:#D4AF37;font-size:34px;font-weight:bold;text-align:center;margin:6px 0 14px}
+.paiement-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.btn-mode-pay{background:#2A2A2A;border:2px solid #D4AF37;border-radius:12px;color:#fff;padding:16px 8px;font-size:26px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px}
+.btn-mode-pay span{font-size:14px;font-weight:bold;color:#D4AF37}
+.btn-mode-pay:active{transform:scale(.96);background:#3A3A2A}
+.btn-mixte{width:100%;background:#1A2A3A;border:1px solid #2a6ab5;color:#8ac4ff;border-radius:10px;padding:12px;font-weight:bold;font-size:13px;cursor:pointer;margin-bottom:6px}
+.mixte-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.mixte-lbl{flex:1;font-size:13px;color:#fff}
+.mixte-input{width:90px;background:#111;border:1px solid #D4AF37;border-radius:8px;color:#D4AF37;font-weight:bold;font-size:16px;text-align:right;padding:8px}
+.btn-reste{background:#333;border:1px solid #555;color:#ccc;border-radius:8px;padding:8px;font-size:11px;cursor:pointer;white-space:nowrap}
+.mixte-reste{text-align:center;font-size:14px;margin:10px 0 4px;color:#ddd}
+.btn-valider-modal:disabled{opacity:.4;cursor:not-allowed}
+.pay-badge{display:inline-block;background:#2A2A2A;border:1px solid #444;color:#ddd;font-size:10px;padding:2px 7px;border-radius:10px;margin:3px 4px 0 0}
+</style>
+</head>
+<body>
+<div id="bandeauModeTest" style="position:fixed;top:3px;left:50%;transform:translateX(-50%);z-index:2147483647;pointer-events:none;background:#d6332a;color:#fff;font:bold 11px/1 Arial,sans-serif;letter-spacing:1px;padding:5px 12px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,.5);opacity:.93;white-space:nowrap">🧪 MODE TEST · base menutest · rien n'est réel</div>
+<script>window.MODE_TEST=true;</script>
+
+<!-- ÉCRAN DE CONNEXION ÉQUIPE (mot de passe unique partagé) -->
+<div id="screenLoginEquipe" class="masque">
+  <div class="login-box">
+    <h2>🔒 Moule & Smile — Caisse</h2>
+    <p>Code d'accès équipe</p>
+    <input type="password" id="loginPwdInput" placeholder="Mot de passe équipe" autocomplete="current-password" onkeydown="if(event.key==='Enter')connexionEquipe()">
+    <button onclick="connexionEquipe()">Se connecter</button>
+    <div class="login-erreur" id="loginErreur"></div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>🐚 <span id="motCaisse" onclick="tapMotCaisse()" style="cursor:default;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent">CAISSE</span> — Moule & Smile<span class="build-tag">v.21/10/2026 10:15 TEST</span></h1>
+  <div class="stats-row">
+    <div class="stat"><div class="num" id="statNouv">0</div><div class="lbl">Nouvelles</div></div>
+    <div class="stat"><div class="num" id="statAdd">0</div><div class="lbl">Additions</div></div>
+    <div class="stat"><div class="num" id="statCA">0€</div><div class="lbl">CA jour</div></div>
+  </div>
+</div>
+
+<!-- NAVIGATION -->
+<div class="nav-tabs">
+  <div class="nav-tab actif" id="tab-btn-commandes" onclick="switchTab('commandes')">
+    📋 Commandes <span class="badge-r" id="badgeCmd" style="display:none">0</span>
+  </div>
+  <div class="nav-tab" id="tab-btn-deux" onclick="switchTab('deux')">
+    👥 Tables 2 pers. <span class="badge-r" id="badgeDeux" style="display:none">0</span>
+  </div>
+  <div class="nav-tab" id="tab-btn-cuisine" onclick="switchTab('cuisine')">
+    🍳 Cuisine <span class="badge-r" id="badgeCuisine" style="display:none">0</span>
+  </div>
+  <div class="nav-tab" id="tab-btn-additions" onclick="switchTab('additions')">
+    🧾 Additions <span class="badge-r" id="badgeAdd" style="display:none">0</span>
+  </div>
+  <div class="nav-tab" id="tab-btn-historique" onclick="switchTab('historique')">📚 Historique</div>
+  <div class="nav-tab" id="tab-btn-ca" onclick="switchTab('ca')">💰 CA</div>
+  <div class="nav-tab" id="tab-btn-jetons" onclick="switchTab('jetons')">🎫 Jetons</div>
+  <div class="nav-tab" id="tab-btn-recharges" onclick="switchTab('recharges')">🔄 Recharges</div>
+  <div class="nav-tab" id="tab-btn-stats" onclick="switchTab('stats')">📊 Stats</div>
+</div>
+
+<div class="bandeau-retard" id="bandeauRetard"></div>
+
+<div class="toast" id="toast"></div>
+
+<!-- MODAL MOT DE PASSE -->
+<div class="modal-overlay" id="modalPwd">
+  <div class="modal-box" style="text-align:center">
+    <h3>🔒 Code requis</h3>
+    <div class="modal-sub">Pour modifier une commande</div>
+    <input type="password" class="pwd-input" id="pwdInput" inputmode="numeric" maxlength="6" placeholder="••••">
+    <div class="modal-actions">
+      <button class="btn-annuler-modal" onclick="fermerModalPwd()">Annuler</button>
+      <button class="btn-valider-modal" onclick="validerPwd()">Valider</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITION ARTICLES -->
+<div class="modal-overlay" id="modalEditCmd">
+  <div class="modal-box">
+    <h3 id="editCmdTitre">✏️ Modifier la commande</h3>
+    <div class="modal-sub" id="editCmdSub"></div>
+    <div id="editItemsList"></div>
+    <div class="edit-total-row">
+      <span>TOTAL</span>
+      <span class="val" id="editTotalAffiche">0,00 €</span>
+    </div>
+    <div class="add-item-form">
+      <input type="text" class="nom" id="newItemNom" placeholder="Nom article">
+      <input type="number" class="prix" id="newItemPrix" placeholder="Prix" step="0.10">
+      <button class="btn-add-item" onclick="ajouterArticleEdition()">+ Ajouter</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-annuler-modal" onclick="fermerModalEdit()">Annuler</button>
+      <button class="btn-valider-modal" onclick="validerEditionCommande()">✅ Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ONGLET COMMANDES ===== -->
+<div class="tab-content actif" id="tab-commandes">
+  <div class="status-bar"><div class="dot"></div>🚨 Mode rush : cliquez "Nouvelles uniquement" pour ne voir que les commandes non traitées — "✓ Vu" les bascule en Addition</div>
+  <div class="filtre-bar">
+    <button class="btn-filtre actif" id="filtreToutes" onclick="setFiltre('toutes',this)">Toutes</button>
+    <button class="btn-filtre" id="filtreActives" onclick="setFiltre('actives',this)">Actives seulement</button>
+    <button class="btn-filtre" id="filtreNouv" onclick="setFiltre('nouvelles',this)">🚨 Nouvelles uniquement</button>
+    <button class="btn-sm" onclick="resetJour()">🗑 Tout effacer</button>
+  </div>
+  <div id="alertesContainer"></div>
+  <div class="commandes-grid" id="commandesGrid">
+    <div class="empty"><div class="em">🐚</div><p>En attente de commandes...</p></div>
+  </div>
+</div>
+
+<!-- ===== ONGLET TABLES 2 PERSONNES (renfort) ===== -->
+<div class="tab-content" id="tab-deux">
+  <div class="status-bar"><div class="dot"></div>⚡ Vue dédiée renfort — uniquement les commandes des tables de 2 personnes, priorité rotation rapide</div>
+  <div class="commandes-grid" id="commandesGridDeux">
+    <div class="empty"><div class="em">👥</div><p>Aucune commande de table 2 personnes</p></div>
+  </div>
+</div>
+
+<!-- ===== ONGLET CUISINE (plats à préparer, regroupés) ===== -->
+<div class="tab-content" id="tab-cuisine">
+  <div class="status-bar"><div class="dot"></div>🍳 Plats à préparer — seuls les produits cochés « Afficher dans l'onglet Cuisine » (admin) apparaissent ici. « ✓ Prêt » retire la commande de cette vue.</div>
+  <button class="btn-plein" onclick="basculerCuisinePlein(true)">⛶ Plein écran (compteurs seuls)</button>
+  <div class="cuisine-duo">
+    <div class="cuisine-duo-col">
+      <div class="kiosk-titre fait">✅ FAIT</div>
+      <div class="cuisine-compteurs fait" id="cuisineCompteursFait"></div>
+    </div>
+    <div class="cuisine-duo-col">
+      <div class="kiosk-titre faire">🔥 À FAIRE</div>
+      <div class="cuisine-compteurs" id="cuisineCompteurs"></div>
+    </div>
+  </div>
+  <div class="commandes-grid" id="cuisineTickets"></div>
+  <div class="cuisine-histo-titre">📜 HISTORIQUE CUISINE — commandes déjà prêtes (service en cours)</div>
+  <div class="commandes-grid" id="cuisineHistorique"></div>
+</div>
+
+<!-- Mode plein écran cuisine : compteurs seuls, À FAIRE + FAIT -->
+<div id="cuisineKiosk">
+  <div class="kiosk-top"><span class="kt">🍳 Cuisine — mise à jour en direct</span><button class="btn-quitter" onclick="basculerCuisinePlein(false)">✕ Quitter</button></div>
+  <div class="kiosk-cols">
+    <div class="kiosk-col">
+      <div class="kiosk-titre fait">✅ FAIT</div>
+      <div class="kiosk-grille fait" id="kioskFait"></div>
+    </div>
+    <div class="kiosk-col">
+      <div class="kiosk-titre faire">🔥 À FAIRE</div>
+      <div class="kiosk-grille" id="kioskAFaire"></div>
+    </div>
+  </div>
+  <div class="kiosk-titre" style="color:#aaa;margin-top:14px">🎫 COMMANDES EN COURS — appuie sur ✓ quand c'est prêt</div>
+  <div class="kiosk-tickets" id="kioskTickets"></div>
+</div>
+
+<!-- ===== ONGLET ADDITIONS ===== -->
+<div class="tab-content" id="tab-additions">
+  <div class="status-bar"><div class="dot"></div>Tables dont l'addition est demandée ou en cours</div>
+  <div class="recherche-bar">
+    <input type="text" id="rechercheTable" class="recherche-input" placeholder="🔍 Rechercher par numéro de table..." inputmode="numeric" oninput="filtrerAdditions()">
+    <button class="btn-sm" onclick="viderRecherche()" id="btnViderRecherche" style="display:none">✕ Effacer</button>
+  </div>
+  <div id="additionsList">
+    <div class="empty"><div class="em">🧾</div><p>Aucune addition en cours</p></div>
+  </div>
+</div>
+
+<!-- ===== ONGLET HISTORIQUE ===== -->
+<div class="tab-content" id="tab-historique">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <span style="color:#D4AF37;font-weight:bold">Tables réglées</span>
+    <button onclick="viderHistorique()" style="background:#333;border:none;color:#aaa;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px">🗑 Vider</button>
+  </div>
+  <div id="historiqueList">
+    <div class="empty"><div class="em">📚</div><p>Aucun historique</p></div>
+  </div>
+</div>
+
+<!-- ===== ONGLET CA ===== -->
+<div class="tab-content" id="tab-ca">
+  <div class="ca-grid">
+    <div class="ca-box"><div class="ca-num" id="caTotal">0 €</div><div class="ca-lbl">CA Total</div></div>
+    <div class="ca-box"><div class="ca-num" id="caNb">0</div><div class="ca-lbl">Commandes</div></div>
+    <div class="ca-box"><div class="ca-num" id="caCouverts">0</div><div class="ca-lbl">Couverts</div></div>
+    <div class="ca-box"><div class="ca-num" id="caMoyen">0 €</div><div class="ca-lbl">Ticket moyen / couvert</div></div>
+  </div>
+  <table class="ca-table">
+    <thead><tr><th>Heure</th><th>Table</th><th>Articles</th><th>Total</th><th>Statut</th></tr></thead>
+    <tbody id="caTableBody"></tbody>
+  </table>
+</div>
+
+<!-- ===== ONGLET JETONS ===== -->
+<div class="tab-content" id="tab-jetons">
+  <div class="status-bar"><div class="dot"></div>Imprimez un jeton jetable au moment de placer une table — il s'active tout seul, se libère automatiquement à l'encaissement.</div>
+  <div style="background:#242424;border:1px solid #D4AF37;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px">
+    <label for="choixAdresseApp" style="color:#D4AF37;font-weight:bold">🔗 Adresse mise dans les QR codes :</label>
+    <select id="choixAdresseApp" onchange="changerAdresseApp(this.value)" style="margin-left:6px;padding:6px;border-radius:8px;background:#1a1a1a;color:#fff;border:1px solid #555;font-size:13px">
+      <option value="firebase">Page client de TEST (même dépôt)</option>
+      <option value="github">Page client de TEST (même dépôt)</option>
+    </select>
+    <div id="adresseAppAffichee" style="color:#888;font-size:11px;margin-top:4px;word-break:break-all"></div>
+  </div>
+  <div id="occupationCounter" style="background:#1A2A1A;border:1px solid #2ab54a;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#8aff9d;font-weight:bold;text-align:center"></div>
+  <button class="btn-encaisser" style="width:100%;font-size:15px;padding:14px;margin-bottom:8px" onclick="ouvrirModalNouvelleTable()">🖨️ Nouvelle table — imprimer un jeton</button>
+  <button class="btn-encaisser" style="width:100%;font-size:15px;padding:14px;margin-bottom:8px;background:#2A6FB5" onclick="imprimerJetonAvance()">🖨️ Imprimer à l'avance (sans table — à attribuer ensuite)</button>
+  <button class="btn-encaisser" style="width:100%;font-size:15px;padding:14px;margin-bottom:14px;background:#8E44AD" onclick="creerJetonEmploye()">🍽️ Nouveau repas employé (10 points offerts)</button>
+  <div class="recherche-bar">
+    <input type="number" id="rechercheJeton" class="recherche-input" placeholder="🔍 Rechercher par n° de jeton OU n° de table..." inputmode="numeric" oninput="filtrerJetons()">
+    <button class="btn-sm" onclick="document.getElementById('rechercheJeton').value='';filtrerJetons()" id="btnViderRechercheJeton" style="display:none">✕ Effacer</button>
+  </div>
+  <div class="filtre-bar">
+    <button class="btn-filtre actif" id="filtreJetonsTous" onclick="setFiltreJetons('tous',this)">Tous</button>
+    <button class="btn-filtre" id="filtreJetonsLibres" onclick="setFiltreJetons('libre',this)">Libres</button>
+    <button class="btn-filtre" id="filtreJetonsActifs" onclick="setFiltreJetons('actif',this)">Actifs</button>
+  </div>
+  <div class="jetons-grid" id="jetonsGrid">
+    <div class="empty"><div class="em">🎫</div><p>Aucun jeton — générez-les depuis qrcodes.html</p></div>
+  </div>
+</div>
+
+<!-- ===== ONGLET RECHARGES (moules à volonté) ===== -->
+<div class="tab-content" id="tab-recharges">
+  <div class="status-bar"><div class="dot"></div>Enregistrez une recharge de marmite — alimente les statistiques (recharges/table pour les achats).</div>
+  <div class="recherche-bar">
+    <input type="number" id="rechercheTableRecharge" class="recherche-input" placeholder="🔍 N° de table..." inputmode="numeric" oninput="filtrerTablesRecharge()">
+  </div>
+  <div id="tablesRechargeGrid" class="jetons-grid"></div>
+  <div style="margin-top:20px">
+    <h3 style="color:#D4AF37;font-size:14px;margin-bottom:10px">📋 Recharges du service en cours</h3>
+    <div id="rechargesRecentes"></div>
+  </div>
+</div>
+
+<!-- MODAL RECHARGE -->
+<div class="modal-overlay" id="modalRecharge">
+  <div class="modal-box" style="text-align:center">
+    <h3 id="rechargeModalTitre">🔄 Recharge — Table ?</h3>
+    <div class="modal-sub" id="rechargeModalSub">Quel plat rechargez-vous ?</div>
+    <div id="rechargeContenuList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px"></div>
+    <div class="modal-actions">
+      <button class="btn-annuler-modal" onclick="fermerModalRecharge()">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ONGLET STATS ===== -->
+<div class="tab-content" id="tab-stats">
+  <div class="status-bar"><div class="dot"></div>Durée moyenne par table et recharges — basé sur les visites enregistrées.</div>
+  <div class="filtre-bar">
+    <button class="btn-filtre actif" id="filtreStats7" onclick="setFiltreStats(7,this)">7 derniers jours</button>
+    <button class="btn-filtre" id="filtreStats30" onclick="setFiltreStats(30,this)">30 derniers jours</button>
+    <button class="btn-filtre" id="filtreStatsTout" onclick="setFiltreStats(9999,this)">Tout</button>
+  </div>
+  <button class="btn-sm" style="width:100%;margin-top:10px;background:#3A1E1E;color:#E88;border:1px solid #C0392B;padding:10px" onclick="reinitialiserStats()">🗑️ Réinitialiser toutes les statistiques</button>
+  <div id="statsContent" style="margin-top:14px"></div>
+</div>
+
+<!-- MODAL ACTIVATION JETON -->
+<div class="modal-overlay" id="modalActiverJeton">
+  <div class="modal-box" style="text-align:center">
+    <h3 id="jetonModalTitre">🎫 Jeton n°?</h3>
+    <div class="modal-sub">Quelle table pour ce jeton ?</div>
+    <input type="number" class="pwd-input" id="jetonTableInput" inputmode="numeric" placeholder="N° de table" min="1" max="150">
+
+    <div style="text-align:left;font-size:11px;color:#D4AF37;font-weight:bold;margin:10px 0 4px">🪑 Nombre de tables 90×90 assemblées (pour la capacité)</div>
+    <input type="number" class="pwd-input" id="jetonUnitesInput" inputmode="numeric" placeholder="Ex: 2" min="1" max="15" style="font-size:16px;letter-spacing:normal">
+
+    <div style="text-align:left;font-size:11px;color:#D4AF37;font-weight:bold;margin:10px 0 4px">👥 Nombre de couverts (personnes)</div>
+    <input type="number" class="pwd-input" id="jetonCouvertsInput" inputmode="numeric" placeholder="Ex: 4" min="1" max="30" style="font-size:16px;letter-spacing:normal">
+
+    <div class="modal-actions">
+      <button class="btn-annuler-modal" onclick="fermerModalJeton()">Annuler</button>
+      <button class="btn-valider-modal" onclick="validerActivationJeton()">✅ Activer</button>
+    </div>
+    <button class="btn-sm" id="btnReimprimerJeton" onclick="reimprimerJetonDepuisModal()" style="display:none;margin-top:10px;width:100%;background:#1A2A3A;color:#8ac4ff;border:1px solid #2a6ab5">🖨️ Réimprimer ce jeton</button>
+    <button class="btn-sm" id="btnCopierLienJeton" onclick="copierLienJetonDepuisModal()" style="display:none;margin-top:8px;width:100%;background:#1A2A1A;color:#8aff9d;border:1px solid #2ab54a">📋 Copier le lien (test sur ordinateur)</button>
+    <button class="btn-sm" id="btnLibererJeton" onclick="libererJetonDepuisModal()" style="display:none;margin-top:10px;width:100%;background:#3A1E1E;color:#E88;border:1px solid #C0392B">🔓 Libérer ce jeton</button>
+    <button class="btn-sm" id="btnSupprimerJeton" onclick="supprimerJetonDepuisModal()" style="margin-top:8px;width:100%;background:#1A1A1A;color:#888;border:1px solid #555">🗑️ Supprimer définitivement</button>
+  </div>
+</div>
+
+<!-- MODAL MODE DE PAIEMENT (ajouté le 17/10/2026) -->
+<div class="modal-overlay" id="modalPaiement">
+  <div class="modal-box">
+    <h3 id="paiementTitre" style="text-align:center">💰 Encaisser</h3>
+    <div class="modal-sub" style="text-align:center" id="paiementSousTitre">Comment le client a-t-il payé ?</div>
+    <div class="paiement-total" id="paiementTotal">0,00 €</div>
+    <div class="paiement-grid" id="paiementModesSimples"></div>
+    <button class="btn-mixte" id="btnBasculerMixte" onclick="basculerPaiementMixte()">➗ Paiement en plusieurs fois (mixte)</button>
+    <div id="paiementMixte" style="display:none"></div>
+    <div class="modal-actions">
+      <button class="btn-annuler-modal" onclick="fermerModalPaiement()">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalNouvelleTable">
+  <div class="modal-box" style="text-align:center">
+    <h3>🖨️ Nouvelle table</h3>
+    <div class="modal-sub">Renseigne les informations pour imprimer le jeton</div>
+
+    <div style="text-align:left;font-size:11px;color:#D4AF37;font-weight:bold;margin:10px 0 4px">N° de table</div>
+    <input type="number" class="pwd-input" id="ntTableInput" inputmode="numeric" placeholder="Ex: 12" min="1" max="150" style="font-size:16px;letter-spacing:normal">
+
+    <div style="text-align:left;font-size:11px;color:#D4AF37;font-weight:bold;margin:10px 0 4px">🪑 Nombre de tables 90×90 assemblées (pour la capacité)</div>
+    <input type="number" class="pwd-input" id="ntUnitesInput" inputmode="numeric" placeholder="1 par défaut" min="1" max="15" style="font-size:16px;letter-spacing:normal">
+
+    <div style="text-align:left;font-size:11px;color:#D4AF37;font-weight:bold;margin:10px 0 4px">👥 Nombre de couverts (personnes)</div>
+    <input type="number" class="pwd-input" id="ntCouvertsInput" inputmode="numeric" placeholder="Ex: 4" min="1" max="30" style="font-size:16px;letter-spacing:normal">
+
+    <div class="modal-actions">
+      <button class="btn-annuler-modal" onclick="fermerModalNouvelleTable()">Annuler</button>
+      <button class="btn-valider-modal" onclick="validerNouvelleTable()">🖨️ Créer et imprimer</button>
+    </div>
+  </div>
+</div>
+
+<div class="version">v.21/10/2026 10:15 TEST — Moule & Smile Caisse</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script>
+// ============================================================
+// FIREBASE
+// ============================================================
+const firebaseConfig={apiKey:"AIzaSyCRZDRNtVF95yX7qYCvc__9NjGa41JTdMQ",authDomain:"menutest-f4629.firebaseapp.com",projectId:"menutest-f4629",storageBucket:"menutest-f4629.firebasestorage.app",messagingSenderId:"834088175472",appId:"1:834088175472:web:d45de5bc283c205608b1b5"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+const fonctions=firebase.app().functions('europe-west3');
+
+// ============================================================
+// CONNEXION ÉQUIPE (ajouté le 20/09/2026 — sécurisation Firestore)
+// Un seul compte partagé pour toute l'équipe (caisse.html + admin.html).
+// L'écran de connexion reste affiché tant qu'on n'est pas identifié ;
+// une fois connecté, Firebase garde la session sur cet appareil (pas besoin
+// de retaper le mot de passe à chaque ouverture, sauf déconnexion explicite).
+// ============================================================
+const EMAIL_EQUIPE='tmjumeaux@gmail.com'; // compte équipe du projet de test menutest
+firebase.auth().onAuthStateChanged(user=>{
+  const estEquipeConnectee=user && !user.isAnonymous;
+  document.getElementById('screenLoginEquipe').classList.toggle('masque', !!estEquipeConnectee);
+  if(estEquipeConnectee){
+    // Ne se lance qu'une fois identifié — avant, les requêtes Firestore seraient refusées.
+    chargerHistorique();
+  }
+});
+async function connexionEquipe(){
+  const pwd=document.getElementById('loginPwdInput').value;
+  const err=document.getElementById('loginErreur');
+  err.textContent='';
+  if(!pwd){err.textContent='Entrez le mot de passe';return;}
+  try{
+    await firebase.auth().signInWithEmailAndPassword(EMAIL_EQUIPE,pwd);
+  }catch(e){
+    err.textContent='❌ Mot de passe incorrect';
+  }
+}
+// ⚠️ Adaptez cette URL à celle de votre app si elle change un jour (utilisée pour impression + copie de lien)
+// Adresse de la page client mise dans les QR codes / liens des jetons (choix dans l'onglet Jetons).
+// Les deux adresses lisent les mêmes jetons Firestore : un jeton marche sur les deux.
+const URLS_APP={
+  github:new URL('index.html',location.href).href,   // MODE TEST : page client du dépôt de test
+  firebase:new URL('index.html',location.href).href
+};
+let adresseAppChoisie='firebase'; // adresse par défaut des QR codes (modifiable dans l'onglet Jetons)
+try{const v=localStorage.getItem('adresseApp'); if(v&&URLS_APP[v]) adresseAppChoisie=v;}catch(e){}
+function baseUrlApp(){return URLS_APP[adresseAppChoisie]||URLS_APP.github;}
+function changerAdresseApp(v){
+  if(!URLS_APP[v]) return;
+  adresseAppChoisie=v;
+  try{localStorage.setItem('adresseApp',v);}catch(e){}
+  const el=document.getElementById('adresseAppAffichee'); if(el) el.textContent=baseUrlApp();
+  showToast('🔗 Les prochains QR codes utiliseront : '+(v==='firebase'?'Firebase (web.app)':'GitHub (ancienne adresse)'));
+}
+(function(){
+  const sel=document.getElementById('choixAdresseApp'); if(sel) sel.value=adresseAppChoisie;
+  const el=document.getElementById('adresseAppAffichee'); if(el) el.textContent=baseUrlApp();
+})();
+
+// Lecture seule de la carte — uniquement pour connaître les consignes de service par produit
+// (ex: "Apporter une marmite"). Ne JAMAIS écrire dans ce document depuis caisse.html.
+let carteConsignes={};
+let carteSauces=[]; // options de la famille "sauce" (pour la recharge rapide de marmite)
+let carteFamillesOptions={}; // TOUTES les familles d'options (sauce, croquant, coulis, nappage...) — transmission Hiboutik générique
+let carteCapacite={salle:0,terrasse:0,terrasseOuverte:false};
+let carteCuisineParNom={}; // nom produit (minuscule) → libellé cuisine, pour retrouver les choix des menus enfant/ado
+let carteCuisine={}; // id produit → libellé cuisine (produits cochés « Afficher dans l'onglet Cuisine »)
+db.collection('config').doc('carte_v2').onSnapshot(doc=>{
+  carteConsignes=(doc.exists && doc.data().consignesCuisine)||{};
+  const famillesOptions=(doc.exists && doc.data().famillesOptions)||{};
+  carteSauces=(famillesOptions.sauce&&famillesOptions.sauce.options||[]).filter(o=>o.actif);
+  carteFamillesOptions=famillesOptions;
+  carteCapacite=(doc.exists && doc.data().capaciteSalle)||{salle:0,terrasse:0,terrasseOuverte:false};
+  // Produits à afficher dans l'onglet Cuisine (cochés dans l'admin) : id produit → libellé de regroupement
+  const cuisine={};
+  ((doc.exists&&doc.data().categories)||[]).forEach(cat=>(cat.produits||[]).forEach(p=>{
+    if(p.cuisine) cuisine[p.id]=(p.cuisineLabel||'').trim()||p.nom;
+  }));
+  carteCuisine=cuisine;
+  const parNom={};
+  ((doc.exists&&doc.data().categories)||[]).forEach(cat=>(cat.produits||[]).forEach(p=>{
+    if(p.cuisine) parNom[(p.nom||'').trim().toLowerCase()]=(p.cuisineLabel||'').trim()||p.nom;
+  }));
+  ((doc.exists&&doc.data().enfantMenu)||[]).forEach(p=>{
+    if(p.cuisine) parNom[(p.nom||'').trim().toLowerCase()]=(p.cuisineLabel||'').trim()||p.nom;
+  });
+  carteCuisineParNom=parNom;
+  updateOccupationCounter();
+  renderCuisine();
+});
+
+// ============================================================
+// STATE
+// ============================================================
+let allCommandes={};
+let allAdditions={};
+let allAlertes={};
+let historique=[];
+let filtreCourant='toutes';
+let ticketsData={};
+
+// ============================================================
+// UTILS
+// ============================================================
+function playBeep(n=1){
+  for(let i=0;i<n;i++){
+    setTimeout(()=>{
+      try{
+        const ctx=new AudioContext();
+        const o=ctx.createOscillator();
+        o.connect(ctx.destination);
+        o.frequency.value=880;
+        o.start();
+        setTimeout(()=>o.stop(),200);
+      }catch(e){}
+    },i*350);
+  }
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ============================================================
+// NAVIGATION ONGLETS
+// ============================================================
+function switchTab(nom){
+  // Masquer tous les contenus
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('actif'));
+  // Désactiver tous les boutons
+  document.querySelectorAll('.nav-tab').forEach(el=>el.classList.remove('actif'));
+  // Activer l'onglet demandé
+  document.getElementById('tab-'+nom).classList.add('actif');
+  document.getElementById('tab-btn-'+nom).classList.add('actif');
+  // Actions spéciales
+  if(nom==='historique') chargerHistorique();
+  if(nom==='deux') renderCommandesDeux();
+  if(nom==='cuisine') renderCuisine();
+  if(nom==='additions') filtrerAdditions();
+  if(nom==='stats') chargerStats(filtreStatsJours);
+}
+
+// ============================================================
+// ÉCOUTE FIRESTORE — COMMANDES (uniquement le service en cours)
+// ============================================================
+const HEURE_COUPURE_SERVICE=5; // 5h du matin — heure à laquelle un nouveau service commence
+
+function getDebutService(){
+  const d=new Date();
+  // Si on est avant 5h du matin, le "service en cours" a démarré la veille à 5h
+  if(d.getHours()<HEURE_COUPURE_SERVICE){
+    d.setDate(d.getDate()-1);
+  }
+  d.setHours(HEURE_COUPURE_SERVICE,0,0,0);
+  return firebase.firestore.Timestamp.fromDate(d);
+}
+
+let unsubscribeCommandes=null;
+
+function demarrerEcouteCommandes(){
+  if(unsubscribeCommandes) unsubscribeCommandes(); // stoppe l'ancien listener si déjà actif
+
+  unsubscribeCommandes=db.collection('commandes')
+    .where('timestamp','>=',getDebutService())
+    .onSnapshot(snap=>{
+      let hasNew=false;
+      snap.docChanges().forEach(change=>{
+        if(change.type==='added' && !allCommandes[change.doc.id]) hasNew=true;
+        if(change.type==='removed'){
+          delete allCommandes[change.doc.id];
+        } else {
+          allCommandes[change.doc.id]={id:change.doc.id,...change.doc.data()};
+        }
+      });
+      if(hasNew) playBeep(1);
+      renderCommandes();
+      renderCommandesDeux();
+      renderCuisine();
+      renderCA();
+      updateStats();
+    }, err=>{console.error('Commandes listener error:',err);});
+}
+
+demarrerEcouteCommandes();
+
+// Re-filtrer automatiquement à 5h du matin si la caisse reste ouverte sans rafraîchissement
+// (heure choisie car aucun service ne tourne encore à cette heure-là, donc aucune commande
+// de la veille ne peut être perdue de vue avant d'être encaissée)
+(function planifierReinitService(){
+  const maintenant=new Date();
+  const prochaineCoupure=new Date(maintenant);
+  prochaineCoupure.setHours(HEURE_COUPURE_SERVICE,0,5,0); // 05:00:05
+  if(prochaineCoupure<=maintenant){
+    prochaineCoupure.setDate(prochaineCoupure.getDate()+1);
+  }
+  const delaiMs=prochaineCoupure-maintenant;
+  setTimeout(()=>{
+    allCommandes={}; // on repart sur une base propre pour le nouveau service
+    demarrerEcouteCommandes();
+    showToast('🌅 Nouveau service — commandes réinitialisées');
+    planifierReinitService(); // reprogrammer pour le lendemain
+  }, delaiMs);
+})();
+
+// ============================================================
+// ÉCOUTE FIRESTORE — ADDITIONS
+// ============================================================
+db.collection('additions').onSnapshot(snap=>{
+  let hasNew=false;
+  snap.docChanges().forEach(change=>{
+    const data=change.doc.data();
+    if(change.type==='added' && !allAdditions[change.doc.id] && data.statut==='demandee') hasNew=true;
+    if(change.type==='removed'){
+      delete allAdditions[change.doc.id];
+    } else {
+      allAdditions[change.doc.id]={id:change.doc.id,...change.doc.data()};
+    }
+  });
+  if(hasNew) playBeep(2);
+  renderAdditions();
+  updateStats();
+}, err=>{console.error('Additions listener error:',err);});
+
+// ============================================================
+// ÉCOUTE FIRESTORE — ALERTES
+// ============================================================
+db.collection('alertes').onSnapshot(snap=>{
+  let hasNew=false;
+  snap.docChanges().forEach(change=>{
+    if(change.type==='added' && !allAlertes[change.doc.id]) hasNew=true;
+    if(change.type==='removed'){
+      delete allAlertes[change.doc.id];
+    } else {
+      allAlertes[change.doc.id]={id:change.doc.id,...change.doc.data()};
+    }
+  });
+  if(hasNew) playBeep(3);
+  renderAlertes();
+  updateStats();
+}, err=>{console.error('Alertes listener error:',err);});
+
+// ============================================================
+// ÉCOUTE FIRESTORE — JETONS
+// ============================================================
+let allJetons={};
+let filtreJetonsCourant='tous';
+let jetonEnCoursActivation=null;
+
+// Retrouve le libellé à afficher pour un numéro de "table" — "🍽️ Prénom" pour un repas employé
+// (bande 500+), "Table N" sinon. Utilisé partout où l'app affiche normalement "Table X".
+function libelleTable(t){
+  const je=Object.values(allJetons).find(j=>j.type==='employe' && j.table===t && j.statut==='actif');
+  return je?`🍽️ ${je.employeNom||'Employé'}`:`Table ${t}`;
+}
+
+db.collection('jetons').orderBy('numero').onSnapshot(snap=>{
+  snap.docChanges().forEach(change=>{
+    if(change.type==='removed'){
+      delete allJetons[change.doc.id];
+    } else {
+      allJetons[change.doc.id]={id:change.doc.id,...change.doc.data()};
+    }
+  });
+  renderJetons();
+}, err=>{console.error('Jetons listener error:',err);});
+
+function setFiltreJetons(mode,el){
+  filtreJetonsCourant=mode;
+  document.querySelectorAll('#tab-jetons .btn-filtre').forEach(b=>b.classList.remove('actif'));
+  el.classList.add('actif');
+  renderJetons();
+}
+
+function filtrerJetons(){
+  document.getElementById('btnViderRechercheJeton').style.display=document.getElementById('rechercheJeton').value?'inline-block':'none';
+  renderJetons();
+}
+
+function renderJetons(){
+  updateOccupationCounter();
+  renderTablesRecharge();
+  const grid=document.getElementById('jetonsGrid');
+  const recherche=document.getElementById('rechercheJeton').value.trim();
+  let jetons=Object.values(allJetons);
+
+  if(filtreJetonsCourant==='libre') jetons=jetons.filter(j=>j.statut==='libre');
+  if(filtreJetonsCourant==='actif') jetons=jetons.filter(j=>j.statut==='actif');
+  if(recherche) jetons=jetons.filter(j=>String(j.numero)===recherche || (j.statut==='actif' && String(j.table)===recherche));
+
+  jetons.sort((a,b)=>(a.numero||0)-(b.numero||0));
+
+  if(!jetons.length){
+    grid.innerHTML='<div class="empty"><div class="em">🎫</div><p>Aucun jeton ne correspond</p></div>';
+    return;
+  }
+
+  grid.innerHTML=jetons.map(j=>{
+    const actif=j.statut==='actif';
+    const enAttente=j.statut==='en_attente';
+    const estEmploye=j.type==='employe';
+    const classe=(actif?'actif':(enAttente?'en-attente':'libre'))+(estEmploye?' jeton-employe':'');
+    const sousLibelle=estEmploye?`🍽️ ${j.employeNom||'Employé'}`:(actif?'Table '+j.table+(j.couverts?' ('+j.couverts+'p)':''):(enAttente?'⏳ À attribuer':'Libre'));
+    return `<div class="jeton-pastille ${classe}" style="position:relative">
+      <div onclick="ouvrirModalJeton('${j.id}',${j.numero})">
+        <div class="jp-num">${estEmploye?'🍽️':'🎫'} ${j.numero}</div>
+        <div class="jp-sub">${sousLibelle}</div>
+      </div>
+      ${actif?`<button class="jp-print" onclick="event.stopPropagation();imprimerTicketJeton(${j.numero},'${j.token}',${j.table},null,${estEmploye?`'${(j.employeNom||'').replace(/'/g,"\\'")}'`:'null'});showToast('🖨️ Réimpression jeton n°${j.numero}')" title="Réimprimer">🖨️</button>`:''}
+      ${enAttente?`<button class="jp-print" onclick="event.stopPropagation();imprimerTicketJeton(${j.numero},'${j.token}',null);showToast('🖨️ Réimpression jeton n°${j.numero}')" title="Réimprimer">🖨️</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+function updateOccupationCounter(){
+  const el=document.getElementById('occupationCounter');
+  if(!el)return;
+  const actifs=Object.values(allJetons).filter(j=>j.statut==='actif');
+  const unitesOccupees=actifs.reduce((s,j)=>s+(j.unites||1),0);
+  const totalCouverts=actifs.reduce((s,j)=>s+(j.couverts||0),0);
+  const nb2=actifs.filter(j=>j.couverts===2).length;
+
+  const capaciteTotale=(carteCapacite.salle||0)+(carteCapacite.terrasseOuverte?(carteCapacite.terrasse||0):0);
+
+  if(capaciteTotale>0){
+    const pct=Math.round((unitesOccupees/capaciteTotale)*100);
+    el.textContent=`🪑 ${unitesOccupees}/${capaciteTotale} unités occupées (${pct}%)${totalCouverts?` — ${totalCouverts} couvert(s)`:''}${nb2?` — dont ${nb2} table(s) de 2`:''}`;
+  } else {
+    el.textContent=`🪑 ${actifs.length} table(s) occupée(s)${totalCouverts?` — ${totalCouverts} couvert(s)`:''}${nb2?` — dont ${nb2} table(s) de 2`:''} — configurez la capacité dans Réglages`;
+  }
+}
+
+// ============================================================
+// RECHARGES DE PLATS À VOLONTÉ (moules, calamars, etc.)
+// ============================================================
+let tableRechargeEnCours=null;
+let platRechargeEnCours=null;
+let allRecharges={};
+
+// Liste des plats à volonté configurables — chargée/éditée depuis l'onglet Stats.
+// Format : [{nom:'Moules-frites à volonté', quantite:1.5, unite:'kg', sauce:true}, ...]
+let platsAVolonte=[];
+let platsQuantiteFixe=[]; // portions fixes : [{nom:'Fish and Chips', quantite:0.3, unite:'kg'}]
+
+db.collection('config').doc('statsParams').onSnapshot(doc=>{
+  const data=doc.exists?doc.data():{};
+  if(data.kgParMarmite && !data.platsAVolonte){
+    // Migration automatique depuis l'ancien réglage unique "kgParMarmite"
+    platsAVolonte=[{nom:'Moules-frites à volonté',quantite:data.kgParMarmite,unite:'kg',sauce:true}];
+  } else {
+    platsAVolonte=data.platsAVolonte||[];
+  }
+  platsQuantiteFixe=data.platsQuantiteFixe||[];
+  if(document.getElementById('tab-stats')?.classList.contains('actif')) chargerStats(filtreStatsJours);
+}, err=>console.error('statsParams listener error:',err));
+
+db.collection('recharges').orderBy('timestamp','desc').limit(100).onSnapshot(snap=>{
+  snap.docChanges().forEach(change=>{
+    if(change.type==='removed') delete allRecharges[change.doc.id];
+    else allRecharges[change.doc.id]={id:change.doc.id,...change.doc.data()};
+  });
+  renderRechargesRecentes();
+}, err=>console.error('Recharges listener error:',err));
+
+function filtrerTablesRecharge(){
+  renderTablesRecharge();
+}
+
+function renderTablesRecharge(){
+  const grid=document.getElementById('tablesRechargeGrid');
+  if(!grid)return;
+  const recherche=(document.getElementById('rechercheTableRecharge')?.value||'').trim();
+  let actifs=Object.values(allJetons).filter(j=>j.statut==='actif');
+  if(recherche) actifs=actifs.filter(j=>String(j.table).includes(recherche));
+  actifs.sort((a,b)=>(a.table||0)-(b.table||0));
+
+  if(!actifs.length){
+    grid.innerHTML='<div class="empty"><div class="em">🪑</div><p>Aucune table active</p></div>';
+    return;
+  }
+
+  grid.innerHTML=actifs.map(j=>`
+    <div class="jeton-pastille actif" onclick="ouvrirModalRecharge(${j.table})">
+      <div class="jp-num">🪑 ${j.table}</div>
+      <div class="jp-sub">🔄 Recharger</div>
+    </div>`).join('');
+}
+
+function ouvrirModalRecharge(tableNum){
+  tableRechargeEnCours=tableNum;
+  platRechargeEnCours=null;
+  document.getElementById('rechargeModalTitre').textContent=`🔄 Recharge — Table ${tableNum}`;
+  document.getElementById('rechargeModalSub').textContent='Quel plat rechargez-vous ?';
+  const list=document.getElementById('rechargeContenuList');
+
+  if(!platsAVolonte.length){
+    list.innerHTML=`<div style="color:#888;font-size:12px">Aucun plat à volonté configuré — ajoutez-en dans l'onglet 📊 Stats</div>`;
+  } else {
+    list.innerHTML=platsAVolonte.map((p,i)=>`
+      <button class="btn-valider-modal" style="width:100%" onclick="choisirPlatRecharge(${i})">${p.nom}</button>
+    `).join('');
+  }
+  document.getElementById('modalRecharge').classList.add('visible');
+}
+
+function choisirPlatRecharge(index){
+  platRechargeEnCours=platsAVolonte[index];
+  if(!platRechargeEnCours)return;
+
+  if(platRechargeEnCours.sauce && carteSauces.length){
+    document.getElementById('rechargeModalSub').textContent=`${platRechargeEnCours.nom} — quelle sauce ?`;
+    const list=document.getElementById('rechargeContenuList');
+    list.innerHTML=carteSauces.map(s=>`
+      <button class="btn-valider-modal" style="width:100%" onclick="validerRecharge('${s.nom.replace(/'/g,"\\'")}')">${s.nom}</button>
+    `).join('');
+  } else {
+    validerRecharge(null);
+  }
+}
+
+function fermerModalRecharge(){
+  tableRechargeEnCours=null;
+  platRechargeEnCours=null;
+  document.getElementById('modalRecharge').classList.remove('visible');
+}
+
+async function validerRecharge(sauceNom){
+  if(!tableRechargeEnCours||!platRechargeEnCours)return;
+  const tableNum=tableRechargeEnCours;
+  const platNom=platRechargeEnCours.nom;
+  try{
+    await db.collection('recharges').add({
+      table:tableNum,
+      plat:platNom,
+      sauce:sauceNom||null,
+      timestamp:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast(`✅ Recharge enregistrée — Table ${tableNum} (${platNom})`);
+  }catch(e){console.error(e);showToast('❌ Erreur recharge');}
+  fermerModalRecharge();
+}
+
+function renderRechargesRecentes(){
+  const el=document.getElementById('rechargesRecentes');
+  if(!el)return;
+  const recharges=Object.values(allRecharges).sort((a,b)=>{
+    const ta=a.timestamp?.toMillis?a.timestamp.toMillis():0;
+    const tb=b.timestamp?.toMillis?b.timestamp.toMillis():0;
+    return tb-ta;
+  });
+  if(!recharges.length){
+    el.innerHTML='<div class="empty"><div class="em">🔄</div><p>Aucune recharge enregistrée</p></div>';
+    return;
+  }
+  el.innerHTML=recharges.slice(0,30).map(r=>{
+    const heure=r.timestamp?.toDate?r.timestamp.toDate().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'--:--';
+    return `<div class="cmd-item-row"><span>🪑 Table ${r.table}${r.sauce?' — '+r.sauce:''}</span><span style="color:#888;font-size:11px">${heure}</span></div>`;
+  }).join('');
+}
+
+// ============================================================
+// STATS — durée par table, recharges
+// ============================================================
+let filtreStatsJours=7;
+
+function setFiltreStats(jours,el){
+  filtreStatsJours=jours;
+  document.querySelectorAll('#tab-stats .btn-filtre').forEach(b=>b.classList.remove('actif'));
+  el.classList.add('actif');
+  chargerStats(jours);
+}
+
+async function reinitialiserStats(){
+  if(!confirm('⚠️ Réinitialiser TOUTES les statistiques (durées, recharges, sauces) ?\n\nCeci supprime définitivement les données "Visites" et "Recharges". Les réglages (plats, quantités, conditionnements) sont conservés.\n\nCette action est irréversible.')) return;
+
+  try{
+    const container=document.getElementById('statsContent');
+    container.innerHTML='<div class="empty"><div class="em">⏳</div><p>Réinitialisation en cours...</p></div>';
+
+    // Suppression par lots de 400 (limite Firestore = 500 par batch)
+    async function viderCollection(nomCollection){
+      let snap=await db.collection(nomCollection).limit(400).get();
+      while(!snap.empty){
+        const b=db.batch();
+        snap.forEach(d=>b.delete(d.ref));
+        await b.commit();
+        snap=await db.collection(nomCollection).limit(400).get();
+      }
+    }
+
+    await viderCollection('visites');
+    await viderCollection('recharges');
+
+    showToast('✅ Statistiques réinitialisées');
+    chargerStats(filtreStatsJours);
+  }catch(e){
+    console.error('Erreur réinitialisation stats',e);
+    showToast('❌ Erreur réinitialisation');
+  }
+}
+
+async function chargerStats(jours){
+  const container=document.getElementById('statsContent');
+  container.innerHTML='<div class="empty"><div class="em">⏳</div><p>Chargement...</p></div>';
+
+  try{
+    let query=db.collection('visites').orderBy('heureDepart','desc').limit(1000);
+    const snap=await query.get();
+    const maintenant=Date.now();
+    const limiteMs=jours>=9999?Infinity:jours*24*60*60*1000;
+
+    let visites=snap.docs.map(d=>d.data()).filter(v=>{
+      if(limiteMs===Infinity)return true;
+      const t=v.heureDepart?.toMillis?v.heureDepart.toMillis():0;
+      return (maintenant-t)<=limiteMs;
+    });
+
+    // Regroupement : d'abord "Boisson seule" (peu importe le nombre de couverts, table sans plat commandé),
+    // puis par taille de table pour les visites "repas" uniquement.
+    const buckets={'🍹 Boisson seule':[],'2 pers.':[],'3-4 pers.':[],'5-8 pers.':[],'9+ pers.':[],'Inconnu':[]};
+    visites.forEach(v=>{
+      if(v.type==='boisson'){ buckets['🍹 Boisson seule'].push(v); return; }
+      const c=v.couverts;
+      if(!c) buckets['Inconnu'].push(v);
+      else if(c===2) buckets['2 pers.'].push(v);
+      else if(c<=4) buckets['3-4 pers.'].push(v);
+      else if(c<=8) buckets['5-8 pers.'].push(v);
+      else buckets['9+ pers.'].push(v);
+    });
+
+    const moyenne=arr=>arr.length?Math.round(arr.reduce((s,v)=>s+(v.dureeMinutes||0),0)/arr.length):null;
+    const dureeGlobale=moyenne(visites);
+
+    // Recharges sur la même période
+    let rechargesSnap;
+    try{
+      rechargesSnap=await db.collection('recharges').orderBy('timestamp','desc').limit(2000).get();
+    }catch(e){rechargesSnap={docs:[]};}
+    const recharges=rechargesSnap.docs.map(d=>d.data()).filter(r=>{
+      if(limiteMs===Infinity)return true;
+      const t=r.timestamp?.toMillis?r.timestamp.toMillis():0;
+      return (maintenant-t)<=limiteMs;
+    });
+    const rechargesParTable=visites.length?(recharges.length/visites.length).toFixed(1):'0';
+
+    // Historique des commandes initiales, sur la même période
+    let historiqueSnap;
+    try{
+      historiqueSnap=await db.collection('historique').orderBy('timestamp','desc').limit(1000).get();
+    }catch(e){historiqueSnap={docs:[]};}
+    const historiqueFiltre=historiqueSnap.docs.map(d=>d.data()).filter(data=>{
+      const t=data.timestamp?.toMillis?data.timestamp.toMillis():0;
+      return limiteMs===Infinity || (maintenant-t)<=limiteMs;
+    });
+
+    function jourStr(timestamp){
+      const d=timestamp?.toDate?timestamp.toDate():(timestamp?new Date(timestamp):new Date());
+      return d.toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'2-digit'});
+    }
+    function jourKey(timestamp){
+      const d=timestamp?.toDate?timestamp.toDate():(timestamp?new Date(timestamp):new Date());
+      return d.toISOString().slice(0,10);
+    }
+
+    function compterCommandesInitiales(nomPlat){
+      let n=0;
+      historiqueFiltre.forEach(data=>{
+        (data.commandes||[]).forEach(cmd=>{
+          (cmd.items||[]).forEach(item=>{
+            if((item.nom||'').trim().toLowerCase()===nomPlat.trim().toLowerCase()) n++;
+          });
+        });
+      });
+      return n;
+    }
+
+    // Détail jour par jour pour un plat : {clé date: {label, nbInitial, nbRecharges}}
+    function detailParJour(nomPlat,inclureRecharges){
+      const parJour={};
+      historiqueFiltre.forEach(data=>{
+        const key=jourKey(data.timestamp);
+        (data.commandes||[]).forEach(cmd=>{
+          (cmd.items||[]).forEach(item=>{
+            if((item.nom||'').trim().toLowerCase()===nomPlat.trim().toLowerCase()){
+              if(!parJour[key]) parJour[key]={label:jourStr(data.timestamp),nbInitial:0,nbRecharges:0};
+              parJour[key].nbInitial++;
+            }
+          });
+        });
+      });
+      if(inclureRecharges){
+        recharges.filter(r=>r.plat===nomPlat).forEach(r=>{
+          const key=jourKey(r.timestamp);
+          if(!parJour[key]) parJour[key]={label:jourStr(r.timestamp),nbInitial:0,nbRecharges:0};
+          parJour[key].nbRecharges++;
+        });
+      }
+      return Object.entries(parJour).sort((a,b)=>b[0].localeCompare(a[0]));
+    }
+
+    function conditionnementHtml(totalQte,plat){
+      if(!plat.condTaille||plat.condTaille<=0)return '';
+      const nb=Math.ceil(totalQte/plat.condTaille);
+      return `<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #444;font-size:13px;color:#8aff9d">📦 ≈ <b>${nb}</b> ${plat.condLabel||'conditionnement(s)'} (de ${plat.condTaille} ${plat.unite})</div>`;
+    }
+
+    let html='';
+
+    if(!visites.length){
+      html+='<div class="empty"><div class="em">📊</div><p>Aucune visite enregistrée sur cette période</p></div>';
+    } else {
+      html+=`
+        <div class="ca-box" style="margin-bottom:14px">
+          <div class="ca-num">${visites.length}</div>
+          <div class="ca-lbl">table(s) sur la période</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+          <div class="ca-box"><div class="ca-num">${dureeGlobale!==null?dureeGlobale+' min':'—'}</div><div class="ca-lbl">Durée moyenne globale</div></div>
+          <div class="ca-box"><div class="ca-num">${rechargesParTable}</div><div class="ca-lbl">Recharges / table</div></div>
+        </div>
+        <h3 style="color:#D4AF37;font-size:14px;margin-bottom:10px">⏱️ Durée moyenne par taille de table</h3>
+      `;
+      Object.entries(buckets).forEach(([label,arr])=>{
+        if(!arr.length)return;
+        const m=moyenne(arr);
+        html+=`<div class="cmd-item-row"><span>${label}</span><span style="color:#D4AF37;font-weight:bold">${m} min <span style="color:#888;font-weight:normal;font-size:11px">(${arr.length} table${arr.length>1?'s':''})</span></span></div>`;
+      });
+    }
+
+    // ===== PLATS À VOLONTÉ (avec recharge) =====
+    html+=`<h3 style="color:#D4AF37;font-size:14px;margin:20px 0 10px">🐚 Plats à volonté (avec recharges)</h3>`;
+
+    platsAVolonte.forEach((plat,i)=>{
+      const nbInitial=compterCommandesInitiales(plat.nom);
+      const rechargesPlat=recharges.filter(r=>r.plat===plat.nom);
+      const total=nbInitial+rechargesPlat.length;
+      const qte=total*(plat.quantite||0);
+      const detailJour=detailParJour(plat.nom,true);
+
+      html+=`
+        <div style="background:#242424;border:1px solid #444;border-radius:10px;padding:14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <span style="font-weight:bold;color:#fff;font-size:15px">${plat.nom}</span>
+            <button class="btn-sm" style="background:#3A1E1E;color:#E88;border:1px solid #C0392B;padding:4px 10px;font-size:11px" onclick="supprimerPlatAVolonte(${i})">🗑️</button>
+          </div>
+
+          <div style="text-align:center;background:#111;border-radius:10px;padding:14px;margin-bottom:10px">
+            <div style="font-size:32px;font-weight:900;color:#D4AF37">${qte.toFixed(1)} ${plat.unite}</div>
+            <div style="font-size:11px;color:#888;margin-top:2px">Total période — ${nbInitial} servies + ${rechargesPlat.length} recharge(s)</div>
+            ${conditionnementHtml(qte,plat)}
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+            <div><span style="color:#888;font-size:11px;display:block">Qté/portion</span><input type="number" value="${plat.quantite}" step="0.1" min="0" style="width:65px;background:#111;border:1px solid #D4AF37;border-radius:6px;color:#D4AF37;font-weight:bold;padding:6px;font-size:13px;text-align:center" onchange="majPlatAVolonte(${i},'quantite',this.value)"></div>
+            <div><span style="color:#888;font-size:11px;display:block">Taille cond.</span><input type="number" value="${plat.condTaille||''}" step="0.1" min="0" placeholder="Ex: 5" style="width:65px;background:#111;border:1px solid #4ABA80;border-radius:6px;color:#4ABA80;font-weight:bold;padding:6px;font-size:13px;text-align:center" onchange="majPlatAVolonte(${i},'condTaille',this.value)"></div>
+            <div><span style="color:#888;font-size:11px;display:block">Nom conditionnement</span><input type="text" value="${plat.condLabel||''}" placeholder="Ex: sacs" style="width:90px;background:#111;border:1px solid #4ABA80;border-radius:6px;color:#4ABA80;padding:6px;font-size:12px" onchange="majPlatAVolonte(${i},'condLabel',this.value)"></div>
+            <label style="display:flex;align-items:center;gap:4px;color:#888;font-size:12px;margin-left:auto">
+              <input type="checkbox" ${plat.sauce?'checked':''} onchange="majPlatAVolonte(${i},'sauce',this.checked)"> sauce
+            </label>
+          </div>
+
+          <div class="jour-detail-toggle" style="cursor:pointer;color:#D4AF37;font-size:12px;margin-top:8px" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">📅 Détail par jour (${detailJour.length} jour${detailJour.length>1?'s':''}) ▾</div>
+          <div style="display:none;margin-top:8px">
+            ${detailJour.map(([key,d])=>{
+              const t=d.nbInitial+d.nbRecharges;
+              const q=(t*(plat.quantite||0)).toFixed(1);
+              return `<div class="cmd-item-row" style="font-size:12px"><span>${d.label}</span><span style="color:#D4AF37">${d.nbInitial} servies + ${d.nbRecharges} rech. = <b>${q} ${plat.unite}</b></span></div>`;
+            }).join('')||'<div style="color:#666;font-size:12px">Aucune donnée</div>'}
+          </div>
+        </div>`;
+
+      if(plat.sauce){
+        const sauceCounts={};
+        rechargesPlat.forEach(r=>{
+          const s=r.sauce||'Non précisé';
+          sauceCounts[s]=(sauceCounts[s]||0)+1;
+        });
+        const sauceEntries=Object.entries(sauceCounts).sort((a,b)=>b[1]-a[1]);
+        if(sauceEntries.length){
+          html+=`<div style="margin:0 0 14px 14px">`;
+          sauceEntries.forEach(([sauce,count])=>{
+            html+=`<div class="cmd-item-row" style="font-size:12px"><span>🧂 ${sauce}</span><span style="color:#D4AF37;font-weight:bold">${count}</span></div>`;
+          });
+          html+=`</div>`;
+        }
+      }
+    });
+
+    html+=`
+      <div style="background:#1A2A1A;border:1px dashed #2ab54a;border-radius:10px;padding:10px 14px;margin-bottom:20px">
+        <input type="text" id="nouveauPlatVolonteNom" placeholder="Nom exact du plat (ex: Calamars à volonté)" style="width:100%;background:#111;border:1px solid #444;border-radius:6px;color:#fff;padding:8px;font-size:12px;margin-bottom:6px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <input type="number" id="nouveauPlatVolonteQte" placeholder="Qté/portion" step="0.1" min="0" style="width:80px;background:#111;border:1px solid #444;border-radius:6px;color:#fff;padding:8px;font-size:12px">
+          <select id="nouveauPlatVolonteUnite" style="background:#111;border:1px solid #444;border-radius:6px;color:#fff;padding:8px;font-size:12px">
+            <option value="kg">kg</option>
+            <option value="pièces">pièces</option>
+            <option value="portions">portions</option>
+          </select>
+          <label style="display:flex;align-items:center;gap:4px;color:#888;font-size:11px"><input type="checkbox" id="nouveauPlatVolonteSauce"> sauce</label>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <input type="number" id="nouveauPlatVolonteCondTaille" placeholder="Taille conditionnement (ex: 5)" step="0.1" min="0" style="width:130px;background:#111;border:1px solid #4ABA80;border-radius:6px;color:#4ABA80;padding:8px;font-size:12px">
+          <input type="text" id="nouveauPlatVolonteCondLabel" placeholder="Nom (ex: sacs, cartons)" style="flex:1;background:#111;border:1px solid #4ABA80;border-radius:6px;color:#4ABA80;padding:8px;font-size:12px">
+        </div>
+        <button class="btn-valider-modal" style="width:100%;margin-top:6px;padding:8px" onclick="ajouterPlatAVolonte()">+ Ajouter</button>
+      </div>
+    `;
+
+    // ===== PLATS À QUANTITÉ FIXE (sans recharge) =====
+    html+=`<h3 style="color:#D4AF37;font-size:14px;margin:20px 0 10px">🍽️ Plats à portion fixe</h3>`;
+
+    platsQuantiteFixe.forEach((plat,i)=>{
+      const nb=compterCommandesInitiales(plat.nom);
+      const qte=nb*(plat.quantite||0);
+      const detailJour=detailParJour(plat.nom,false);
+
+      html+=`
+        <div style="background:#242424;border:1px solid #444;border-radius:10px;padding:14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <span style="font-weight:bold;color:#fff;font-size:15px">${plat.nom}</span>
+            <button class="btn-sm" style="background:#3A1E1E;color:#E88;border:1px solid #C0392B;padding:4px 10px;font-size:11px" onclick="supprimerPlatQuantiteFixe(${i})">🗑️</button>
+          </div>
+
+          <div style="text-align:center;background:#111;border-radius:10px;padding:14px;margin-bottom:10px">
+            <div style="font-size:32px;font-weight:900;color:#D4AF37">${qte.toFixed(1)} ${plat.unite}</div>
+            <div style="font-size:11px;color:#888;margin-top:2px">Total période — ${nb} commandée(s)</div>
+            ${conditionnementHtml(qte,plat)}
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap">
+            <div><span style="color:#888;font-size:11px;display:block">Qté/portion</span><input type="number" value="${plat.quantite}" step="0.1" min="0" style="width:65px;background:#111;border:1px solid #D4AF37;border-radius:6px;color:#D4AF37;font-weight:bold;padding:6px;font-size:13px;text-align:center" onchange="majPlatQuantiteFixe(${i},'quantite',this.value)"></div>
+            <div><span style="color:#888;font-size:11px;display:block">Taille cond.</span><input type="number" value="${plat.condTaille||''}" step="0.1" min="0" placeholder="Ex: 40" style="width:65px;background:#111;border:1px solid #4ABA80;border-radius:6px;color:#4ABA80;font-weight:bold;padding:6px;font-size:13px;text-align:center" onchange="majPlatQuantiteFixe(${i},'condTaille',this.value)"></div>
+            <div><span style="color:#888;font-size:11px;display:block">Nom conditionnement</span><input type="text" value="${plat.condLabel||''}" placeholder="Ex: cartons" style="width:90px;background:#111;border:1px solid #4ABA80;border-radius:6px;color:#4ABA80;padding:6px;font-size:12px" onchange="majPlatQuantiteFixe(${i},'condLabel',this.value)"></div>
+          </div>
+
+          <div class="jour-detail-toggle" style="cursor:pointer;color:#D4AF37;font-size:12px;margin-top:8px" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">📅 Détail par jour (${detailJour.length} jour${detailJour.length>1?'s':''}) ▾</div>
+          <div style="display:none;margin-top:8px">
+            ${detailJour.map(([key,d])=>{
+              const q=(d.nbInitial*(plat.quantite||0)).toFixed(1);
+              return `<div class="cmd-item-row" style="font-size:12px"><span>${d.label}</span><span style="color:#D4AF37">${d.nbInitial} commandée(s) = <b>${q} ${plat.unite}</b></span></div>`;
+            }).join('')||'<div style="color:#666;font-size:12px">Aucune donnée</div>'}
+          </div>
+        </div>`;
+    });
+
+    html+=`
+      <div style="background:#1A2A1A;border:1px dashed #2ab54a;border-radius:10px;padding:10px 14px;margin-bottom:10px">
+        <input type="text" id="nouveauPlatFixeNom" placeholder="Nom exact du plat (ex: Fish and Chips)" style="width:100%;background:#111;border:1px solid #444;border-radius:6px;color:#fff;padding:8px;font-size:12px;margin-bottom:6px">
+        <div style="display:flex;gap:6px">
+          <input type="number" id="nouveauPlatFixeQte" placeholder="Qté/portion" step="0.1" min="0" style="width:80px;background:#111;border:1px solid #444;border-radius:6px;color:#fff;padding:8px;font-size:12px">
+          <select id="nouveauPlatFixeUnite" style="background:#111;border:1px solid #444;border-radius:6px;color:#fff;padding:8px;font-size:12px">
+            <option value="kg">kg</option>
+            <option value="pièces">pièces</option>
+            <option value="portions">portions</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <input type="number" id="nouveauPlatFixeCondTaille" placeholder="Taille conditionnement (ex: 40)" step="0.1" min="0" style="width:150px;background:#111;border:1px solid #4ABA80;border-radius:6px;color:#4ABA80;padding:8px;font-size:12px">
+          <input type="text" id="nouveauPlatFixeCondLabel" placeholder="Nom (ex: cartons)" style="flex:1;background:#111;border:1px solid #4ABA80;border-radius:6px;color:#4ABA80;padding:8px;font-size:12px">
+        </div>
+        <button class="btn-valider-modal" style="width:100%;margin-top:6px;padding:8px" onclick="ajouterPlatQuantiteFixe()">+ Ajouter</button>
+      </div>
+      <div style="color:#666;font-size:11px;margin-bottom:10px">💡 Pour un plat avec des quantités variables (ex: nuggets 4pcs enfant / 6pcs ado), ajoutez deux lignes avec des noms distincts s'ils apparaissent différemment sur vos tickets, ou ajustez la quantité en pièces moyennes.</div>
+    `;
+
+    container.innerHTML=html;
+  }catch(e){
+    console.error('Erreur chargement stats',e);
+    container.innerHTML='<div class="empty"><div class="em">❌</div><p>Erreur de chargement — voir console</p></div>';
+  }
+}
+
+async function sauvegarderStatsParams(){
+  try{
+    await db.collection('config').doc('statsParams').set({platsAVolonte,platsQuantiteFixe},{merge:true});
+  }catch(e){console.error(e);showToast('❌ Erreur sauvegarde réglages');}
+}
+
+function majPlatAVolonte(index,champ,valeur){
+  if(!platsAVolonte[index])return;
+  platsAVolonte[index][champ]=(champ==='quantite'||champ==='condTaille')?(parseFloat(valeur)||0):valeur;
+  sauvegarderStatsParams();
+  showToast('✅ Réglage enregistré');
+}
+
+function supprimerPlatAVolonte(index){
+  if(!confirm(`Supprimer "${platsAVolonte[index]?.nom}" des plats à volonté ?`))return;
+  platsAVolonte.splice(index,1);
+  sauvegarderStatsParams();
+  chargerStats(filtreStatsJours);
+}
+
+function ajouterPlatAVolonte(){
+  const nom=document.getElementById('nouveauPlatVolonteNom').value.trim();
+  const quantite=parseFloat(document.getElementById('nouveauPlatVolonteQte').value)||0;
+  const unite=document.getElementById('nouveauPlatVolonteUnite').value;
+  const sauce=document.getElementById('nouveauPlatVolonteSauce').checked;
+  const condTaille=parseFloat(document.getElementById('nouveauPlatVolonteCondTaille').value)||0;
+  const condLabel=document.getElementById('nouveauPlatVolonteCondLabel').value.trim();
+  if(!nom){showToast('⚠️ Indiquez le nom exact du plat');return;}
+  platsAVolonte.push({nom,quantite,unite,sauce,condTaille,condLabel});
+  sauvegarderStatsParams();
+  chargerStats(filtreStatsJours);
+}
+
+function majPlatQuantiteFixe(index,champ,valeur){
+  if(!platsQuantiteFixe[index])return;
+  platsQuantiteFixe[index][champ]=(champ==='quantite'||champ==='condTaille')?(parseFloat(valeur)||0):valeur;
+  sauvegarderStatsParams();
+  showToast('✅ Réglage enregistré');
+}
+
+function supprimerPlatQuantiteFixe(index){
+  if(!confirm(`Supprimer "${platsQuantiteFixe[index]?.nom}" ?`))return;
+  platsQuantiteFixe.splice(index,1);
+  sauvegarderStatsParams();
+  chargerStats(filtreStatsJours);
+}
+
+function ajouterPlatQuantiteFixe(){
+  const nom=document.getElementById('nouveauPlatFixeNom').value.trim();
+  const quantite=parseFloat(document.getElementById('nouveauPlatFixeQte').value)||0;
+  const unite=document.getElementById('nouveauPlatFixeUnite').value;
+  const condTaille=parseFloat(document.getElementById('nouveauPlatFixeCondTaille').value)||0;
+  const condLabel=document.getElementById('nouveauPlatFixeCondLabel').value.trim();
+  if(!nom){showToast('⚠️ Indiquez le nom exact du plat');return;}
+  platsQuantiteFixe.push({nom,quantite,unite,condTaille,condLabel});
+  sauvegarderStatsParams();
+  chargerStats(filtreStatsJours);
+}
+
+function ouvrirModalJeton(jetonId,numero){
+  const j=allJetons[jetonId];
+  const estActif=j&&j.statut==='actif';
+  const enAttente=j&&j.statut==='en_attente';
+  jetonEnCoursActivation=jetonId;
+  document.getElementById('jetonModalTitre').textContent=enAttente?`🎫 Jeton n°${numero} — Attribuer une table`:`🎫 Jeton n°${numero}`;
+  document.getElementById('jetonTableInput').value=estActif?j.table:'';
+  document.getElementById('jetonCouvertsInput').value=(estActif&&j.couverts)?j.couverts:'';
+  document.getElementById('jetonUnitesInput').value=(estActif&&j.unites)?j.unites:'';
+  document.getElementById('btnReimprimerJeton').style.display=estActif?'block':'none';
+  document.getElementById('btnCopierLienJeton').style.display=estActif?'block':'none';
+  document.getElementById('btnLibererJeton').style.display=estActif?'block':'none';
+  document.getElementById('modalActiverJeton').classList.add('visible');
+  setTimeout(()=>document.getElementById('jetonTableInput').focus(),100);
+}
+
+function fermerModalJeton(){
+  jetonEnCoursActivation=null;
+  document.getElementById('modalActiverJeton').classList.remove('visible');
+}
+
+function reimprimerJetonDepuisModal(){
+  if(!jetonEnCoursActivation) return;
+  const j=allJetons[jetonEnCoursActivation];
+  if(!j||j.statut!=='actif'){showToast('⚠️ Ce jeton n\'est plus actif');return;}
+  imprimerTicketJeton(j.numero, j.token, j.table);
+  showToast(`🖨️ Réimpression jeton n°${j.numero} — Table ${j.table}`);
+  fermerModalJeton();
+}
+
+function copierLienJetonDepuisModal(){
+  if(!jetonEnCoursActivation) return;
+  const j=allJetons[jetonEnCoursActivation];
+  if(!j||j.statut!=='actif'){showToast('⚠️ Ce jeton n\'est plus actif');return;}
+  const url=`${baseUrlApp()}?j=${j.token}`;
+  navigator.clipboard.writeText(url).then(()=>{
+    showToast(`📋 Lien copié — Table ${j.table} (collez-le dans votre navigateur)`);
+  }).catch(()=>{
+    prompt('Copiez ce lien manuellement :', url);
+  });
+}
+
+async function libererJetonDepuisModal(){
+  if(!jetonEnCoursActivation) return;
+  await libererJeton(jetonEnCoursActivation);
+  fermerModalJeton();
+}
+
+async function supprimerJetonDepuisModal(){
+  if(!jetonEnCoursActivation) return;
+  const j=allJetons[jetonEnCoursActivation];
+  const numero=j?j.numero:'?';
+  if(!confirm(`Supprimer définitivement le jeton n°${numero} ?\n\nLe QR papier correspondant ne fonctionnera plus jamais — à réserver aux jetons de test.`)) return;
+  try{
+    await db.collection('jetons').doc(jetonEnCoursActivation).delete();
+    showToast(`✅ Jeton n°${numero} supprimé`);
+    fermerModalJeton();
+  }catch(e){console.error(e);showToast('❌ Erreur suppression');}
+}
+
+async function validerActivationJeton(){
+  if(!jetonEnCoursActivation) return;
+  const val=parseInt(document.getElementById('jetonTableInput').value);
+  if(!val||val<1||val>150){showToast('⚠️ Numéro de table invalide');return;}
+  const couverts=parseInt(document.getElementById('jetonCouvertsInput').value)||null;
+  const unites=parseInt(document.getElementById('jetonUnitesInput').value)||1;
+  try{
+    await db.collection('jetons').doc(jetonEnCoursActivation).update({
+      statut:'actif', table:val, couverts, unites,
+      timestamp:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast(`✅ Jeton activé — Table ${val}`);
+    fermerModalJeton();
+  }catch(e){console.error(e);showToast('❌ Erreur activation');}
+}
+
+async function libererJeton(jetonId){
+  try{
+    await db.collection('jetons').doc(jetonId).update({statut:'libre',table:null,couverts:null,unites:null});
+    showToast('✅ Jeton libéré');
+  }catch(e){console.error(e);showToast('❌ Erreur libération');}
+}
+
+// ============================================================
+// NOUVEAU JETON JETABLE — généré et imprimé à la volée pour une table
+// ============================================================
+function genererTokenJeton(){
+  const bytes=new Uint8Array(9);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes,b=>b.toString(36).padStart(2,'0')).join('').slice(0,12);
+}
+
+async function prochainNumeroJeton(){
+  const snap=await db.collection('jetons').orderBy('numero','desc').limit(1).get();
+  if(snap.empty) return 1;
+  return (snap.docs[0].data().numero||0)+1;
+}
+
+function ouvrirModalNouvelleTable(){
+  document.getElementById('ntTableInput').value='';
+  document.getElementById('ntUnitesInput').value='';
+  document.getElementById('ntCouvertsInput').value='';
+  document.getElementById('modalNouvelleTable').classList.add('visible');
+}
+
+function fermerModalNouvelleTable(){
+  document.getElementById('modalNouvelleTable').classList.remove('visible');
+}
+
+async function validerNouvelleTable(){
+  const val=parseInt(document.getElementById('ntTableInput').value);
+  if(!val||val<1||val>150){showToast('⚠️ Numéro de table invalide');return;}
+  const unites=parseInt(document.getElementById('ntUnitesInput').value)||1;
+  const couverts=parseInt(document.getElementById('ntCouvertsInput').value)||null;
+
+  // La fenêtre d'impression s'ouvre ici, au clic direct sur "Créer et imprimer" — c'est le
+  // seul moment fiable pour l'ouvrir sans risquer un blocage par le navigateur, puisqu'aucune
+  // boîte de dialogue native (prompt) ne s'intercale plus avant.
+  const printWin=window.open('','_blank','width=420,height=500');
+  if(!printWin){showToast('⚠️ Fenêtre d\'impression bloquée par le navigateur — autorisez les popups pour ce site');return;}
+
+  fermerModalNouvelleTable();
+
+  try{
+    const numero=await prochainNumeroJeton();
+    const token=genererTokenJeton();
+    await db.collection('jetons').doc(token).set({
+      numero, token, statut:'actif', table:val, couverts, unites, jetable:true,
+      timestamp:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast(`✅ Jeton n°${numero} activé — Table ${val}`);
+    imprimerTicketJeton(numero, token, val, printWin);
+  }catch(e){console.error(e);showToast('❌ Erreur création jeton');if(printWin)printWin.close();}
+}
+
+// ============================================================
+// REPAS EMPLOYÉ — jeton spécial avec un budget de 10 points (voir admin → onglet Options/Carte
+// pour le nombre de points de chaque plat). Réutilise tout le mécanisme des jetons de table :
+// l'employé scanne, commande normalement, la cuisine reçoit le ticket comme d'habitude — mais
+// index.html bloque l'ajout d'un article qui ferait dépasser 10 points, et l'encaissement ne
+// transmet PAS ce repas à Hiboutik (ce n'est pas une vente).
+// On lui attribue un numéro de "table" virtuel dans la bande 500+ (jamais utilisée par une vraie
+// table, plafonnée à 150) uniquement pour réutiliser tel quel tout le pipeline commandes/cuisine/
+// encaissement existant.
+// ============================================================
+async function creerJetonEmploye(){
+  const nom=(prompt('Prénom de l\'employé ?')||'').trim();
+  if(!nom){return;}
+
+  const printWin=window.open('','_blank','width=420,height=500');
+  if(!printWin){showToast('⚠️ Fenêtre d\'impression bloquée par le navigateur — autorisez les popups pour ce site');return;}
+
+  try{
+    const numero=await prochainNumeroJeton();
+    const token=genererTokenJeton();
+    const tableVirtuelle=500+numero;
+    await db.collection('jetons').doc(token).set({
+      numero, token, statut:'actif', table:tableVirtuelle, couverts:1, unites:1, jetable:true,
+      type:'employe', employeNom:nom, pointsBudget:10,
+      timestamp:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast(`✅ Repas employé activé — ${nom} (10 points)`);
+    imprimerTicketJeton(numero, token, tableVirtuelle, printWin, nom);
+  }catch(e){console.error(e);showToast('❌ Erreur création repas employé');if(printWin)printWin.close();}
+}
+
+// Imprime un jeton tout de suite, SANS table assignée (statut "en_attente") — pratique pour
+// l'accueil : on donne le ticket au client en le conduisant à sa table, puis on attribue le
+// numéro de table depuis n'importe quel poste (Jetons → pastille orange → renseigner la table).
+// Le client ne peut PAS encore commander tant que la table n'est pas attribuée.
+async function imprimerJetonAvance(){
+  const nb=parseInt(prompt('Combien de jetons imprimer à l\'avance ? (1 par défaut)'))||1;
+  if(nb<1||nb>50){showToast('⚠️ Entre 1 et 50 jetons à la fois');return;}
+
+  // Ouvre la fenêtre d'impression tout de suite (au clic) pour éviter le blocage anti-popup des
+  // navigateurs — on la remplira une fois les jetons créés dans Firestore.
+  const printWin=window.open('','_blank','width=420,height=500');
+  if(!printWin){showToast('⚠️ Fenêtre d\'impression bloquée par le navigateur — autorisez les popups pour ce site');return;}
+
+  try{
+    const numeroDepart=await prochainNumeroJeton();
+    const jetons=[];
+    for(let i=0;i<nb;i++){
+      jetons.push({numero:numeroDepart+i, token:genererTokenJeton()});
+    }
+
+    const batch=db.batch();
+    jetons.forEach(j=>{
+      const ref=db.collection('jetons').doc(j.token);
+      batch.set(ref,{numero:j.numero, token:j.token, statut:'en_attente', table:null, couverts:null, unites:null, jetable:true});
+    });
+    await batch.commit();
+
+    showToast(`✅ ${nb} jeton${nb>1?'s':''} créé${nb>1?'s':''} — n°${numeroDepart}${nb>1?' à n°'+(numeroDepart+nb-1):''}`);
+    imprimerTicketsJetonAvance(jetons,printWin);
+  }catch(e){console.error(e);showToast('❌ Erreur création jeton(s)');if(printWin)printWin.close();}
+}
+
+// Imprime N jetons "en attente" en un seul job (une étiquette par jeton, saut de page entre chaque —
+// idéal pour une imprimante à étiquettes autocollantes en rouleau continu).
+function imprimerTicketsJetonAvance(jetons,printWin){
+  const baseUrl=baseUrlApp();
+  const win=printWin||window.open('','_blank','width=420,height=500');
+  if(!win){showToast('⚠️ Fenêtre d\'impression bloquée par le navigateur');return;}
+
+  const etiquettes=jetons.map(j=>`
+    <div class="etiquette">
+      <div class="title">🐚 MOULE & SMILE</div>
+      <div class="sub">Bienvenue ! Votre table va vous être attribuée</div>
+      <div id="qr_${j.numero}"></div>
+      <div class="footer">Jeton n°${j.numero}<br>À usage unique — ne pas transférer</div>
+    </div>`).join('');
+
+  const scriptsQr=jetons.map(j=>`
+    new QRCode(document.getElementById('qr_${j.numero}'), {
+      text: "${baseUrl}?j=${j.token}",
+      width: 160, height: 160,
+      colorDark: "#000000", colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.H
+    });`).join('');
+
+  win.document.write(`<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Jetons à l'avance</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,Helvetica,sans-serif;color:#000;background:white;-webkit-print-color-adjust:exact}
+.etiquette{width:80mm;margin:0 auto;padding:8mm;text-align:center;page-break-after:always;font-weight:900}
+.etiquette:last-child{page-break-after:auto}
+.title{font-size:15px;font-weight:900;margin-bottom:4px}
+.sub{font-size:10px;font-weight:900;margin-bottom:10px;border-bottom:2px dashed black;padding-bottom:6px}
+.etiquette [id^="qr_"]{display:flex;justify-content:center;margin:10px 0}
+.footer{font-size:10px;font-weight:900;margin-top:10px;border-top:2px dashed black;padding-top:6px}
+@media print{.etiquette{width:80mm;margin:0;padding:6mm}@page{margin:0;size:80mm auto}}
+</style></head><body>
+${etiquettes}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+<script>
+${scriptsQr}
+window.onload=function(){setTimeout(()=>{window.print();setTimeout(()=>window.close(),1500);},400);}
+<\/script>
+</body></html>`);
+  win.document.close();
+}
+
+function imprimerTicketJeton(numero, token, tableNum, printWin, employeNom){
+  const baseUrl=baseUrlApp();
+  const url=`${baseUrl}?j=${token}`;
+  const aTable=tableNum!==null && tableNum!==undefined;
+  const estEmploye=!!employeNom;
+
+  const win=printWin||window.open('','_blank','width=420,height=500');
+  if(!win){showToast('⚠️ Fenêtre d\'impression bloquée par le navigateur');return;}
+  win.document.write(`<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>${estEmploye?'Repas employé — '+employeNom:(aTable?'Jeton Table '+tableNum:'Jeton n°'+numero)}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:900;color:#000;background:white;width:80mm;margin:0 auto;padding:8mm;text-align:center;-webkit-print-color-adjust:exact}
+.title{font-size:15px;font-weight:900;margin-bottom:4px}
+.sub{font-size:10px;font-weight:900;margin-bottom:10px;border-bottom:2px dashed black;padding-bottom:6px}
+.table-num{font-size:18px;font-weight:900;margin:10px 0}
+#qr{display:flex;justify-content:center;margin:10px 0}
+.footer{font-size:10px;font-weight:900;margin-top:10px;border-top:2px dashed black;padding-top:6px}
+@media print{body{width:80mm;margin:0;padding:6mm}@page{margin:0;size:80mm auto}}
+</style></head><body>
+<div class="title">🐚 MOULE & SMILE</div>
+<div class="sub">${estEmploye?'Repas employé — 10 points offerts':(aTable?'Scannez pour commander depuis votre table':'Bienvenue ! Votre table va vous être attribuée')}</div>
+${estEmploye?`<div class="table-num">🍽️ ${employeNom}</div>`:(aTable?`<div class="table-num">Table ${tableNum}</div>`:'')}
+<div id="qr"></div>
+<div class="footer">Jeton n°${numero}<br>À usage unique — ne pas transférer</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
+<script>
+new QRCode(document.getElementById('qr'), {
+  text: "${url}",
+  width: 160,
+  height: 160,
+  colorDark: "#000000",
+  colorLight: "#ffffff",
+  correctLevel: QRCode.CorrectLevel.H
+});
+window.onload=function(){setTimeout(()=>{window.print();setTimeout(()=>window.close(),1500);},300);}
+<\/script>
+</body></html>`);
+  win.document.close();
+}
+
+// ============================================================
+// ALERTE — TABLE EN ATTENTE D'ENCAISSEMENT DEPUIS TROP LONGTEMPS
+// ============================================================
+const SEUIL_ALERTE_MINUTES=5; // Modifiez ce chiffre si besoin
+let dernierBeepRetard=0;
+
+function minutesDepuis(timestamp){
+  if(!timestamp) return 0;
+  const d=timestamp.toDate?timestamp.toDate():new Date(timestamp);
+  return Math.floor((Date.now()-d.getTime())/60000);
+}
+
+// Le chrono ne démarre QUE quand le client a demandé l'addition (statut « demandee »),
+// et se compte depuis cette demande (demandeTimestamp). « Vu → Addition » ne lance plus rien.
+function additionDemandee(a){return a.statut==='demandee';}
+function minutesAttenteAddition(a){
+  if(!additionDemandee(a)) return 0;
+  return minutesDepuis(a.demandeTimestamp||a.timestamp);
+}
+function additionEnRetard(a){
+  return a.statut!=='regle' && additionDemandee(a) && minutesAttenteAddition(a)>=SEUIL_ALERTE_MINUTES;
+}
+
+function verifierAdditionsEnRetard(){
+  const enRetard=Object.values(allAdditions).filter(additionEnRetard);
+
+  const bandeau=document.getElementById('bandeauRetard');
+  if(enRetard.length>0){
+    const tables=enRetard.map(a=>libelleTable(a.table).replace('Table ','')).join(', ');
+    bandeau.textContent=`⏰ ${enRetard.length} table(s) en attente d'encaissement depuis plus de ${SEUIL_ALERTE_MINUTES} min — Table(s) ${tables}`;
+    bandeau.classList.add('visible');
+    // Bip toutes les 60s tant qu'il reste au moins une table en retard (évite le spam sonore)
+    if(Date.now()-dernierBeepRetard>60000){
+      playBeep(2);
+      dernierBeepRetard=Date.now();
+    }
+  } else {
+    bandeau.classList.remove('visible');
+  }
+}
+
+setInterval(()=>{
+  verifierAdditionsEnRetard();
+  if(document.getElementById('tab-additions').classList.contains('actif')) renderAdditions();
+},15000);
+
+// ============================================================
+// STATS
+// ============================================================
+function updateStats(){
+  const cmds=Object.values(allCommandes);
+  const adds=Object.values(allAdditions).filter(a=>a.statut!=='regle');
+  const alertes=Object.values(allAlertes).filter(a=>a.statut==='nouvelle');
+  const nbNouv=cmds.filter(c=>c.statut==='nouvelle').length;
+  const nbAdds=adds.length+alertes.length;
+  const total=cmds.reduce((s,c)=>s+(c.total||0),0);
+
+  document.getElementById('statNouv').textContent=nbNouv;
+  document.getElementById('statAdd').textContent=nbAdds;
+  document.getElementById('statCA').textContent=total.toFixed(0)+'€';
+
+  const badgeCmd=document.getElementById('badgeCmd');
+  badgeCmd.textContent=nbNouv;
+  badgeCmd.style.display=nbNouv>0?'inline':'none';
+
+  const badgeAdd=document.getElementById('badgeAdd');
+  badgeAdd.textContent=nbAdds;
+  badgeAdd.style.display=nbAdds>0?'inline':'none';
+}
+
+// ============================================================
+// RENDER — ALERTES (demandes d'addition)
+// ============================================================
+function renderAlertes(){
+  const container=document.getElementById('alertesContainer');
+  const alertes=Object.values(allAlertes).filter(a=>a.statut==='nouvelle');
+  if(!alertes.length){container.innerHTML='';return;}
+  container.innerHTML=alertes.map(a=>{
+    const estServeur=a.type==='serveur';
+    const titre=estServeur?`🙋 Table ${a.table} appelle un serveur`:`🔔 Table ${a.table} demande l'addition`;
+    const sub=estServeur
+      ?`🕐 ${a.heure||'--:--'}`
+      :`🕐 ${a.heure||'--:--'} — Total estimé : <strong style="color:#D4AF37">${(a.total||0).toFixed(2).replace('.',',')} €</strong>`;
+    return `
+    <div class="alerte-card">
+      <div class="alerte-info">
+        <div class="alerte-titre">${titre}</div>
+        <div class="alerte-sub">${sub}</div>
+      </div>
+      <button class="btn-ack" onclick="acquitterAlerte('${a.id}')">✓ Vu</button>
+    </div>`;
+  }).join('');
+}
+
+async function acquitterAlerte(id){
+  await db.collection('alertes').doc(id).update({statut:'vue'});
+  showToast('✅ Alerte acquittée');
+}
+
+// ============================================================
+// RENDER — COMMANDES
+// ============================================================
+function setFiltre(mode,el){
+  filtreCourant=mode;
+  document.querySelectorAll('.btn-filtre').forEach(b=>b.classList.remove('actif'));
+  el.classList.add('actif');
+  renderCommandes();
+}
+
+// Basculer automatiquement en "nouvelles uniquement" quand on marque vu
+// pour rester en mode rush sans changer manuellement
+function passerEnModeRush(){
+  if(filtreCourant==='nouvelles') return; // déjà en mode rush
+  // Ne pas forcer — laisser l'utilisateur choisir
+}
+
+function getCommandesFiltrees(){
+  const ordre={nouvelle:0,vue:1,regle:2};
+  // Les commandes en_addition ne s'affichent plus ici — elles vivent dans l'onglet Addition
+  let cmds=Object.values(allCommandes).filter(c=>c.statut!=='en_addition');
+  if(filtreCourant==='actives') cmds=cmds.filter(c=>c.statut!=='regle');
+  // "nouvelles" = seulement les commandes pas encore traitées
+  if(filtreCourant==='nouvelles') cmds=cmds.filter(c=>c.statut==='nouvelle');
+  return cmds.sort((a,b)=>{
+    const s=(ordre[a.statut]||0)-(ordre[b.statut]||0);
+    if(s!==0) return s;
+    // Ordre chronologique (par heure de commande)
+    return (a.heure||'').localeCompare(b.heure||'');
+  });
+}
+
+function renderCommandes(){
+  const grid=document.getElementById('commandesGrid');
+  const cmds=getCommandesFiltrees();
+  if(!cmds.length){
+    grid.innerHTML='<div class="empty"><div class="em">🐚</div><p>En attente de commandes...</p></div>';
+    return;
+  }
+  const statutColors={nouvelle:'#D4AF37',en_addition:'#4ABA80',vue:'#4ABA80',regle:'#555'};
+  const statutLabels={nouvelle:'🟡 Nouvelle',en_addition:'📋 En addition',vue:'✅ Vue',regle:'💰 Réglée'};
+  grid.innerHTML=cmds.map(cmd=>{
+    const items=cmd.items||[];
+    const estRegle=cmd.statut==='regle';
+    const estDeux=cmd.couverts===2;
+    return `<div class="cmd-card ${cmd.statut||'nouvelle'}">
+      <div class="cmd-header">
+        <div class="cmd-table">${libelleTable(cmd.table)} ${estDeux?'<span class="badge-prio">👥 2 pers.</span>':''}</div>
+        <div class="cmd-meta">
+          <div class="cmd-heure">🕐 ${cmd.heure||'--:--'}</div>
+          <div class="cmd-statut" style="color:${statutColors[cmd.statut]||'#888'}">${statutLabels[cmd.statut]||''}</div>
+        </div>
+      </div>
+      <div class="cmd-items">
+        ${items.map(item=>`
+          <div class="cmd-item-row" style="flex-direction:column;align-items:stretch">
+            <div style="display:flex;justify-content:space-between">
+              <span>${item.nom}</span>
+              <span style="color:#D4AF37;font-weight:bold">${item.prix===0?'Inclus':item.prix.toFixed(2).replace('.',',')+' €'}</span>
+            </div>
+            ${item.choix?`<div style="font-size:11px;color:#4ABA80;padding-left:4px">${item.choix}</div>`:''}
+          </div>`).join('')}
+      </div>
+      <div class="cmd-total">Total : ${(cmd.total||0).toFixed(2).replace('.',',')} €</div>
+      <div class="cmd-actions">
+        ${!estRegle
+          ?`<button class="btn-vu" onclick="marquerVuEtAddition('${cmd.id}',${cmd.table})">✓ Vu → Addition</button>`
+          :`<div style="color:#4ABA80;font-size:12px;font-weight:bold;padding:6px 0">✅ Réglée</div>`
+        }
+        ${!estRegle?`<button class="btn-editer" onclick="demanderPwdPuis(()=>ouvrirModalEditCommande('${cmd.id}'))">✏️</button>`:''}
+        <button class="btn-archive" onclick="archiverCommande('${cmd.id}',${cmd.table})">🗑 Archiver</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// ONGLET DÉDIÉ — TABLES 2 PERSONNES (renfort)
+// ============================================================
+function renderCommandesDeux(){
+  const grid=document.getElementById('commandesGridDeux');
+  if(!grid) return;
+  // Uniquement les tables de 2, pas encore basculées en addition, dans l'ordre chronologique
+  const cmds=Object.values(allCommandes)
+    .filter(c=>c.couverts===2 && c.statut!=='regle' && c.statut!=='en_addition')
+    .sort((a,b)=>(a.heure||'').localeCompare(b.heure||''));
+
+  if(!cmds.length){
+    grid.innerHTML='<div class="empty"><div class="em">👥</div><p>Aucune commande de table 2 personnes</p></div>';
+  } else {
+    const statutColors={nouvelle:'#D4AF37',vue:'#4ABA80'};
+    const statutLabels={nouvelle:'🟡 Nouvelle',vue:'✅ Vue'};
+    grid.innerHTML=cmds.map(cmd=>{
+      const items=cmd.items||[];
+      return `<div class="cmd-card ${cmd.statut||'nouvelle'}">
+        <div class="cmd-header">
+          <div class="cmd-table">Table ${cmd.table} <span class="badge-prio">👥 2 pers.</span></div>
+          <div class="cmd-meta">
+            <div class="cmd-heure">🕐 ${cmd.heure||'--:--'}</div>
+            <div class="cmd-statut" style="color:${statutColors[cmd.statut]||'#888'}">${statutLabels[cmd.statut]||''}</div>
+          </div>
+        </div>
+        <div class="cmd-items">
+          ${items.map(item=>`
+            <div class="cmd-item-row" style="flex-direction:column;align-items:stretch">
+              <div style="display:flex;justify-content:space-between">
+                <span>${item.nom}</span>
+                <span style="color:#D4AF37;font-weight:bold">${item.prix===0?'Inclus':item.prix.toFixed(2).replace('.',',')+' €'}</span>
+              </div>
+              ${item.choix?`<div style="font-size:11px;color:#4ABA80;padding-left:4px">${item.choix}</div>`:''}
+            </div>`).join('')}
+        </div>
+        <div class="cmd-total">Total : ${(cmd.total||0).toFixed(2).replace('.',',')} €</div>
+        <div class="cmd-actions">
+          <button class="btn-vu" onclick="marquerVuEtAddition('${cmd.id}',${cmd.table})">✓ Vu → Addition</button>
+          <button class="btn-editer" onclick="demanderPwdPuis(()=>ouvrirModalEditCommande('${cmd.id}'))">✏️</button>
+          <button class="btn-archive" onclick="archiverCommande('${cmd.id}',${cmd.table})">🗑 Archiver</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Badge compteur sur l'onglet
+  const badgeDeux=document.getElementById('badgeDeux');
+  if(badgeDeux){
+    const nbNouv=cmds.filter(c=>c.statut==='nouvelle').length;
+    badgeDeux.textContent=nbNouv;
+    badgeDeux.style.display=nbNouv>0?'inline':'none';
+  }
+}
+
+// ============================================================
+// ONGLET CUISINE — plats à préparer, regroupés (réglé produit par produit dans admin.html)
+// Une commande reste visible ici tant qu'elle n'est pas "✓ Prêt" (champ cuisineFait) ni réglée.
+// ============================================================
+// Plat choisi dans un menu enfant / ado : écrit dans le détail (« Menu : Nuggets » / « Choix : Calamars à volonté »)
+function platMenuDe(choix){
+  const segs=(choix||'').split(' — ');
+  for(const sg of segs){
+    const m=sg.match(/^\s*(?:Menu|Choix)\s*:\s*(.+?)\s*$/i);
+    if(m) return {plat:m[1].trim(),segs,seg:sg};
+  }
+  return null;
+}
+
+function lignesCuisineDe(cmd){
+  const lignes=[];
+  (cmd.items||[]).forEach(it=>{
+    const idBase=(it.id||'').replace('_inclus','');
+    const labelItem=carteCuisine[idBase];
+    const pm=platMenuDe(it.choix);
+    const labPlat=pm?carteCuisineParNom[pm.plat.toLowerCase()]:null;
+    if(labPlat){
+      // Le plat choisi (ex. Nuggets) remplace la ligne « Enfant / Ado » : la cuisine voit ce qu'il faut préparer
+      lignes.push({...it,nom:'🧒 '+pm.plat,choix:pm.segs.filter(x=>x!==pm.seg).join(' — '),label:labPlat,menuPlat:true});
+    } else if(labelItem){
+      const l={...it,label:labelItem};
+      if(pm) l.platMenu=pm.plat;                                   // plat affiché même s'il n'est pas coché cuisine
+      else if(/enfant|ado/i.test(it.nom||'')) l.aPreciser=true;     // tarif enfant/ado sans plat choisi
+      lignes.push(l);
+    }
+  });
+  return lignes;
+}
+
+// Texte court d'une ligne pour les pastilles du plein écran
+function texteLigneCuisine(l){
+  if(l.menuPlat) return '🧒 '+l.label;
+  if(l.platMenu) return l.label+' → '+l.platMenu;
+  if(l.aPreciser) return l.label+' ⚠️ plat non choisi';
+  return l.label;
+}
+
+function choixSansPrix(c){
+  return (c||'').replace(/\s*\(\+[\d,]+\s*€\)/g,'').trim();
+}
+
+function renderCuisine(){
+  const elCompteurs=document.getElementById('cuisineCompteurs');
+  const elTickets=document.getElementById('cuisineTickets');
+  if(!elCompteurs||!elTickets) return;
+
+  const aPreparer=Object.values(allCommandes)
+    .filter(c=>c.statut!=='regle' && !c.cuisineFait)
+    .map(c=>({cmd:c,lignes:lignesCuisineDe(c)}))
+    .filter(x=>x.lignes.length)
+    .sort((a,b)=>(a.cmd.heure||'').localeCompare(b.cmd.heure||''));
+
+  // Pastille sur l'onglet : nombre total de plats en attente
+  const nbTotal=aPreparer.reduce((s,x)=>s+x.lignes.length,0);
+  const badge=document.getElementById('badgeCuisine');
+  if(badge){badge.textContent=nbTotal;badge.style.display=nbTotal>0?'inline':'none';}
+
+  // Mode plein écran : petites pastilles pour pouvoir marquer « prêt » (sinon les commandes ne partent jamais)
+  const kT=document.getElementById('kioskTickets');
+  if(kT){
+    kT.innerHTML=aPreparer.length?aPreparer.map(({cmd,lignes})=>{
+      const par={}; lignes.forEach(l=>{const t=texteLigneCuisine(l); par[t]=(par[t]||0)+1;});
+      const plats=Object.entries(par).map(([n,q])=>`<div class="kt-ligne"><span class="q">${q} ×</span><span>${n}</span></div>`).join('');
+      return `<div class="kiosk-ticket ${cmd.statut==='nouvelle'?'nouvelle':''}">
+        <div class="kt-tete"><b>${libelleTable(cmd.table)}</b><span>🕐 ${cmd.heure||'--:--'}</span></div>
+        ${plats}
+        <button onclick="marquerCuisinePret('${cmd.id}')">✓ Prêt</button>
+      </div>`;
+    }).join(''):'<span style="color:#666;font-size:12px">Rien en cours ✅</span>';
+  }
+
+  // Historique : commandes déjà marquées « Prêt » (la plus récente en haut) + possibilité de remettre à faire
+  const elHisto=document.getElementById('cuisineHistorique');
+  if(elHisto){
+    const heurePret=c=>{
+      try{const d=c.cuisineHeure&&c.cuisineHeure.toDate?c.cuisineHeure.toDate():null; return d?d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';}catch(e){return '';}
+    };
+    const msPret=c=>{try{return c.cuisineHeure&&c.cuisineHeure.toMillis?c.cuisineHeure.toMillis():0;}catch(e){return 0;}};
+    const dejaPrets=Object.values(allCommandes)
+      .filter(c=>c.cuisineFait)
+      .map(c=>({cmd:c,lignes:lignesCuisineDe(c)}))
+      .filter(x=>x.lignes.length)
+      .sort((a,b)=>msPret(b.cmd)-msPret(a.cmd)||(b.cmd.heure||'').localeCompare(a.cmd.heure||''));
+    elHisto.innerHTML=dejaPrets.length?dejaPrets.map(({cmd,lignes})=>`
+      <div class="cmd-card en_addition histo-carte">
+        <div class="cmd-header">
+          <div class="cmd-table">${libelleTable(cmd.table)}</div>
+          <div class="cmd-meta">
+            <div class="cmd-heure">🕐 ${cmd.heure||'--:--'}</div>
+            <div class="cmd-statut" style="color:#4ABA80">✅ Prêt${heurePret(cmd)?' à '+heurePret(cmd):''}</div>
+          </div>
+        </div>
+        <div class="cmd-items">
+          ${lignes.map(it=>`
+            <div class="cmd-item-row" style="flex-direction:column;align-items:stretch">
+              <div style="font-size:14px;font-weight:bold">${it.menuPlat?it.nom:(it.platMenu?it.nom+' → '+it.platMenu:it.nom)}</div>
+              ${it.choix?`<div style="font-size:12px;color:#4ABA80;padding-left:4px">${it.choix}</div>`:''}
+            </div>`).join('')}
+        </div>
+        <div class="cmd-actions"><button class="btn-remettre" onclick="remettreCuisineAFaire('${cmd.id}')">↩ Remettre à faire</button></div>
+      </div>`).join(''):'<div class="empty"><div class="em">📜</div><p>Aucune commande prête pour le moment</p></div>';
+  }
+
+  const labelsConfigures=[...new Set(Object.values(carteCuisine))].sort((a,b)=>a.localeCompare(b));
+  if(!labelsConfigures.length){
+    elCompteurs.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="em">🍳</div><p>Aucun produit réglé pour la cuisine.<br>Dans l\'admin : Carte → clique un produit → coche « Afficher dans l\'onglet Cuisine ».</p></div>';
+    elTickets.innerHTML='';
+    const kA0=document.getElementById('kioskAFaire'),kF0=document.getElementById('kioskFait');
+    if(kA0) kA0.innerHTML=elCompteurs.innerHTML; if(kF0) kF0.innerHTML='';
+    const elF0=document.getElementById('cuisineCompteursFait'); if(elF0) elF0.innerHTML='';
+    return;
+  }
+
+  // Compteurs : un par libellé (y compris à 0, pour que l'écran ne saute pas), détail par choix
+  const faits=Object.values(allCommandes)
+    .filter(c=>c.cuisineFait)
+    .map(c=>({cmd:c,lignes:lignesCuisineDe(c)}))
+    .filter(x=>x.lignes.length);
+  const htmlCompteurs=(liste)=>{
+    const groupes={};
+    labelsConfigures.forEach(l=>groupes[l]={nb:0,choix:{}});
+    liste.forEach(x=>x.lignes.forEach(l=>{
+      const g=groupes[l.label]; if(!g) return;
+      g.nb++;
+      const c=choixSansPrix(l.choix);
+      if(c) g.choix[c]=(g.choix[c]||0)+1;
+    }));
+    return labelsConfigures.map(l=>{
+      const g=groupes[l];
+      const detail=Object.entries(g.choix).map(([c,n])=>`${c} ×${n}`).join('<br>');
+      return `<div class="cuisine-compteur ${g.nb===0?'zero':''}">
+        <div class="cc-nb">${g.nb}</div>
+        <div class="cc-nom">${l}</div>
+        ${detail?`<div class="cc-detail">${detail}</div>`:''}
+      </div>`;
+    }).join('');
+  };
+  const hAFaire=htmlCompteurs(aPreparer);
+  elCompteurs.innerHTML=hAFaire;
+  const kA=document.getElementById('kioskAFaire'), kF=document.getElementById('kioskFait');
+  const hFait=htmlCompteurs(faits);
+  if(kA) kA.innerHTML=hAFaire;
+  if(kF) kF.innerHTML=hFait;
+  const elFait=document.getElementById('cuisineCompteursFait');
+  if(elFait) elFait.innerHTML=hFait;
+
+  // Tickets : uniquement les lignes cuisine de chaque commande
+  if(!aPreparer.length){
+    elTickets.innerHTML='<div class="empty"><div class="em">✅</div><p>Rien à préparer pour le moment</p></div>';
+    return;
+  }
+  const statutLabels={nouvelle:'🟡 Pas encore vue',vue:'✅ Vue',en_addition:'🖨️ Envoyée'};
+  elTickets.innerHTML=aPreparer.map(({cmd,lignes})=>`
+    <div class="cmd-card ${cmd.statut==='nouvelle'?'nouvelle':'en_addition'}">
+      <div class="cmd-header">
+        <div class="cmd-table">${libelleTable(cmd.table)}</div>
+        <div class="cmd-meta">
+          <div class="cmd-heure">🕐 ${cmd.heure||'--:--'}</div>
+          <div class="cmd-statut" style="color:#888">${statutLabels[cmd.statut]||''}</div>
+        </div>
+      </div>
+      <div class="cmd-items">
+        ${lignes.map(it=>`
+          <div class="cmd-item-row" style="flex-direction:column;align-items:stretch">
+            <div style="font-size:15px;font-weight:bold">${it.nom}</div>
+            ${it.choix?`<div style="font-size:12px;color:#4ABA80;padding-left:4px">${it.choix}</div>`:''}
+            ${it.aPreciser?`<div style="font-size:12px;color:#ff8a8a;padding-left:4px;font-weight:bold">⚠️ Plat non choisi par le client — demander au serveur</div>`:''}
+          </div>`).join('')}
+      </div>
+      <div class="cmd-actions">
+        <button class="btn-vu" onclick="marquerCuisinePret('${cmd.id}')">✓ Prêt</button>
+      </div>
+    </div>`).join('');
+}
+
+// Plein écran cuisine : API native si dispo, sinon recouvrement CSS (iPhone/iPad Safari...)
+let cuisineFsNatif=false;
+function basculerCuisinePlein(on){
+  document.body.classList.toggle('cuisine-plein',!!on);
+  const el=document.documentElement;
+  if(on){
+    renderCuisine();
+    try{
+      const dejaPlein=!!(document.fullscreenElement||document.webkitFullscreenElement);
+      const f=el.requestFullscreen||el.webkitRequestFullscreen||el.msRequestFullscreen;
+      if(f&&!dejaPlein){const r=f.call(el); cuisineFsNatif=true; if(r&&r.catch) r.catch(()=>{cuisineFsNatif=false;});}
+    }catch(e){cuisineFsNatif=false;}
+  }else{
+    // On ne quitte le plein écran du navigateur que si c'est ce mode cuisine qui l'avait lancé
+    // (si toute la caisse est déjà en plein écran via le mot CAISSE, elle y reste).
+    const etaitGere=cuisineFsNatif;
+    cuisineFsNatif=false;
+    try{
+      if(etaitGere&&(document.fullscreenElement||document.webkitFullscreenElement)){
+        (document.exitFullscreen||document.webkitExitFullscreen).call(document);
+      }
+    }catch(e){}
+  }
+}
+
+// ============================================================
+// PLEIN ÉCRAN DE TOUTE LA CAISSE — commande cachée : 3 appuis rapides sur le mot « CAISSE » (en haut à gauche)
+// → entre en plein écran ; 3 appuis rapides de nouveau → en sort. Aucun bouton visible pour le personnel.
+// ============================================================
+let tapsCaisse=[];
+function tapMotCaisse(){
+  const now=Date.now();
+  tapsCaisse=tapsCaisse.filter(t=>now-t<1500);
+  tapsCaisse.push(now);
+  if(tapsCaisse.length<3) return;
+  tapsCaisse=[];
+  const el=document.documentElement;
+  const enPleinEcran=!!(document.fullscreenElement||document.webkitFullscreenElement);
+  try{
+    if(enPleinEcran){
+      (document.exitFullscreen||document.webkitExitFullscreen).call(document);
+    }else{
+      const f=el.requestFullscreen||el.webkitRequestFullscreen||el.msRequestFullscreen;
+      if(!f){showToast('⚠️ Plein écran non disponible sur ce navigateur');return;}
+      const r=f.call(el); if(r&&r.catch) r.catch(()=>showToast('⚠️ Plein écran refusé par le navigateur'));
+    }
+  }catch(e){showToast('⚠️ Plein écran non disponible');}
+}
+function _fsChange(){
+  // Échap / geste du navigateur : on quitte aussi notre mode
+  if(!document.fullscreenElement&&!document.webkitFullscreenElement&&cuisineFsNatif){
+    cuisineFsNatif=false;
+    document.body.classList.remove('cuisine-plein');
+  }
+}
+document.addEventListener('fullscreenchange',_fsChange);
+document.addEventListener('webkitfullscreenchange',_fsChange);
+
+async function remettreCuisineAFaire(id){
+  try{
+    await db.collection('commandes').doc(id).update({
+      cuisineFait:firebase.firestore.FieldValue.delete(),
+      cuisineHeure:firebase.firestore.FieldValue.delete()
+    });
+    showToast('↩ Commande remise « à faire » en cuisine');
+  }catch(e){console.error(e);showToast('❌ Erreur');}
+}
+
+async function marquerCuisinePret(id){
+  try{
+    await db.collection('commandes').doc(id).update({
+      cuisineFait:true,
+      cuisineHeure:firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }catch(e){showToast('❌ Erreur');console.error(e);}
+}
+
+// ============================================================
+// ACTIONS — COMMANDES
+// ============================================================
+async function marquerVuEtAddition(id,tableNum){
+  // Ouvre la fenêtre d'impression tout de suite (au clic) pour éviter le blocage anti-popup des navigateurs,
+  // on la remplira une fois les données prêtes.
+  const printWin=window.open('','_blank','width=420,height=600');
+  try{
+    const cmd=allCommandes[id];
+    await db.collection('commandes').doc(id).update({statut:'en_addition'});
+    await recalcAddition(tableNum);
+    await db.collection('notifications').doc(`table_${tableNum}`).set({
+      message:'✅ Votre commande est prise en charge — un serveur arrive !',
+      ts:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast(`✅ Table ${tableNum} → Addition`);
+    if(cmd) imprimerTicketCuisine(cmd,printWin);
+    else if(printWin) printWin.close();
+  }catch(e){showToast('❌ Erreur');console.error(e);if(printWin) printWin.close();}
+}
+
+function imprimerTicketCuisine(cmd,printWin){
+  let lignes='';
+  (cmd.items||[]).forEach(item=>{
+    lignes+=`<tr>
+      <td style="padding:3px 0 0 0;font-size:12px;font-weight:900">${item.nom}</td>
+      <td style="padding:3px 0 0 0;font-size:11px;font-weight:900;text-align:right;white-space:nowrap">${item.prix===0?'Incl.':item.prix.toFixed(2).replace('.',',')+' €'}</td>
+    </tr>`;
+    if(item.choix){
+      lignes+=`<tr><td colspan="2" style="padding:0 0 2px 8px;font-size:11px;color:#000;font-weight:900">→ ${item.choix}</td></tr>`;
+    }
+    const idBase=(item.id||'').replace('_inclus','');
+    const consigne=carteConsignes[idBase];
+    if(consigne){
+      lignes+=`<tr><td colspan="2" style="padding:1px 0 4px 8px;font-size:11px;color:#000;font-weight:900;border-left:3px solid #000;padding-left:8px">🍽️ ${consigne}</td></tr>`;
+    }
+  });
+
+  const win=printWin||window.open('','_blank','width=420,height=600');
+  if(!win){showToast('⚠️ Fenêtre d\'impression bloquée par le navigateur');return;}
+  win.document.write(`<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Cuisine ${libelleTable(cmd.table)}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:900;color:#000;background:white;width:80mm;margin:0 auto;padding:8mm;-webkit-print-color-adjust:exact}
+.title{text-align:center;font-size:16px;font-weight:900;margin-bottom:2px}
+.sub{text-align:center;font-size:10px;margin-bottom:8px;border-bottom:2px solid black;padding-bottom:8px;font-weight:900}
+table{width:100%;border-collapse:collapse}
+@media print{body{width:80mm;margin:0;padding:6mm}@page{margin:0;size:80mm auto}}
+</style></head><body>
+<div class="title">🍳 CUISINE</div>
+<div class="sub">${libelleTable(cmd.table)} — ${cmd.heure||new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>
+<table>${lignes}</table>
+<script>window.onload=function(){window.print();setTimeout(()=>window.close(),1500);}<\/script>
+</body></html>`);
+  win.document.close();
+}
+
+async function recalcAddition(tableNum){
+  const snap=await db.collection('commandes').where('table','==',tableNum).get();
+  let total=0;
+  const commandes=[];
+  snap.forEach(doc=>{
+    const d=doc.data();
+    if(d.statut==='regle') return;
+    if(!(d.items||[]).length) return;
+    total+=d.total||0;
+    commandes.push({id:doc.id,heure:d.heure||'--:--',items:d.items||[],total:d.total||0});
+  });
+  commandes.sort((a,b)=>a.heure.localeCompare(b.heure));
+  if(!commandes.length) return;
+  // Si le client avait déjà demandé l'addition, on garde cette demande (et son heure) pour ne pas perdre/relancer le chrono
+  let demande=null;
+  try{
+    const ex=await db.collection('additions').doc(`table_${tableNum}`).get();
+    if(ex.exists && ex.data().statut==='demandee') demande={ts:ex.data().demandeTimestamp||ex.data().timestamp};
+  }catch(e){}
+  const doc={
+    table:tableNum,
+    total,
+    commandes,
+    timestamp:firebase.firestore.FieldValue.serverTimestamp(),
+    statut:demande?'demandee':'en_cours'
+  };
+  if(demande&&demande.ts) doc.demandeTimestamp=demande.ts;
+  await db.collection('additions').doc(`table_${tableNum}`).set(doc);
+}
+
+async function archiverCommande(id,tableNum){
+  if(!confirm(`Archiver cette commande ?`)) return;
+  try{
+    const doc=await db.collection('commandes').doc(id).get();
+    if(doc.exists){
+      const d=doc.data();
+      await db.collection('historique').add({
+        table:tableNum,
+        total:d.total||0,
+        commandes:[{heure:d.heure||'--:--',items:d.items||[],total:d.total||0}],
+        heureReglement:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
+        timestamp:firebase.firestore.FieldValue.serverTimestamp()
+      });
+      await db.collection('commandes').doc(id).delete();
+    }
+    showToast('✅ Archivée');
+    chargerHistorique();
+  }catch(e){showToast('❌ Erreur');console.error(e);}
+}
+
+// ============================================================
+// MOT DE PASSE — protection avant modification d'une commande
+// ============================================================
+const CODE_MODIF='1234'; // Code à modifier selon vos besoins
+let actionApresPwd=null;
+
+function demanderPwdPuis(callback){
+  actionApresPwd=callback;
+  document.getElementById('pwdInput').value='';
+  document.getElementById('modalPwd').classList.add('visible');
+  setTimeout(()=>document.getElementById('pwdInput').focus(),100);
+}
+
+function fermerModalPwd(){
+  document.getElementById('modalPwd').classList.remove('visible');
+  actionApresPwd=null;
+}
+
+function validerPwd(){
+  const saisi=document.getElementById('pwdInput').value.trim();
+  if(saisi!==CODE_MODIF){
+    showToast('❌ Code incorrect');
+    document.getElementById('pwdInput').value='';
+    return;
+  }
+  document.getElementById('modalPwd').classList.remove('visible');
+  if(actionApresPwd) actionApresPwd();
+  actionApresPwd=null;
+}
+
+// ============================================================
+// EDITION D'UNE COMMANDE (articles + prix + ajout)
+// ============================================================
+let editionCommandeId=null;
+let editionItems=[]; // copie de travail, modifiable avant validation
+
+function ouvrirModalEditCommande(id){
+  const cmd=allCommandes[id];
+  if(!cmd){showToast('❌ Commande introuvable');return;}
+  editionCommandeId=id;
+  editionItems=(cmd.items||[]).map(it=>({...it})); // copie profonde légère
+  document.getElementById('editCmdTitre').textContent=`✏️ Table ${cmd.table} — ${cmd.heure||''}`;
+  document.getElementById('editCmdSub').textContent='Modifiez le prix, supprimez ou ajoutez un article';
+  renderEditItemsList();
+  document.getElementById('newItemNom').value='';
+  document.getElementById('newItemPrix').value='';
+  document.getElementById('modalEditCmd').classList.add('visible');
+}
+
+function renderEditItemsList(){
+  const container=document.getElementById('editItemsList');
+  if(!editionItems.length){
+    container.innerHTML='<div style="color:#888;text-align:center;padding:14px;font-size:13px">Aucun article — ajoutez-en un ci-dessous</div>';
+  } else {
+    container.innerHTML=editionItems.map((it,idx)=>`
+      <div class="edit-item-row">
+        <span class="edit-item-nom">${it.nom}</span>
+        <input type="number" class="edit-item-prix" value="${it.prix}" step="0.10" onchange="modifierPrixEdition(${idx},this.value)">
+        <button class="edit-item-del" onclick="supprimerArticleEdition(${idx})">✕</button>
+      </div>`).join('');
+  }
+  const total=editionItems.reduce((s,it)=>s+(parseFloat(it.prix)||0),0);
+  document.getElementById('editTotalAffiche').textContent=total.toFixed(2).replace('.',',')+' €';
+}
+
+function modifierPrixEdition(idx,val){
+  editionItems[idx].prix=parseFloat(val)||0;
+  renderEditItemsList();
+}
+
+function supprimerArticleEdition(idx){
+  editionItems.splice(idx,1);
+  renderEditItemsList();
+}
+
+function ajouterArticleEdition(){
+  const nom=document.getElementById('newItemNom').value.trim();
+  const prix=parseFloat(document.getElementById('newItemPrix').value)||0;
+  if(!nom){showToast('⚠️ Nom obligatoire');return;}
+  editionItems.push({id:'manuel_'+Date.now(),nom,desc:'',prix});
+  document.getElementById('newItemNom').value='';
+  document.getElementById('newItemPrix').value='';
+  renderEditItemsList();
+}
+
+function fermerModalEdit(){
+  document.getElementById('modalEditCmd').classList.remove('visible');
+  editionCommandeId=null;
+  editionItems=[];
+}
+
+async function validerEditionCommande(){
+  if(!editionCommandeId){fermerModalEdit();return;}
+  const total=editionItems.reduce((s,it)=>s+(parseFloat(it.prix)||0),0);
+  try{
+    await db.collection('commandes').doc(editionCommandeId).update({
+      items:editionItems,
+      total
+    });
+    // Si cette commande est déjà en addition, on recalcule l'addition pour refléter le changement
+    const cmd=allCommandes[editionCommandeId];
+    if(cmd && cmd.table!=null && (cmd.statut==='en_addition'||cmd.statut==='vue')){
+      await recalcAddition(cmd.table);
+    }
+    showToast('✅ Commande modifiée');
+    fermerModalEdit();
+  }catch(e){showToast('❌ Erreur enregistrement');console.error(e);}
+}
+
+async function resetJour(){
+  if(!confirm('Supprimer toutes les commandes du jour ? Irréversible.')) return;
+  const snap=await db.collection('commandes').get();
+  const b=db.batch();
+  snap.forEach(d=>b.delete(d.ref));
+  const snap2=await db.collection('additions').get();
+  snap2.forEach(d=>b.delete(d.ref));
+  const snap3=await db.collection('alertes').get();
+  snap3.forEach(d=>b.delete(d.ref));
+  await b.commit();
+  showToast('🗑️ Tout supprimé');
+}
+
+// ============================================================
+// RENDER — ADDITIONS
+// ============================================================
+// ============================================================
+// RECHERCHE ADDITIONS PAR NUMÉRO DE TABLE
+// ============================================================
+function filtrerAdditions(){
+  const recherche=(document.getElementById('rechercheTable')?.value||'').trim();
+  const btnVider=document.getElementById('btnViderRecherche');
+  if(btnVider) btnVider.style.display=recherche?'inline-block':'none';
+  renderAdditions();
+}
+
+function viderRecherche(){
+  const input=document.getElementById('rechercheTable');
+  if(input) input.value='';
+  document.getElementById('btnViderRecherche').style.display='none';
+  renderAdditions();
+}
+
+function renderAdditions(){
+  const container=document.getElementById('additionsList');
+  const recherche=(document.getElementById('rechercheTable')?.value||'').trim();
+  let adds=Object.values(allAdditions)
+    .filter(a=>a.statut!=='regle')
+    .sort((a,b)=>{
+      const retardA=additionEnRetard(a), retardB=additionEnRetard(b);
+      if(retardA!==retardB) return retardA?-1:1; // en retard en premier
+      const demA=additionDemandee(a), demB=additionDemandee(b);
+      if(demA!==demB) return demA?-1:1; // puis celles que le client a demandées
+      return (a.table||0)-(b.table||0);
+    });
+
+  // Filtre recherche par numéro de table
+  if(recherche){
+    adds=adds.filter(a=>String(a.table).includes(recherche));
+  }
+
+  if(!adds.length){
+    const msg=recherche
+      ?`<div class="empty"><div class="em">🔍</div><p>Aucune table trouvée pour "${recherche}"</p></div>`
+      :'<div class="empty"><div class="em">🧾</div><p>Aucune addition en cours</p></div>';
+    container.innerHTML=msg;
+    return;
+  }
+
+  // Stocker pour impression
+  adds.forEach(add=>{
+    ticketsData['add_'+add.table]={table:add.table,commandes:add.commandes||[],total:add.total||0};
+  });
+
+  container.innerHTML=adds.map(add=>{
+    const mins=minutesAttenteAddition(add);
+    const enRetard=additionEnRetard(add);
+    const demandee=additionDemandee(add);
+    return `
+    <div class="addition-card ${enRetard?'en-retard':''}">
+      <div class="addition-header">
+        <div>
+          <div class="addition-table-num">🪑 ${libelleTable(add.table)}${enRetard?`<span class="badge-retard">⏰ ${mins} min</span>`:(demandee?`<span class="badge-retard" style="background:#E67E22">🔔 Demandée · ${mins} min</span>`:'')}</div>
+          <div class="addition-nb">${(add.commandes||[]).length} commande(s)</div>
+        </div>
+        <div class="addition-total">${(add.total||0).toFixed(2).replace('.',',')} €</div>
+      </div>
+      <div>
+        ${(add.commandes||[]).map(cmd=>`
+          <div class="cmd-groupe">
+            <div class="cmd-groupe-heure" style="display:flex;justify-content:space-between;align-items:center">
+              <span>🕐 ${cmd.heure||'--:--'}</span>
+              <button class="btn-editer" style="padding:4px 8px;font-size:11px" onclick="demanderPwdPuis(()=>ouvrirModalEditCommande('${cmd.id}'))">✏️</button>
+            </div>
+            ${(cmd.items||[]).map(item=>`
+              <div class="cmd-groupe-item" style="flex-direction:column;align-items:stretch">
+                <div style="display:flex;justify-content:space-between">
+                  <span>${item.nom}</span>
+                  <span style="color:#D4AF37">${item.prix===0?'Inclus':item.prix.toFixed(2).replace('.',',')+' €'}</span>
+                </div>
+                ${item.choix?`<div style="font-size:10px;color:#4ABA80;padding-left:4px">${item.choix}</div>`:''}
+              </div>`).join('')}
+            <div class="cmd-groupe-subtotal">ss-total : ${(cmd.total||0).toFixed(2).replace('.',',')} €</div>
+          </div>`).join('')}
+      </div>
+      <div class="addition-actions">
+        <button class="btn-imprimer" onclick="imprimerTicket('add_${add.table}')">🖨️ Imprimer</button>
+        <button class="btn-encaisser" onclick="encaisser(${add.table})">💰 Encaissé ✓</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// ENCAISSER
+// ============================================================
+// ============================================================
+// TRANSMISSION HIBOUTIK — appelle la Cloud Function au moment de l'encaissement.
+// Ne bloque jamais le flux local : une erreur ici n'empêche pas l'encaissement de se terminer.
+// ============================================================
+async function envoyerVenteVersHiboutik(tableNum, commandes, couverts, paiements){
+  try{
+    // Regroupe par (produit + prix + choix exact) : deux articles identiques au même prix
+    // ET au même choix (même sauce, même supplément) → une seule ligne avec quantity=2.
+    // Toute différence de prix OU de choix (sauce différente, supplément différent) →
+    // lignes séparées, pour ne jamais perdre le détail de ce qui a été réellement choisi.
+    const compteur={};
+    commandes.forEach(cmd=>{
+      (cmd.items||[]).forEach(item=>{
+        const idBase=(item.id||'').replace('_inclus','');
+        const prix=item.prix||0;
+        const choixTexte=item.choix||'';
+        // Extrait le total des suppléments depuis le texte du choix, ex: "(+0,50 €)"
+        const matches=[...choixTexte.matchAll(/\(\+([\d,]+)\s*€\)/g)];
+        const supplement=matches.reduce((s,m)=>s+parseFloat(m[1].replace(',','.')),0);
+
+        // Extraction GÉNÉRIQUE : le texte du choix est composé de segments "Famille : Option"
+        // séparés par " — " (ex: "Coulis : Chocolat — Croquant : Daim (+0,50 €)"). Pour chaque
+        // segment, on retrouve la famille et l'option correspondantes dans carteFamillesOptions,
+        // quelle que soit la famille (Sauce, Croquant, Coulis, Nappage, ou toute future famille)
+        // — aucun code à ajouter ici quand tu crées une nouvelle famille d'options.
+        const optionIds=[];
+        choixTexte.split('—').forEach(segment=>{
+          const m=segment.match(/^\s*(.+?)\s*:\s*([^()]+)/);
+          if(!m)return;
+          const [,nomFamilleTexte,nomOptionTexte]=m;
+          const familleTrouvee=Object.values(carteFamillesOptions).find(f=>
+            (f.nom||'').trim().toLowerCase()===nomFamilleTexte.trim().toLowerCase());
+          if(!familleTrouvee)return;
+          const optionTrouvee=(familleTrouvee.options||[]).find(o=>
+            o.nom.trim().toLowerCase()===nomOptionTexte.trim().toLowerCase());
+          if(optionTrouvee) optionIds.push(optionTrouvee.id);
+        });
+
+        const cle=idBase+'|'+prix+'|'+choixTexte;
+        if(!compteur[cle]) compteur[cle]={id:idBase, nom:item.nom, prix, quantite:0, supplement, optionIds, choix:choixTexte};
+        compteur[cle].quantite++;
+      });
+    });
+    const items=Object.values(compteur);
+    if(!items.length) return;
+
+    if(window.MODE_TEST){ console.log('MODE TEST : vente NON envoyée à Hiboutik',{table:tableNum,items,couverts}); showToast('🧪 MODE TEST : vente non envoyée à Hiboutik'); return; }
+    const appel=fonctions.httpsCallable('envoyerVenteHiboutik');
+    // « paiements » est transmis en plus (ex. [{mode:'cb',montant:42.5}]) : la Cloud Function l'ignore
+    // tant qu'elle n'est pas adaptée — sans effet sur l'envoi actuel.
+    const result=await appel({table:tableNum, items, couverts, paiements:paiements||[]});
+
+    if(result.data && result.data.nonMappes && result.data.nonMappes.length){
+      console.warn(`Table ${tableNum} — produits non transmis à Hiboutik :`, result.data.nonMappes);
+      showToast(`⚠️ Table ${tableNum} : ${result.data.nonMappes.length} produit(s) non transmis à Hiboutik`);
+    } else {
+      console.log(`✅ Vente table ${tableNum} transmise à Hiboutik (id ${result.data?.saleId})`);
+    }
+  }catch(e){
+    console.error(`❌ Échec transmission Hiboutik — table ${tableNum} :`, e.message);
+    showToast(`⚠️ ${libelleTable(tableNum)} encaissée, mais échec transmission Hiboutik`);
+  }
+}
+
+// ============================================================
+// MODE DE PAIEMENT À L'ENCAISSEMENT (ajouté le 17/10/2026)
+// Au clic sur « Encaissé ✓ », on demande comment le client a payé. Le détail est enregistré
+// dans l'historique (champ « paiements ») : l'appli Comptage Caisse le lit en direct et
+// remplit son onglet Tickets toute seule — plus besoin de retaper les tickets le soir.
+// Les clés ci-dessous sont IDENTIQUES à celles de l'appli Comptage : ne pas les renommer.
+// ============================================================
+const MODES_PAIEMENT=[
+  {cle:'especes',         label:'Espèces',          icone:'💶'},
+  {cle:'cb',              label:'CB',               icone:'💳'},
+  {cle:'titrerestaurant', label:'Titre-restaurant', icone:'🍽️'},
+  {cle:'chequevacances',  label:'Chèque-vacances',  icone:'🏖️'},
+  {cle:'cheque',          label:'Chèque',           icone:'📝'}
+];
+// Moyens de paiement sur lesquels on ne rend pas la monnaie : le client peut donner plus que l'addition
+const MODES_SANS_RENDU=['titrerestaurant','chequevacances'];
+function modePaiementInfo(cle){return MODES_PAIEMENT.find(m=>m.cle===cle)||{cle,label:cle,icone:'💰'};}
+function euros(n){return (Math.round((n||0)*100)/100).toFixed(2).replace('.',',')+' €';}
+function lireMontant(v){const n=parseFloat(String(v||'').replace(',','.'));return isNaN(n)?0:Math.round(n*100)/100;}
+
+let paiementEnCours=null;     // {table, total}
+let encaissementVerrou=false; // empêche un double encaissement (double appui)
+
+async function encaisser(tableNum){
+  const jetonActif=Object.values(allJetons).find(j=>j.statut==='actif' && j.table===tableNum);
+  const estRepasEmploye=jetonActif&&jetonActif.type==='employe';
+  // Repas employé : ce n'est pas une vente, pas de mode de paiement à demander
+  if(estRepasEmploye){
+    if(!confirm(`Clôturer ${libelleTable(tableNum)} (repas offert) ?`)) return;
+    finaliserEncaissement(tableNum,{offert:true});
+    return;
+  }
+  const add=allAdditions[`table_${tableNum}`];
+  paiementEnCours={table:tableNum,total:Math.round(((add&&add.total)||0)*100)/100};
+  afficherModalPaiement(`💰 Encaisser ${libelleTable(tableNum)}`,'Comment le client a-t-il payé ?');
+}
+
+// Remplit et affiche la fenêtre des moyens de paiement pour paiementEnCours
+// (utilisée pour un encaissement ET pour corriger le paiement d'une table déjà réglée).
+function afficherModalPaiement(titre,sousTitre){
+  document.getElementById('paiementTitre').textContent=titre;
+  document.getElementById('paiementSousTitre').textContent=sousTitre||'';
+  document.getElementById('paiementTotal').textContent=euros(paiementEnCours.total);
+  document.getElementById('paiementModesSimples').innerHTML=MODES_PAIEMENT.map(m=>
+    `<button class="btn-mode-pay" onclick="choisirPaiementSimple('${m.cle}')">${m.icone}<span>${m.label}</span></button>`).join('');
+  document.getElementById('paiementMixte').innerHTML=MODES_PAIEMENT.map(m=>`
+    <div class="mixte-row">
+      <span class="mixte-lbl">${m.icone} ${m.label}</span>
+      <input type="text" inputmode="decimal" class="mixte-input" id="mixte_${m.cle}" placeholder="0,00" oninput="majPaiementMixte()">
+      <button class="btn-reste" onclick="mettreLeReste('${m.cle}')">= reste</button>
+    </div>`).join('')+`
+    <div class="mixte-reste" id="mixteReste"></div>
+    <button class="btn-valider-modal" id="btnValiderMixte" style="width:100%;margin-top:8px" onclick="validerPaiementMixte()" disabled>✅ Valider le paiement mixte</button>`;
+  document.getElementById('paiementMixte').style.display='none';
+  document.getElementById('btnBasculerMixte').style.display='block';
+  document.getElementById('paiementModesSimples').style.display='grid';
+  majPaiementMixte();
+  document.getElementById('modalPaiement').classList.add('visible');
+}
+
+function fermerModalPaiement(){
+  paiementEnCours=null;
+  document.getElementById('modalPaiement').classList.remove('visible');
+}
+
+function basculerPaiementMixte(){
+  document.getElementById('paiementMixte').style.display='block';
+  document.getElementById('paiementModesSimples').style.display='none';
+  document.getElementById('btnBasculerMixte').style.display='none';
+  setTimeout(()=>{const el=document.getElementById('mixte_cb'); if(el) el.focus();},100);
+}
+
+// Calcule le paiement mixte saisi : total donné, reste, surplus de titres non rendu
+function etatPaiementMixte(){
+  if(!paiementEnCours) return null;
+  const paiements=[];
+  MODES_PAIEMENT.forEach(m=>{
+    const v=lireMontant(document.getElementById('mixte_'+m.cle)?.value);
+    if(v>0) paiements.push({mode:m.cle,montant:v});
+  });
+  const donne=Math.round(paiements.reduce((s,p)=>s+p.montant,0)*100)/100;
+  const titres=paiements.filter(p=>MODES_SANS_RENDU.includes(p.mode)).reduce((s,p)=>s+p.montant,0);
+  const reste=Math.round((paiementEnCours.total-donne)*100)/100;
+  const surplus=reste<0?-reste:0;
+  // Un trop-perçu n'est accepté que s'il vient des titres-restaurant / chèques-vacances (pas de rendu monnaie)
+  const surplusOk=surplus<=titres+0.001;
+  return {paiements,donne,reste,surplus,valide:paiements.length>0 && reste<=0.004 && surplusOk, surplusOk};
+}
+
+function majPaiementMixte(){
+  const e=etatPaiementMixte(); if(!e) return;
+  const el=document.getElementById('mixteReste');
+  const btn=document.getElementById('btnValiderMixte');
+  if(!el||!btn) return;
+  if(e.reste>0.004){
+    el.innerHTML=`Reste à payer : <b style="color:#ff8a8a">${euros(e.reste)}</b>`;
+  } else if(e.surplus>0.004){
+    el.innerHTML=e.surplusOk
+      ?`✅ Compte bon — <span style="color:#E6B84A">surplus titres non rendu : ${euros(e.surplus)}</span>`
+      :`<b style="color:#ff8a8a">⚠️ Trop perçu de ${euros(e.surplus)}</b> — en espèces/CB, saisis le montant NET (après rendu de monnaie)`;
+  } else {
+    el.innerHTML='<b style="color:#4ABA80">✅ Compte bon</b>';
+  }
+  btn.disabled=!e.valide;
+}
+
+function mettreLeReste(cle){
+  const input=document.getElementById('mixte_'+cle); if(!input) return;
+  input.value='';
+  const e=etatPaiementMixte();
+  if(e.reste>0) input.value=e.reste.toFixed(2).replace('.',',');
+  majPaiementMixte();
+}
+
+function choisirPaiementSimple(cle){
+  if(!paiementEnCours) return;
+  const tableNum=paiementEnCours.table;
+  if(paiementEnCours.histId){
+    const histId=paiementEnCours.histId, total=paiementEnCours.total;
+    fermerModalPaiement();
+    enregistrerCorrectionPaiement(histId,[{mode:cle,montant:total}]);
+    return;
+  }
+  fermerModalPaiement();
+  // montant:null = "toute l'addition" — le montant exact est relu dans Firestore au moment d'encaisser
+  finaliserEncaissement(tableNum,{paiements:[{mode:cle,montant:null}]});
+}
+
+function validerPaiementMixte(){
+  const e=etatPaiementMixte();
+  if(!e||!e.valide){showToast('⚠️ Le paiement ne correspond pas au total');return;}
+  const tableNum=paiementEnCours.table, totalVu=paiementEnCours.total;
+  if(paiementEnCours.histId){
+    const histId=paiementEnCours.histId;
+    fermerModalPaiement();
+    enregistrerCorrectionPaiement(histId,e.paiements);
+    return;
+  }
+  fermerModalPaiement();
+  finaliserEncaissement(tableNum,{paiements:e.paiements,totalVu});
+}
+
+// ============================================================
+// CORRIGER LE MOYEN DE PAIEMENT D'UNE TABLE DÉJÀ RÉGLÉE (ajouté le 17/10/2026)
+// Historique → toucher la table → « ✏️ Modifier le paiement » (code de modification demandé).
+// Seul le moyen de paiement change : le montant total de l'addition reste le même.
+// L'appli Comptage Caisse reçoit la correction toute seule et met ses tickets à jour.
+// ⚠️ Hiboutik n'est PAS corrigé automatiquement : à corriger aussi dans Hiboutik.
+// ============================================================
+function ouvrirCorrectionPaiement(histId){
+  const h=historique.find(x=>x.id===histId);
+  if(!h){showToast('❌ Table introuvable dans l\'historique');return;}
+  if(h.type==='employe'){showToast('🍽️ Repas offert : pas de paiement à modifier');return;}
+  const total=Math.round((h.total||0)*100)/100;
+  paiementEnCours={table:h.table,total,histId};
+  const avant=(h.paiements&&h.paiements.length)
+    ?'Actuellement : '+h.paiements.map(p=>modePaiementInfo(p.mode).label+' '+euros(p.montant)).join(' + ')
+    :'Aucun moyen de paiement enregistré';
+  afficherModalPaiement(`✏️ Corriger le paiement — ${libelleTable(h.table)}`,avant);
+}
+
+async function enregistrerCorrectionPaiement(histId,paiements){
+  const h=historique.find(x=>x.id===histId);
+  if(!h){showToast('❌ Table introuvable');return;}
+  const total=Math.round((h.total||0)*100)/100;
+  const totalPaye=Math.round(paiements.reduce((s,p)=>s+p.montant,0)*100)/100;
+  const surplus=Math.max(0,Math.round((totalPaye-total)*100)/100);
+  const maj={
+    paiements,
+    modePaiement:paiements.length===1?paiements[0].mode:'mixte',
+    surplusTitres:surplus>0?surplus:firebase.firestore.FieldValue.delete(),
+    paiementCorrigeLeMs:Date.now(),
+    paiementAvantCorrection:h.paiements||[]
+  };
+  if(!h.encaisseLeMs && h.timestamp && h.timestamp.toMillis) maj.encaisseLeMs=h.timestamp.toMillis();
+  try{
+    await db.collection('historique').doc(histId).update(maj);
+    showToast(`✅ Paiement corrigé — ${libelleTable(h.table)}. Pense à corriger aussi dans Hiboutik`);
+    chargerHistorique();
+  }catch(e){
+    console.error('Correction paiement',e);
+    showToast(e&&e.code==='permission-denied'?'❌ Correction refusée par les règles Firestore':'❌ Erreur — correction non enregistrée');
+  }
+}
+
+async function finaliserEncaissement(tableNum,choix){
+  if(encaissementVerrou){showToast('⏳ Encaissement déjà en cours…');return;}
+  encaissementVerrou=true;
+  const jetonActif=Object.values(allJetons).find(j=>j.statut==='actif' && j.table===tableNum);
+  const estRepasEmploye=jetonActif&&jetonActif.type==='employe';
+  try{
+    const addRef=db.collection('additions').doc(`table_${tableNum}`);
+    const addSnap=await addRef.get();
+    const addData=addSnap.exists?addSnap.data():{total:0,commandes:[]};
+    const totalAddition=Math.round((addData.total||0)*100)/100;
+
+    // Répartition du paiement par mode (vide pour un repas employé)
+    let paiements=[];
+    if(!estRepasEmploye && choix.paiements){
+      if(choix.paiements.length===1 && choix.paiements[0].montant===null){
+        paiements=[{mode:choix.paiements[0].mode,montant:totalAddition}];
+      } else {
+        // Paiement mixte : si l'addition a été modifiée entre-temps, on refuse plutôt que d'enregistrer un faux montant
+        if(choix.totalVu!==undefined && Math.abs(choix.totalVu-totalAddition)>0.004){
+          showToast(`⚠️ L'addition a changé (${euros(totalAddition)}) — refais le paiement mixte`);
+          return;
+        }
+        paiements=choix.paiements;
+      }
+    }
+    const totalPaye=Math.round(paiements.reduce((s,p)=>s+p.montant,0)*100)/100;
+    const surplusTitres=Math.max(0,Math.round((totalPaye-totalAddition)*100)/100);
+    const modePaiement=estRepasEmploye?'offert':(paiements.length===1?paiements[0].mode:'mixte');
+
+    // Détecte si un vrai plat (formule à volonté ou portion fixe) a été commandé sur cette table,
+    // pour distinguer "repas" de "boisson seule" dans les statistiques.
+    const nomsPlatsRepas=[...platsAVolonte.map(p=>p.nom),...platsQuantiteFixe.map(p=>p.nom)].map(n=>n.trim().toLowerCase());
+    const aCommandeRepas=(addData.commandes||[]).some(cmd=>
+      (cmd.items||[]).some(item=>nomsPlatsRepas.includes((item.nom||'').trim().toLowerCase()))
+    );
+
+    // Archiver dans historique — un repas employé est tagué à part (type + prénom) pour ne pas
+    // fausser les statistiques de chiffre d'affaires ; son "total" reste indicatif (valeur du repas
+    // s'il avait été facturé), pas un encaissement réel.
+    await db.collection('historique').add({
+      table:tableNum,
+      total:addData.total||0,
+      commandes:addData.commandes||[],
+      heureReglement:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
+      timestamp:firebase.firestore.FieldValue.serverTimestamp(),
+      encaisseLeMs:Date.now(),              // heure d'encaissement (lisible tout de suite par l'appli Comptage)
+      paiements,                            // [{mode:'cb', montant:42.5}, ...] — lu par l'appli Comptage Caisse
+      modePaiement,                         // 'especes' | 'cb' | ... | 'mixte' | 'offert'
+      ...(surplusTitres>0?{surplusTitres}:{}),
+      etablissement:'moule',
+      ...(estRepasEmploye?{type:'employe',employeNom:jetonActif.employeNom||null}:{})
+    });
+
+    // Transmission à Hiboutik (caisse certifiée) — ne bloque JAMAIS l'encaissement local en cas d'échec.
+    // Un repas employé n'est PAS une vente : on ne le transmet jamais à Hiboutik.
+    if(estRepasEmploye){
+      console.log(`🍽️ Repas employé (${jetonActif.employeNom}) — non transmis à Hiboutik`);
+    } else {
+      envoyerVenteVersHiboutik(tableNum, addData.commandes||[], jetonActif?.couverts||null, paiements);
+    }
+
+    // Marquer toutes les commandes réglées + supprimer addition + supprimer alerte
+    const snap=await db.collection('commandes').where('table','==',tableNum).get();
+    const b=db.batch();
+    snap.forEach(d=>b.update(d.ref,{statut:'regle'}));
+    b.delete(addRef);
+    const alerteRef=db.collection('alertes').doc(`addition_table_${tableNum}`);
+    b.delete(alerteRef);
+    await b.commit();
+
+    // Notifier le client
+    await db.collection('notifications').doc(`table_${tableNum}`).set({
+      message:'💳 Paiement enregistré — merci et à bientôt ! 🐚',
+      ts:firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    const libPay=estRepasEmploye?'repas offert':(paiements.length===1?modePaiementInfo(paiements[0].mode).label:'paiement mixte');
+    showToast(`✅ ${libelleTable(tableNum)} encaissée — ${libPay}`);
+    chargerHistorique();
+    liberJetonDeTable(tableNum, addData.total||0, aCommandeRepas);
+  }catch(e){showToast('❌ Erreur encaissement');console.error(e);}
+  finally{encaissementVerrou=false;}
+}
+
+// Libère automatiquement le(s) jeton(s) rattaché(s) à cette table (encaissement = fin de service)
+// et enregistre la visite (arrivée → départ) pour les statistiques.
+async function liberJetonDeTable(tableNum, totalAddition, aCommandeRepas){
+  try{
+    const snap=await db.collection('jetons').where('table','==',tableNum).where('statut','==','actif').get();
+    if(snap.empty) return;
+    const b=db.batch();
+    const maintenant=Date.now();
+    snap.forEach(d=>{
+      const data=d.data();
+
+      // Enregistre la visite pour les statistiques (durée réelle, taille de table)
+      // Si aucun plat n'a été commandé, la visite est classée "boisson" — peu importe le nombre de couverts.
+      if(data.timestamp){
+        const arrivee=data.timestamp.toDate?data.timestamp.toDate():new Date(data.timestamp);
+        const dureeMinutes=Math.round((maintenant-arrivee.getTime())/60000);
+        db.collection('visites').add({
+          table:tableNum,
+          couverts:data.couverts||null,
+          type:aCommandeRepas?'repas':'boisson',
+          dureeMinutes,
+          total:totalAddition||0,
+          heureArrivee:data.timestamp,
+          heureDepart:firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(e=>console.error('Erreur enregistrement visite',e));
+      }
+
+      if(data.jetable){
+        b.delete(d.ref); // jeton à usage unique imprimé à la volée → supprimé définitivement
+      } else {
+        b.update(d.ref,{statut:'libre',table:null,couverts:null}); // jeton réutilisable (lot pré-imprimé) → remis dans le pool
+      }
+    });
+    await b.commit();
+  }catch(e){console.error('Erreur libération jeton',e);}
+}
+
+// ============================================================
+// HISTORIQUE
+// ============================================================
+async function chargerHistorique(){
+  try{
+    const snap=await db.collection('historique').orderBy('timestamp','desc').limit(50).get();
+    historique=[];
+    snap.forEach(doc=>historique.push({id:doc.id,...doc.data()}));
+    renderHistorique();
+  }catch(e){
+    // Si pas d'index, charger sans orderBy
+    const snap=await db.collection('historique').get();
+    historique=[];
+    snap.forEach(doc=>historique.push({id:doc.id,...doc.data()}));
+    historique.sort((a,b)=>((b.timestamp?.seconds||0)-(a.timestamp?.seconds||0)));
+    renderHistorique();
+  }
+}
+
+function renderHistorique(){
+  const container=document.getElementById('historiqueList');
+  if(!historique.length){
+    container.innerHTML='<div class="empty"><div class="em">📚</div><p>Aucun historique</p></div>';
+    return;
+  }
+  // Stocker pour impression
+  historique.forEach((h,i)=>ticketsData['hist_'+i]={table:h.table,commandes:h.commandes||[],total:h.total||0,paiements:h.paiements||[]});
+
+  container.innerHTML=historique.map((h,i)=>`
+    <div class="histo-card" onclick="toggleDetail('hdet_${i}')">
+      <div class="histo-header">
+        <div>
+          <span class="histo-table">Table ${h.table}</span>
+          <div class="histo-heure">Réglé à ${h.heureReglement||'--:--'}</div>
+          <div>${badgesPaiement(h)}</div>
+        </div>
+        <div class="histo-total">${(h.total||0).toFixed(2).replace('.',',')} €</div>
+      </div>
+      <div class="histo-detail" id="hdet_${i}">
+        ${(h.commandes||[]).map(cmd=>`
+          <div style="margin-bottom:8px;padding:8px;background:#2A2A2A;border-radius:6px">
+            <div style="color:#D4AF37;font-size:11px;margin-bottom:4px">🕐 ${cmd.heure||'--:--'}</div>
+            ${(cmd.items||[]).map(item=>`
+              <div style="padding:2px 0">
+                <div style="display:flex;justify-content:space-between;font-size:12px;color:#ddd">
+                  <span>${item.nom}</span>
+                  <span>${item.prix===0?'Inclus':item.prix.toFixed(2).replace('.',',')+' €'}</span>
+                </div>
+                ${item.choix?`<div style="font-size:10px;color:#4ABA80;padding-left:4px">${item.choix}</div>`:''}
+              </div>`).join('')}
+          </div>`).join('')}
+        <button onclick="event.stopPropagation();imprimerTicket('hist_${i}')"
+          style="background:#333;border:1px solid #D4AF37;color:#D4AF37;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;margin-top:4px">
+          🖨️ Réimprimer
+        </button>
+        ${h.type!=='employe'&&Array.isArray(h.paiements)&&h.paiements.length?`<button onclick="event.stopPropagation();demanderPwdPuis(()=>ouvrirCorrectionPaiement('${h.id}'))"
+          style="background:#1A2A3A;border:1px solid #2a6ab5;color:#8ac4ff;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;margin-top:4px;margin-left:6px">
+          ✏️ Modifier le paiement
+        </button>`:''}
+        ${h.paiementCorrigeLeMs?`<div style="font-size:10px;color:#E6B84A;margin-top:6px">✏️ Paiement corrigé à ${new Date(h.paiementCorrigeLeMs).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+// Petites étiquettes « 💳 CB 42,50 € » sous chaque table réglée
+function badgesPaiement(h){
+  if(h.type==='employe'||h.modePaiement==='offert') return '<span class="pay-badge">🍽️ Repas offert</span>';
+  if(!h.paiements||!h.paiements.length) return h.heureReglement?'<span class="pay-badge" style="color:#888">Mode non renseigné</span>':'';
+  return h.paiements.map(p=>{const m=modePaiementInfo(p.mode);return `<span class="pay-badge">${m.icone} ${m.label} ${euros(p.montant)}</span>`;}).join('')
+    +(h.surplusTitres?`<span class="pay-badge" style="color:#E6B84A">surplus titres ${euros(h.surplusTitres)}</span>`:'');
+}
+
+function toggleDetail(id){
+  const el=document.getElementById(id);
+  if(el) el.classList.toggle('open');
+}
+
+async function viderHistorique(){
+  if(!confirm('Vider tout l\'historique ?')) return;
+  const snap=await db.collection('historique').get();
+  const b=db.batch();
+  snap.forEach(d=>b.delete(d.ref));
+  await b.commit();
+  historique=[];
+  renderHistorique();
+  showToast('🗑️ Historique vidé');
+}
+
+// ============================================================
+// CA
+// ============================================================
+function renderCA(){
+  const cmds=Object.values(allCommandes);
+  const total=cmds.reduce((s,c)=>s+(c.total||0),0);
+  const nb=cmds.length;
+  document.getElementById('caTotal').textContent=total.toFixed(2).replace('.',',')+' €';
+  document.getElementById('caNb').textContent=nb;
+
+  // Ticket moyen par COUVERT (pas par commande) — on prend le nombre de couverts déclaré
+  // une seule fois par table (le premier trouvé), pour ne pas compter plusieurs fois
+  // les couverts d'une même table qui a passé plusieurs commandes successives
+  const couvertsParTable={};
+  cmds.forEach(c=>{
+    if(c.table!=null && c.couverts && !couvertsParTable[c.table]){
+      couvertsParTable[c.table]=c.couverts;
+    }
+  });
+  const totalCouverts=Object.values(couvertsParTable).reduce((s,n)=>s+n,0);
+  document.getElementById('caCouverts').textContent=totalCouverts;
+  document.getElementById('caMoyen').textContent=totalCouverts?(total/totalCouverts).toFixed(2).replace('.',',')+'€':'0 €';
+
+  const statutColors={nouvelle:'#D4AF37',en_addition:'#4ABA80',vue:'#4ABA80',regle:'#555'};
+  document.getElementById('caTableBody').innerHTML=cmds
+    .sort((a,b)=>(b.timestamp?.seconds||0)-(a.timestamp?.seconds||0))
+    .slice(0,50)
+    .map(c=>`<tr>
+      <td>${c.heure||'--'}</td>
+      <td>Table ${c.table}</td>
+      <td>${(c.items||[]).length} article(s)</td>
+      <td style="color:#D4AF37;font-weight:bold">${(c.total||0).toFixed(2).replace('.',',')} €</td>
+      <td style="color:${statutColors[c.statut]||'#888'}">${c.statut||'-'}</td>
+    </tr>`).join('');
+}
+
+// ============================================================
+// IMPRESSION TICKET — fenêtre dédiée
+// ============================================================
+function imprimerTicket(key){
+  const data=ticketsData[key];
+  if(!data){showToast('❌ Données ticket introuvables');return;}
+  const now=new Date().toLocaleString('fr-FR');
+  let lignes='';
+  (data.commandes||[]).forEach(cmd=>{
+    lignes+=`<tr><td colspan="2" style="padding:4px 0;border-top:1px dashed #000;font-size:9px;color:#000;font-weight:900">🕐 ${cmd.heure||'--:--'}</td></tr>`;
+    (cmd.items||[]).forEach(item=>{
+      lignes+=`<tr>
+        <td style="padding:2px 0 0 0;font-size:11px;font-weight:900">${item.nom}</td>
+        <td style="padding:2px 0 0 0;font-size:11px;font-weight:900;text-align:right;white-space:nowrap">${item.prix===0?'Incl.':item.prix.toFixed(2).replace('.',',')+' €'}</td>
+      </tr>`;
+      if(item.choix){
+        lignes+=`<tr><td colspan="2" style="padding:0 0 2px 8px;font-size:9px;color:#000;font-weight:900">${item.choix}</td></tr>`;
+      }
+    });
+    lignes+=`<tr><td colspan="2" style="text-align:right;font-size:9px;color:#000;font-weight:900;padding-bottom:4px">ss-total : ${(cmd.total||0).toFixed(2).replace('.',',')} €</td></tr>`;
+  });
+
+  const win=window.open('','_blank','width=420,height=650');
+  win.document.write(`<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Ticket Table ${data.table}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:900;color:#000;background:white;width:80mm;margin:0 auto;padding:8mm;-webkit-print-color-adjust:exact}
+.title{text-align:center;font-size:15px;font-weight:900;margin-bottom:4px}
+.sub{text-align:center;font-size:10px;font-weight:900;margin-bottom:8px;border-bottom:2px dashed black;padding-bottom:6px}
+table{width:100%;border-collapse:collapse}
+.sep td{border-top:2px dashed black;padding:4px 0}
+.total-row td{font-weight:900;font-size:14px;padding-top:6px;border-top:3px solid black}
+.footer{text-align:center;font-size:10px;font-weight:900;margin-top:8px;border-top:2px dashed black;padding-top:6px}
+@media print{body{width:80mm;margin:0;padding:6mm}@page{margin:0;size:80mm auto}}
+</style></head><body>
+<div class="title">MOULE & SMILE</div>
+<div class="sub">1 Bd de la Douane — Saint-Pierre-la-Mer<br>Table ${data.table} — ${now}</div>
+<table>${lignes}
+<tr class="sep"><td colspan="2"></td></tr>
+<tr class="total-row">
+  <td>TOTAL</td>
+  <td style="text-align:right">${(data.total||0).toFixed(2).replace('.',',')} €</td>
+</tr>
+${(data.paiements||[]).map(p=>{const m=modePaiementInfo(p.mode);return `<tr><td style="font-size:10px;padding-top:3px">Réglé ${m.label}</td><td style="font-size:10px;text-align:right;padding-top:3px">${euros(p.montant)}</td></tr>`;}).join('')}
+</table>
+<div class="footer">Merci de votre visite !<br>À bientôt chez Moule & Smile 🐚</div>
+<script>window.onload=function(){window.print();setTimeout(()=>window.close(),1500);}<\/script>
+</body></html>`);
+  win.document.close();
+}
+
+// ============================================================
+// INIT
+// (chargerHistorique() est désormais lancé depuis onAuthStateChanged
+// ci-dessus, une fois la connexion équipe confirmée — voir plus haut)
+// ============================================================
+</script>
+</body>
+</html>
