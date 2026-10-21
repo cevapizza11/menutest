@@ -393,7 +393,7 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
   </div>
 </div>
 
-<div class="version">v.21/10/2026 17:10 TEST — Le Menu</div>
+<div class="version">v.21/10/2026 17:15 TEST — Le Menu</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -403,6 +403,9 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
 const firebaseConfig={apiKey:"AIzaSyCRZDRNtVF95yX7qYCvc__9NjGa41JTdMQ",authDomain:"menutest-f4629.firebaseapp.com",projectId:"menutest-f4629",storageBucket:"menutest-f4629.firebasestorage.app",messagingSenderId:"834088175472",appId:"1:834088175472:web:d45de5bc283c205608b1b5"};
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
+// Connexion « classique » (long polling) au lieu du flux direct : certains navigateurs
+// (Brave et ses boucliers, réseaux wifi filtrés) bloquent le flux direct → commandes et jetons figés.
+db.settings({experimentalForceLongPolling:true});
 // Connexion anonyme automatique, invisible pour le client (aucun mot de passe, aucun écran).
 // Nécessaire depuis le 20/09/2026 : les règles de sécurité Firestore exigent désormais d'être
 // connecté (même anonymement) pour lire/écrire — avant cette date, la base était ouverte à tous.
