@@ -393,7 +393,7 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
   </div>
 </div>
 
-<div class="version">v.21/10/2026 16:55 TEST — Le Menu</div>
+<div class="version">v.21/10/2026 17:00 TEST — Le Menu</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -1382,7 +1382,10 @@ function intercepterCommande(){
 
   // Suggestion plats (non-bloquant) : uniquement si la table n'a commandé QUE des boissons
   // (aucun plat dans le panier ni dans les commandes déjà envoyées), et n'a pas refusé la suggestion
-  if(!refuserSuggestionFormule && nbPlatsTotalTable()===0){
+  // Restaurant classique (pas à volonté) : les clients commandent boissons et plats ensemble
+  // ou l'un après l'autre → pas de suggestion. Mettre true pour la réactiver.
+  const SUGGESTION_PLATS_ACTIVE=false;
+  if(SUGGESTION_PLATS_ACTIVE && !refuserSuggestionFormule && nbPlatsTotalTable()===0){
     document.getElementById('checkboxJusteBoire').checked=false;
     document.getElementById('modalSuggestionFormule').classList.add('visible');
     return;
