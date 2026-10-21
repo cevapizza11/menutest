@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>[TEST] Moule & Smile — Admin Carte</title>
+<title>[TEST] Le Menu — Admin Carte</title>
 <link rel="icon" type="image/png" href="icon-admin.png">
 <link rel="apple-touch-icon" href="icon-admin-180.png">
 <style>
@@ -114,7 +114,7 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
 <!-- ÉCRAN DE CONNEXION ÉQUIPE (mot de passe unique partagé, même compte que caisse.html) -->
 <div id="screenLoginEquipe" class="masque">
   <div class="login-box">
-    <h2>🔒 Moule & Smile — Admin</h2>
+    <h2>🔒 Le Menu — Admin</h2>
     <p>Code d'accès équipe</p>
     <input type="password" id="loginPwdInput" placeholder="Mot de passe équipe" autocomplete="current-password" onkeydown="if(event.key==='Enter')connexionEquipe()">
     <button onclick="connexionEquipe()">Se connecter</button>
@@ -123,7 +123,7 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
 </div>
 
 <div class="header">
-  <h1>⚙️ Admin — Moule & Smile</h1>
+  <h1>⚙️ Admin — Le Menu</h1>
   <button class="save-btn" onclick="sauvegarder()">💾 Publier</button>
 </div>
 <div class="nav-tabs" style="overflow-x:auto;display:flex">
@@ -411,7 +411,7 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
     <strong>Catégories valides :</strong> formules · sauces · softs · bieres · vins_blancs · vins_roses · vins_rouges · cocktails · sangria · desserts · digestifs · chauds<br><br>
     🔗 <strong style="color:#4ABA80">Colonne "ID Hiboutik"</strong> : si elle est remplie (dernière colonne de chaque onglet produit, et de l'onglet Familles Options), la Correspondance Hiboutik est mise à jour automatiquement à l'import — plus besoin de la ressaisir à la main dans l'écran "🔗 Correspondance Hiboutik".<br><br>
     🧒 <strong style="color:#D4AF37">Colonne M "Enfant gratuit"</strong> (facultative) : <b>ADULTE</b> = ce menu ouvre droit à 1 enfant gratuit · <b>GRATUIT</b> = menu enfant gratuit (1 par menu adulte) · <b>NON</b> = hors règle · <b>case vide</b> = on garde le réglage de l'admin (Réglages → Règle « enfant gratuit »).<br><br>
-    🗂️ <strong style="color:#D4AF37">Onglet "Catégories"</strong> (fichiers créés par l'Import de carte IA) : s'il est présent, il fixe les tuiles du client, leurs titres, leurs emojis et leur ordre (ex. 🍕 Pizzas, 🥞 Galettes). Sans cet onglet, les catégories habituelles de Moule & Smile sont utilisées.<br><br>
+    🗂️ <strong style="color:#D4AF37">Onglet "Catégories"</strong> (fichiers créés par l'Import de carte IA) : s'il est présent, il fixe les tuiles du client, leurs titres, leurs emojis et leur ordre (ex. 🍕 Pizzas, 🥞 Galettes). Sans cet onglet, les catégories habituelles de Le Menu sont utilisées.<br><br>
     ⚠️ <strong style="color:#C0392B">L'import remplace toute la carte.</strong> Utilisez MouleSmile_Carte_Admin.xlsx comme base.
   </div>
   <div class="import-zone" id="importZone" onclick="document.getElementById('importInput').click()"
@@ -467,7 +467,7 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
   </div>
 </div>
 
-<div class="version">v.21/10/2026 10:25 TEST — Moule & Smile Admin</div>
+<div class="version">v.21/10/2026 11:55 TEST — Le Menu Admin</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -933,7 +933,7 @@ function lireFamillesOptions(wb){
 // ============================================================
 // LECTURE ONGLET "Catégories" (facultatif — fichiers créés par import-carte.html)
 // Colonnes : ID Catégorie | Titre affiché (emoji + titre) | Ordre
-// Si l'onglet existe, il fixe les tuiles et leur ordre ; sinon on garde la liste fixe CATS (Moule & Smile).
+// Si l'onglet existe, il fixe les tuiles et leur ordre ; sinon on garde la liste fixe CATS (Le Menu).
 // ============================================================
 let importedCategories=null;
 function lireCategories(wb){
@@ -1069,7 +1069,7 @@ function confirmerImport(){
   };
   const newCarte={categories:[]};
   // Onglet "Catégories" présent (carte d'un autre restaurant) → ses tuiles, ses titres et son ordre.
-  // Sinon → liste fixe CATS, comme avant (carte Moule & Smile).
+  // Sinon → liste fixe CATS, comme avant (carte Le Menu).
   const defsCategories=importedCategories&&importedCategories.length?importedCategories:CATS;
   defsCategories.forEach(catDef=>{
     let prods=importedData.filter(p=>p.cat===catDef.id||(!importedCategories&&catDef.id.includes(p.cat)));
@@ -1491,7 +1491,7 @@ function ajouterOptionFamille(fid){
 // ============================================================
 // ============================================================
 // RÈGLE « ENFANT GRATUIT » — même logique que index.html
-// Tant qu'aucun produit n'est réglé, valeurs historiques Moule & Smile (comme côté client).
+// Tant qu'aucun produit n'est réglé, valeurs historiques Le Menu (comme côté client).
 // ============================================================
 const REGLE_ADULTES_DEFAUT=['p1','ca1','fc1','fc2'];
 const REGLE_GRATUITS_DEFAUT=['en1'];
@@ -1539,7 +1539,7 @@ function renderRegleEnfant(){
       • Le menu enfant/ado payant n'ouvre pas droit à un enfant gratuit (sauf si vous cochez la case).<br><br>
       🧑 Ouvrent droit à 1 enfant gratuit : ${nomsListe(adultes)}<br>
       👧 Menus enfant gratuits : ${nomsListe(gratuits)}<br>
-      <span style="color:#888">${regleEnfantReglee()?'Réglage : cases cochées ci-dessous (ou colonne M de l\'Excel).':'Réglage par défaut Moule & Smile (aucune case encore modifiée).'}</span>
+      <span style="color:#888">${regleEnfantReglee()?'Réglage : cases cochées ci-dessous (ou colonne M de l\'Excel).':'Réglage par défaut Le Menu (aucune case encore modifiée).'}</span>
     </div>
     ${lignes.map(x=>{const r=regleEnfantEffective(x.p);return `
       <div class="item-row" style="flex-wrap:wrap;gap:6px">

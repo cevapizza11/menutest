@@ -1,7 +1,7 @@
 {
   "name": "M&S TEST",
   "short_name": "M&S TEST",
-  "description": "Commander chez Moule & Smile",
+  "description": "Commander chez Le Menu",
   "start_url": "/index.html",
   "display": "fullscreen",
   "orientation": "portrait",

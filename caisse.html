@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>[TEST] Moule & Smile — Caisse</title>
+<title>[TEST] Le Menu — Caisse</title>
 <link rel="icon" type="image/png" href="icon-caisse.png">
 <link rel="apple-touch-icon" href="icon-caisse-180.png">
 <style>
@@ -255,7 +255,7 @@ body.cuisine-plein{overflow:hidden}
 <!-- ÉCRAN DE CONNEXION ÉQUIPE (mot de passe unique partagé) -->
 <div id="screenLoginEquipe" class="masque">
   <div class="login-box">
-    <h2>🔒 Moule & Smile — Caisse</h2>
+    <h2>🔒 Le Menu — Caisse</h2>
     <p>Code d'accès équipe</p>
     <input type="password" id="loginPwdInput" placeholder="Mot de passe équipe" autocomplete="current-password" onkeydown="if(event.key==='Enter')connexionEquipe()">
     <button onclick="connexionEquipe()">Se connecter</button>
@@ -265,7 +265,7 @@ body.cuisine-plein{overflow:hidden}
 
 <!-- HEADER -->
 <div class="header">
-  <h1>🐚 <span id="motCaisse" onclick="tapMotCaisse()" style="cursor:default;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent">CAISSE</span> — Moule & Smile<span class="build-tag">v.21/10/2026 10:15 TEST</span></h1>
+  <h1>🐚 <span id="motCaisse" onclick="tapMotCaisse()" style="cursor:default;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent">CAISSE</span> — Le Menu<span class="build-tag">v.21/10/2026 11:55 TEST</span></h1>
   <div class="stats-row">
     <div class="stat"><div class="num" id="statNouv">0</div><div class="lbl">Nouvelles</div></div>
     <div class="stat"><div class="num" id="statAdd">0</div><div class="lbl">Additions</div></div>
@@ -555,7 +555,7 @@ body.cuisine-plein{overflow:hidden}
   </div>
 </div>
 
-<div class="version">v.21/10/2026 10:15 TEST — Moule & Smile Caisse</div>
+<div class="version">v.21/10/2026 11:55 TEST — Le Menu Caisse</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -1600,7 +1600,7 @@ function imprimerTicketsJetonAvance(jetons,printWin){
 
   const etiquettes=jetons.map(j=>`
     <div class="etiquette">
-      <div class="title">🐚 MOULE & SMILE</div>
+      <div class="title">🍽️ LE MENU</div>
       <div class="sub">Bienvenue ! Votre table va vous être attribuée</div>
       <div id="qr_${j.numero}"></div>
       <div class="footer">Jeton n°${j.numero}<br>À usage unique — ne pas transférer</div>
@@ -1657,7 +1657,7 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:900;color
 .footer{font-size:10px;font-weight:900;margin-top:10px;border-top:2px dashed black;padding-top:6px}
 @media print{body{width:80mm;margin:0;padding:6mm}@page{margin:0;size:80mm auto}}
 </style></head><body>
-<div class="title">🐚 MOULE & SMILE</div>
+<div class="title">🍽️ LE MENU</div>
 <div class="sub">${estEmploye?'Repas employé — 10 points offerts':(aTable?'Scannez pour commander depuis votre table':'Bienvenue ! Votre table va vous être attribuée')}</div>
 ${estEmploye?`<div class="table-num">🍽️ ${employeNom}</div>`:(aTable?`<div class="table-num">Table ${tableNum}</div>`:'')}
 <div id="qr"></div>
@@ -3018,7 +3018,7 @@ table{width:100%;border-collapse:collapse}
 .footer{text-align:center;font-size:10px;font-weight:900;margin-top:8px;border-top:2px dashed black;padding-top:6px}
 @media print{body{width:80mm;margin:0;padding:6mm}@page{margin:0;size:80mm auto}}
 </style></head><body>
-<div class="title">MOULE & SMILE</div>
+<div class="title">LE MENU</div>
 <div class="sub">1 Bd de la Douane — Saint-Pierre-la-Mer<br>Table ${data.table} — ${now}</div>
 <table>${lignes}
 <tr class="sep"><td colspan="2"></td></tr>
@@ -3028,7 +3028,7 @@ table{width:100%;border-collapse:collapse}
 </tr>
 ${(data.paiements||[]).map(p=>{const m=modePaiementInfo(p.mode);return `<tr><td style="font-size:10px;padding-top:3px">Réglé ${m.label}</td><td style="font-size:10px;text-align:right;padding-top:3px">${euros(p.montant)}</td></tr>`;}).join('')}
 </table>
-<div class="footer">Merci de votre visite !<br>À bientôt chez Moule & Smile 🐚</div>
+<div class="footer">Merci de votre visite !<br>À bientôt chez nous 🍽️</div>
 <script>window.onload=function(){window.print();setTimeout(()=>window.close(),1500);}<\/script>
 </body></html>`);
   win.document.close();

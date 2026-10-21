@@ -1,4 +1,4 @@
-// Service Worker Firebase Cloud Messaging — Moule & Smile
+// Service Worker Firebase Cloud Messaging — Le Menu
 // Ce fichier gère les notifications reçues quand l'app n'est PAS au premier plan
 // (téléphone verrouillé, autre appli ouverte, etc.)
 
@@ -18,7 +18,7 @@ const messaging = firebase.messaging();
 
 // Notification reçue alors que l'app est en arrière-plan / fermée
 messaging.onBackgroundMessage((payload) => {
-  const title = payload.notification?.title || '🐚 Moule & Smile';
+  const title = payload.notification?.title || '🍽️ Le Menu';
   const options = {
     body: payload.notification?.body || "Un serveur s'occupe de votre commande !",
     icon: '/icon-192.png',

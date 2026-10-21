@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>[TEST] Moule & Smile — Jetons QR</title>
+<title>[TEST] Le Menu — Jetons QR</title>
 <link rel="icon" type="image/png" href="icon-jetons.png">
 <link rel="apple-touch-icon" href="icon-jetons-180.png">
 <style>
@@ -121,11 +121,11 @@
   <a href="outils.html">← Outils</a>
   <div style="display:flex;gap:10px;align-items:center">
     <button class="btn-deco" onclick="deconnexion()">Déconnexion</button>
-    <span class="version">v.21/10/2026 10:15 TEST</span>
+    <span class="version">v.21/10/2026 11:55 TEST</span>
   </div>
 </div>
 
-<h1>🎫 Jetons QR — Moule & Smile</h1>
+<h1>🎫 Jetons QR — Le Menu</h1>
 <p class="intro">Créez et imprimez les jetons de table et les repas employés, attribuez une table aux jetons en attente, et gardez un œil sur tous les jetons ouverts. Même fonctionnement que l'onglet Jetons de la caisse.</p>
 
 <div class="resume">
@@ -380,7 +380,7 @@ function afficherLot(lot){
     const actif=j.statut==='actif';
     card.innerHTML=`
       <button class="reimp" title="Imprimer ce jeton seul" onclick="imprimerUnJeton(${j.numero},'${j.token}')">🖨️</button>
-      <div class="marque">🐚 MOULE & SMILE</div>
+      <div class="marque">🍽️ LE MENU</div>
       <div class="jeton-num">Jeton n°${j.numero}</div>
       <div class="qr" id="qr_${j.numero}"></div>
       <div class="etat ${actif?'etat-actif':'etat-libre'}">${actif?('À table — Table '+j.table):'Libre'}</div>`;
@@ -644,7 +644,7 @@ body{font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:900;color
 .table-num{font-size:18px;margin:10px 0}#qr{display:flex;justify-content:center;margin:10px 0}
 .footer{font-size:10px;margin-top:10px;border-top:2px dashed black;padding-top:6px}
 @media print{body{width:80mm;margin:0;padding:6mm}@page{margin:0;size:80mm auto}}</style></head><body>
-<div class="title">🐚 MOULE & SMILE</div><div class="sub">${sousTitre}</div>
+<div class="title">🍽️ LE MENU</div><div class="sub">${sousTitre}</div>
 <div class="table-num">${ligne}</div><div id="qr"></div>
 <div class="footer">Jeton n°${numero}<br>À usage unique — ne pas transférer</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
@@ -656,7 +656,7 @@ window.onload=function(){setTimeout(function(){window.print();setTimeout(functio
 
 function imprimerPlusieurs(win, jetons){
   const base=baseUrl();
-  const etiquettes=jetons.map(j=>`<div class="etiquette"><div class="title">🐚 MOULE & SMILE</div>
+  const etiquettes=jetons.map(j=>`<div class="etiquette"><div class="title">🍽️ LE MENU</div>
 <div class="sub">Bienvenue ! Votre table va vous être attribuée</div><div id="qr_${j.numero}" class="qr"></div>
 <div class="footer">Jeton n°${j.numero}<br>À usage unique — ne pas transférer</div></div>`).join('');
   const scripts=jetons.map(j=>`new QRCode(document.getElementById('qr_${j.numero}'),{text:"${base}?j=${j.token}",width:160,height:160,colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.H});`).join('');
@@ -684,7 +684,7 @@ function imprimerUnJeton(numero, token){
 .t{font-size:15px;margin-bottom:4px}.s{font-size:10px;border-bottom:2px dashed #000;padding-bottom:6px;margin-bottom:10px}
 #qr{display:flex;justify-content:center;margin:10px 0}.f{font-size:10px;border-top:2px dashed #000;padding-top:6px;margin-top:10px}
 @media print{body{margin:0;padding:6mm}@page{margin:0;size:80mm auto}}</style></head><body>
-<div class="t">🐚 MOULE & SMILE</div><div class="s">Scannez pour commander depuis votre table</div>
+<div class="t">🍽️ LE MENU</div><div class="s">Scannez pour commander depuis votre table</div>
 <div id="qr"></div><div class="f">Jeton n°${numero}<br>Jeton réutilisable — merci de le laisser sur la table</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>
 <script>new QRCode(document.getElementById('qr'),{text:"${url}",width:160,height:160,colorDark:"#000",colorLight:"#fff",correctLevel:QRCode.CorrectLevel.H});
