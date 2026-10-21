@@ -129,7 +129,7 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
 <div class="nav-tabs" style="overflow-x:auto;display:flex">
   <div class="nav-tab active" onclick="switchNav('Carte',this)" style="flex-shrink:0">📋 Carte</div>
   <div class="nav-tab" onclick="switchNav('BoissonMenu',this)" style="flex-shrink:0">🍺 Menu</div>
-  <div class="nav-tab" onclick="switchNav('EnfantMenu',this)" style="flex-shrink:0">🧒 Enfant</div>
+  <div class="nav-tab" id="navTabEnfant" onclick="switchNav('EnfantMenu',this)" style="flex-shrink:0">🧒 Enfant</div>
   <div class="nav-tab" onclick="switchNav('Options',this)" style="flex-shrink:0">🎛️ Options</div>
   <div class="nav-tab" onclick="switchNav('Reglages',this)" style="flex-shrink:0">⚙️ Réglages</div>
   <div class="nav-tab" onclick="switchNav('Ajouter',this)" style="flex-shrink:0">➕ Ajouter</div>
@@ -367,7 +367,7 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
     <div id="suggestionAdditionList"></div>
   </div>
 
-  <div class="section" style="margin-top:14px">
+  <div class="section" id="sectionMenuAdo" style="margin-top:14px">
     <h2>🧒 Menu Ado (6-17 ans)</h2>
     <div style="color:#888;font-size:12px;margin-bottom:10px">Choisissez les formules proposées quand un client ajoute le menu Enfant/Ado</div>
     <div id="menuAdoOptionsList"></div>
@@ -467,7 +467,7 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
   </div>
 </div>
 
-<div class="version">v.21/10/2026 11:55 TEST — Le Menu Admin</div>
+<div class="version">v.21/10/2026 16:45 TEST — Le Menu Admin</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -570,6 +570,7 @@ function remplirSelectCategories(){
 function render(){
   if(!carte)return;
   remplirSelectCategories();
+  appliquerVisibiliteEnfant();
   document.getElementById('catTabs').innerHTML=carte.categories.map(c=>`<div class="cat-tab ${c.id===catActive?'active':''}" onclick="selectCat('${c.id}')">${c.nom}</div>`).join('');
   const cat=carte.categories.find(c=>c.id===catActive);
   if(!cat)return;
@@ -1519,6 +1520,20 @@ function changerRegleEnfant(catId,idx,type,coche){
   sauvegarder(); renderRegleEnfant();
   showToast(`✅ ${p.nom} : ${p.regleEnfant==='adulte'?'ouvre droit à 1 enfant gratuit':p.regleEnfant==='gratuit'?'menu enfant gratuit':'hors règle'}`);
 }
+// La carte contient-elle un menu enfant ? (produit réglé « enfant gratuit », catégorie « enfants » ou nom avec « enfant »)
+// Sinon l'onglet 🧒 Enfant et la section Menu Ado sont masqués : inutiles pour ce restaurant.
+function carteAEnfant(){
+  if(!carte) return false;
+  return (carte.categories||[]).some(c=>c.id==='enfants'||/enfant/i.test(c.nom||'')||(c.produits||[]).some(p=>regleEnfantEffective(p)==='gratuit'||/enfant|kid/i.test(p.nom||'')));
+}
+function appliquerVisibiliteEnfant(){
+  const avec=carteAEnfant();
+  const tab=document.getElementById('navTabEnfant'); if(tab) tab.style.display=avec?'':'none';
+  const ado=document.getElementById('sectionMenuAdo'); if(ado) ado.style.display=avec?'':'none';
+  // Si on était sur l'onglet Enfant et qu'il disparaît, on revient sur la carte
+  const vue=document.getElementById('navEnfantMenu');
+  if(!avec && vue && vue.style.display!=='none'){ const t=document.querySelector('.nav-tab'); if(t) switchNav('Carte',t); }
+}
 const CATS_BOISSONS_REGLE=['sauces','softs','bieres','vins','vins_blancs','vins_roses','vins_rouges','cocktails','sangria','digestifs','chauds'];
 function renderRegleEnfant(){
   const zone=document.getElementById('regleEnfantInfo'); if(!zone||!carte)return;
@@ -1527,6 +1542,20 @@ function renderRegleEnfant(){
   const gratuits=tous.filter(x=>regleEnfantEffective(x.p)==='gratuit');
   const nomsListe=l=>l.length?l.map(x=>`<strong style="color:#D4AF37">${x.p.nom}</strong>`).join(', '):'<em style="color:#C0392B">aucun</em>';
   const lignes=tous.filter(x=>!CATS_BOISSONS_REGLE.includes(x.c.id)||regleEnfantEffective(x.p));
+  appliquerVisibiliteEnfant();
+  if(!carteAEnfant()){
+    zone.innerHTML=`
+    <div style="color:#ccc;font-size:12px;line-height:1.7;margin-bottom:10px">
+      <strong style="color:#D4AF37">Aucun menu enfant dans cette carte</strong> → l'onglet <b>🧒 Enfant</b> et la section <b>Menu Ado</b> sont masqués, et aucune règle « enfant gratuit » n'est appliquée au client.<br>
+      Pour en créer un : coche <b>👧 Enfant gratuit</b> sur un produit ci-dessous (ou mets <b>GRATUIT</b> en colonne M de l'Excel). L'onglet réapparaît aussitôt.
+    </div>
+    ${lignes.map(x=>`
+      <div class="item-row" style="flex-wrap:wrap;gap:6px">
+        <div class="item-info" style="cursor:default;min-width:140px"><div class="item-nom">${x.p.emoji||''} ${x.p.nom}</div><div class="item-detail">${x.c.nom}${x.p.prix?' · '+Number(x.p.prix).toFixed(2).replace('.',',')+' €':' · gratuit'}</div></div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#ddd;cursor:pointer"><input type="checkbox" onchange="changerRegleEnfant('${x.c.id}',${x.idx},'gratuit',this.checked)" style="width:18px;height:18px">👧 Enfant gratuit</label>
+      </div>`).join('')}`;
+    return;
+  }
   zone.innerHTML=`
     <div style="color:#ccc;font-size:12px;line-height:1.7;margin-bottom:10px">
       <strong style="color:#D4AF37">Règles actives (contrôlées sur le téléphone du client) :</strong><br>
