@@ -1,0 +1,3269 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="HACCP Moule">
+<meta name="theme-color" content="#185FA5">
+<title>[TEST] HACCP — Moule & Smile</title>
+<link rel="icon" type="image/png" href="icon-haccp.png">
+<link rel="apple-touch-icon" href="icon-haccp-180.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --blue:#185FA5;--blue-light:#E6F1FB;--blue-dark:#0C447C;
+  --teal:#0F6E56;--teal-light:#E1F5EE;
+  --amber:#854F0B;--amber-light:#FAEEDA;
+  --red:#A32D2D;--red-light:#FCEBEB;
+  --purple:#534AB7;--purple-light:#EEEDFE;
+  --coral:#993C1D;--coral-light:#FAECE7;
+  --green:#3B6D11;--green-light:#EAF3DE;
+  --bg:#F5F5F3;--card:#FFFFFF;--border:#E0E0D8;
+  --text:#1A1A18;--text2:#6B6B65;--text3:#9B9B95;
+  --radius:12px;--radius-sm:8px;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* LOGIN */
+#login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:var(--bg)}
+.login-logo{width:64px;height:64px;background:var(--blue);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:16px;color:white}
+.login-title{font-size:22px;font-weight:600;margin-bottom:4px;text-align:center}
+.login-sub{font-size:14px;color:var(--text2);text-align:center;margin-bottom:32px}
+.login-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:24px;width:100%;max-width:360px}
+.field-group{margin-bottom:16px}
+.field-group label{display:block;font-size:13px;color:var(--text2);margin-bottom:6px;font-weight:500}
+.field-group input{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:15px;color:var(--text);background:var(--card);outline:none;transition:border-color .15s}
+.field-group input:focus{border-color:var(--blue)}
+.btn-login{width:100%;padding:13px;background:var(--blue);color:white;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;transition:opacity .15s}
+.btn-login:active{opacity:.85}
+.btn-login:disabled{opacity:.6;cursor:not-allowed}
+.login-err{color:var(--red);font-size:13px;text-align:center;margin-top:10px;min-height:18px}
+
+/* APP */
+#app-screen{display:none;flex-direction:column;max-width:480px;margin:0 auto;min-height:100vh}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:calc(var(--safe-top) + 10px) 16px 10px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar-logo{width:32px;height:32px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:16px}
+.topbar-title{font-size:15px;font-weight:600}
+.topbar-sub{font-size:11px;color:var(--text2);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;transition:background .3s}
+.sync-dot.syncing{background:#f59e0b}
+.sync-dot.offline{background:#ef4444}
+.sync-label{font-size:11px;color:var(--text2)}
+.btn-logout{font-size:12px;color:var(--text2);background:none;border:1px solid var(--border);border-radius:6px;padding:4px 8px;cursor:pointer}
+
+.content{flex:1;padding:12px 12px calc(80px + var(--safe-bot));overflow-y:auto}
+
+.nav{display:flex;background:var(--card);border-top:1px solid var(--border);padding-bottom:var(--safe-bot);position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:100}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px;font-size:10px;color:var(--text2);cursor:pointer;border:none;background:none;transition:color .15s;min-width:0}
+.nav-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;flex-shrink:0}
+.nav-btn.active{color:var(--blue)}
+.nav-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:56px}
+
+/* PAGES */
+.page{display:none}.page.active{display:block}
+
+/* COMPONENTS */
+.section-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin:16px 0 8px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px}
+.card-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.card-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.card-icon svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2}
+.icon-blue{background:var(--blue-light);color:var(--blue)}
+.icon-teal{background:var(--teal-light);color:var(--teal)}
+.icon-amber{background:var(--amber-light);color:var(--amber)}
+.icon-red{background:var(--red-light);color:var(--red)}
+.icon-purple{background:var(--purple-light);color:var(--purple)}
+.icon-coral{background:var(--coral-light);color:var(--coral)}
+.card-title{font-size:14px;font-weight:600}
+.card-sub{font-size:12px;color:var(--text2);margin-top:1px}
+
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;color:var(--text2);font-weight:500;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;color:var(--text);background:var(--card);font-family:inherit;outline:none;transition:border-color .15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue)}
+.field textarea{resize:none;min-height:68px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.btn{width:100%;padding:12px;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:opacity .15s}
+.btn:active{opacity:.82}
+.btn-blue{background:var(--blue);color:white}
+.btn-teal{background:var(--teal);color:white}
+.btn-red{background:var(--red);color:white}
+.btn-loading{opacity:.7;pointer-events:none}
+
+.back-btn{display:flex;align-items:center;gap:4px;color:var(--text2);font-size:13px;background:none;border:none;cursor:pointer;margin-bottom:12px;padding:4px 0}
+.back-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* TEMP INPUTS */
+.temps-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.temp-box{background:#F8F8F6;border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;text-align:center;transition:border-color .2s,background .2s}
+.temp-box label{font-size:11px;color:var(--text2);display:block;margin-bottom:5px}
+.temp-box input{width:100%;border:none;background:none;font-size:22px;font-weight:600;text-align:center;color:var(--text);font-family:inherit;outline:none}
+.temp-box input::-webkit-outer-spin-button,.temp-box input::-webkit-inner-spin-button{-webkit-appearance:none}
+.temp-status{font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;display:inline-block;margin-top:4px}
+.st-ok{background:var(--teal-light);color:var(--teal)}
+.st-warn{background:var(--amber-light);color:var(--amber)}
+.st-nc{background:var(--red-light);color:var(--red)}
+.temp-box.ok{border-color:var(--teal)}
+.temp-box.warn{border-color:#f59e0b}
+.temp-box.nc{border-color:var(--red);background:var(--red-light)}
+
+/* CHECKLIST */
+.check-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.check-item:last-child{border:none}
+.check-box{width:24px;height:24px;border-radius:6px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;background:none;transition:all .15s}
+.check-box.on{background:var(--teal);border-color:var(--teal)}
+.check-box svg{width:13px;height:13px;stroke:white;fill:none;stroke-width:3;opacity:0;transition:opacity .15s}
+.check-box.on svg{opacity:1}
+.check-text{font-size:13px;flex:1;line-height:1.4}
+
+/* HUILE */
+.tpm-meter{background:#F8F8F6;border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;text-align:center;margin-bottom:12px}
+.tpm-value{font-size:40px;font-weight:700;transition:color .2s}
+.tpm-sub{font-size:12px;color:var(--text2);margin-bottom:8px}
+.tpm-bar-wrap{height:10px;background:var(--border);border-radius:5px;overflow:hidden;margin:8px 0}
+.tpm-bar{height:100%;border-radius:5px;transition:width .3s,background .3s}
+.tpm-legend{font-size:10px;color:var(--text2)}
+
+/* SUMMARY CHIPS */
+.chips{display:flex;gap:8px;margin-bottom:14px}
+.chip{flex:1;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 6px;text-align:center}
+.chip-num{font-size:24px;font-weight:700}
+.chip-lbl{font-size:10px;color:var(--text2);margin-top:2px}
+.progress-wrap{background:var(--border);border-radius:4px;height:5px;overflow:hidden;margin-bottom:14px}
+.progress-bar{height:100%;background:var(--blue);border-radius:4px;transition:width .5s}
+
+/* HOME GRID */
+.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.home-tile{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;text-align:left;transition:border-color .15s,transform .1s}
+.home-tile:active{transform:scale(.97);border-color:var(--blue)}
+.tile-icon{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.tile-icon svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+.tile-title{font-size:13px;font-weight:600;margin-bottom:2px}
+.tile-meta{font-size:11px;color:var(--text2)}
+.tile-badge{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;font-size:10px;font-weight:700;margin-left:4px}
+.badge-ok{background:var(--teal-light);color:var(--teal)}
+.badge-nc{background:var(--red-light);color:var(--red)}
+
+/* RECORDS */
+.record-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.record-item:last-child{border:none}
+.rec-title{font-size:13px;font-weight:500}
+.rec-meta{font-size:11px;color:var(--text2);margin-top:2px}
+.status-pill{font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px;white-space:nowrap}
+.pill-ok{background:var(--teal-light);color:var(--teal)}
+.pill-nc{background:var(--red-light);color:var(--red)}
+.pill-warn{background:var(--amber-light);color:var(--amber)}
+
+/* SUPPLIER ROW */
+.supp-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.supp-row:last-child{border:none}
+.supp-avatar{width:34px;height:34px;border-radius:9px;background:var(--blue-light);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+
+/* SIGN ROW */
+.sign-row{display:flex;gap:8px;margin-top:12px;align-items:stretch}
+.sign-input{flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;background:var(--card);color:var(--text);font-family:inherit;outline:none}
+.sign-input:focus{border-color:var(--blue)}
+
+/* TOAST */
+.toast{position:fixed;bottom:calc(84px + var(--safe-bot));left:50%;transform:translateX(-50%) translateY(10px);background:#1e293b;color:white;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:999;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;white-space:nowrap;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* LOADING */
+.loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:12px}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-size:14px;color:var(--text2)}
+
+.empty-state{text-align:center;color:var(--text2);font-size:13px;padding:16px 0}
+
+/* PHOTOS */
+.photo-zone{margin:12px 0 4px}
+.photo-zone label{display:block;font-size:12px;color:var(--text2);font-weight:500;margin-bottom:6px}
+.photo-picker{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap}
+.photo-thumb-wrap{position:relative;width:80px;height:80px;flex-shrink:0}
+.photo-thumb{width:80px;height:80px;object-fit:cover;border-radius:10px;border:1px solid var(--border);display:block}
+.photo-del{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--red);color:white;border:none;font-size:13px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700}
+.photo-add-btn{width:80px;height:80px;border:2px dashed var(--border);border-radius:10px;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:4px;color:var(--text2);font-size:11px;font-weight:500;transition:border-color .15s}
+.photo-add-btn:active{border-color:var(--blue)}
+.photo-add-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+.photo-uploading{font-size:11px;color:var(--blue);margin-top:4px;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+/* Dans le détail modal */
+.detail-photos{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.detail-photo{width:90px;height:90px;object-fit:cover;border-radius:10px;border:1px solid var(--border);cursor:pointer}
+.detail-photo:active{opacity:.8}
+.doc-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px;display:flex;align-items:flex-start;gap:14px;cursor:pointer;transition:border-color .15s}
+.doc-card:active{border-color:var(--blue);transform:scale(.98)}
+.doc-card-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.doc-card-icon svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+.doc-card-body{flex:1}
+.doc-card-title{font-size:14px;font-weight:600;margin-bottom:3px}
+.doc-card-sub{font-size:12px;color:var(--text2);line-height:1.5}
+.doc-card-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;margin-top:6px}
+.info-block{background:#E6F1FB;border-left:3px solid var(--blue);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:10px 14px;margin-bottom:10px}
+.info-block p{font-size:12px;color:#0C447C;line-height:1.6}
+.ccp-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px}
+.ccp-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:11px;font-weight:700;margin-right:8px;flex-shrink:0}
+.ccp-ok{background:var(--teal-light);color:var(--teal)}
+.ccp-warn{background:var(--amber-light);color:var(--amber)}
+.ccp-red{background:var(--red-light);color:var(--red)}
+
+/* CONFIG APPAREILS */
+.appareil-item{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px}
+.appareil-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px}
+.appareil-body{flex:1;min-width:0}
+.appareil-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.appareil-range{font-size:11px;color:var(--text2);margin-top:2px}
+.appareil-del{width:32px;height:32px;border-radius:8px;background:var(--red-light);color:var(--red);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.appareil-del svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.5}
+
+/* ADMIN BADGE */
+.admin-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:#FFF3CD;color:#854F0B}
+.admin-only{display:none}
+body.is-admin .admin-only{display:flex}
+body.is-admin .admin-only-block{display:block}
+.admin-only-flex{display:none}
+body.is-admin .admin-only-flex{display:flex}
+
+/* ALERTES RELEVÉS */
+.alert-banner{background:var(--red-light);border:1px solid var(--red);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:10px;display:flex;align-items:flex-start;gap:10px}
+.alert-banner svg{width:18px;height:18px;stroke:var(--red);fill:none;stroke-width:2;flex-shrink:0;margin-top:1px}
+.alert-banner-body{flex:1}
+.alert-banner-title{font-size:13px;font-weight:700;color:var(--red)}
+.alert-banner-sub{font-size:12px;color:var(--red);margin-top:2px;opacity:.85}
+.notif-dot{position:absolute;top:4px;right:4px;width:9px;height:9px;background:var(--red);border-radius:50%;border:2px solid var(--card)}
+.nav-btn{position:relative}
+
+/* RAPPORT */
+.rapport-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px}
+.rapport-stat{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0}
+.rapport-stat-item{background:var(--bg);border-radius:var(--radius-sm);padding:10px;text-align:center}
+.rapport-stat-num{font-size:22px;font-weight:700}
+.rapport-stat-lbl{font-size:10px;color:var(--text2);margin-top:2px}
+.btn-word{display:flex;align-items:center;gap:6px;padding:11px 14px;background:#185FA5;color:white;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;width:100%;justify-content:center;margin-top:8px}
+.btn-word:active{opacity:.85}
+
+/* GESTION EMPLOYÉS */
+.emp-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.emp-item:last-child{border:none}
+.emp-avatar{width:34px;height:34px;border-radius:50%;background:var(--blue-light);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.emp-body{flex:1}
+.emp-name{font-size:13px;font-weight:600}
+.emp-role{font-size:11px;color:var(--text2);margin-top:2px}
+.role-toggle{font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:none;cursor:pointer;color:var(--blue)}
+
+/* HISTORIQUE FILTRES */
+.filter-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.filter-bar input[type=date]{flex:1;min-width:130px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--card);color:var(--text);font-family:inherit}
+.filter-bar select{flex:1;min-width:120px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;background:var(--card);color:var(--text);font-family:inherit}
+.btn-pdf{display:flex;align-items:center;gap:6px;padding:9px 14px;background:var(--red);color:white;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.btn-pdf:active{opacity:.85}
+.btn-pdf svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.2}
+.record-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+.record-item:last-child{border:none}
+.record-item:active{background:#F8F8F6;margin:0 -14px;padding:10px 14px}
+.rec-chevron{width:16px;height:16px;stroke:var(--text2);fill:none;stroke-width:2;flex-shrink:0;margin-left:6px}
+
+/* MODAL DÉTAIL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal-sheet{background:var(--card);border-radius:18px 18px 0 0;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;padding:0 0 calc(24px + var(--safe-bot));transform:translateY(30px);transition:transform .25s}
+.modal-overlay.open .modal-sheet{transform:translateY(0)}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 16px}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:0 18px 14px;border-bottom:1px solid var(--border)}
+.modal-title{font-size:16px;font-weight:700}
+.modal-close{width:30px;height:30px;border-radius:50%;background:var(--bg);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:var(--text2)}
+.modal-body{padding:16px 18px}
+
+/* CLASSEUR HSA */
+.cat-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px;-webkit-overflow-scrolling:touch}
+.cat-scroll::-webkit-scrollbar{display:none}
+.cat-chip{flex-shrink:0;padding:8px 14px;border-radius:20px;border:1px solid var(--border);background:var(--card);font-size:12.5px;font-weight:600;color:var(--text2);cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.cat-chip.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.cat-chip .cnt{font-size:10px;opacity:.75}
+.cat-add-chip{flex-shrink:0;padding:8px 14px;border-radius:20px;border:1.5px dashed var(--text3);background:none;font-size:12.5px;font-weight:600;color:var(--text2);cursor:pointer;white-space:nowrap}
+.classeur-tip{font-size:11.5px;color:var(--text2);font-style:italic;margin:-2px 0 12px}
+.doc-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.doc-row:last-child{border:none}
+.doc-row-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px}
+.doc-row-body{flex:1;min-width:0}
+.doc-row-title{font-size:13.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-row-meta{font-size:11px;color:var(--text2);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.doc-row-actions{display:flex;gap:12px;flex-shrink:0}
+.doc-row-actions a,.doc-row-actions button{background:none;border:none;color:var(--text2);font-size:16px;cursor:pointer;padding:2px;text-decoration:none}
+.share-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.toggle-sw{width:38px;height:22px;border-radius:12px;background:var(--border);position:relative;cursor:pointer;flex-shrink:0;transition:background .15s}
+.toggle-sw.on{background:var(--teal)}
+.toggle-sw .knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:left .15s}
+.toggle-sw.on .knob{left:18px}
+.type-seg{display:flex;gap:6px;margin-bottom:12px}
+.type-seg button{flex:1;padding:9px;border-radius:8px;border:1px solid var(--border);background:var(--bg);font-size:12.5px;font-weight:600;color:var(--text2);cursor:pointer}
+.type-seg button.active{background:var(--text);color:#fff;border-color:var(--text)}
+.detail-section{margin-bottom:16px}
+.detail-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin-bottom:8px}
+.detail-row{display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--border)}
+.detail-row:last-child{border:none}
+.detail-key{font-size:12px;color:var(--text2);flex:1}
+.detail-val{font-size:13px;font-weight:500;text-align:right;flex:1;max-width:60%}
+.detail-val.nc{color:var(--red)}
+.detail-val.ok{color:var(--teal)}
+.modal-pdf-btn{margin:0 18px;width:calc(100% - 36px);padding:12px;background:var(--blue);color:white;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.modal-pdf-btn:active{opacity:.85}
+.modal-pdf-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.2}
+
+/* STATS HISTORIQUE */
+.hist-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.hist-stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 6px;text-align:center}
+.hist-stat-num{font-size:20px;font-weight:700}
+.hist-stat-lbl{font-size:10px;color:var(--text2);margin-top:2px}
+.login-switch{font-size:13px;color:var(--text2);text-align:center;margin-top:14px}
+.login-switch span{color:var(--blue);cursor:pointer;font-weight:600;text-decoration:underline}
+.topbar-user{font-size:12px;font-weight:600;color:var(--blue);background:#E6F1FB;padding:3px 9px;border-radius:20px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="bandeauModeTest" style="position:fixed;top:3px;left:50%;transform:translateX(-50%);z-index:2147483647;pointer-events:none;background:#d6332a;color:#fff;font:bold 11px/1 Arial,sans-serif;letter-spacing:1px;padding:5px 12px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,.5);opacity:.93;white-space:nowrap">🧪 MODE TEST · base menutest · rien n'est réel</div>
+<script>window.MODE_TEST=true;</script>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-txt">Chargement...</div>
+</div>
+
+<!-- LOGIN / INSCRIPTION -->
+<div id="login-screen">
+  <div class="login-logo">🐚</div>
+  <div class="login-title">HACCP — Moule & Smile</div>
+  <div class="login-sub">Saint-Pierre-la-Mer · Fleury, Aude</div>
+
+  <!-- Panneau connexion -->
+  <div class="login-card" id="panel-login">
+    <div class="field-group">
+      <label>Adresse e-mail</label>
+      <input type="email" id="l-email" placeholder="nom@exemple.fr" autocomplete="email">
+    </div>
+    <div class="field-group">
+      <label>Mot de passe</label>
+      <input type="password" id="l-pwd" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-login" id="btn-login" onclick="doLogin()">Se connecter</button>
+    <div class="login-err" id="login-err"></div>
+    <div class="login-switch">Pas encore de compte ? <span onclick="showRegister()">S'inscrire</span></div>
+  </div>
+
+  <!-- Panneau inscription -->
+  <div class="login-card" id="panel-register" style="display:none">
+    <div style="font-size:15px;font-weight:700;margin-bottom:16px;color:var(--text)">Créer un compte employé</div>
+    <div class="field-group">
+      <label>Prénom</label>
+      <input type="text" id="r-prenom" placeholder="Ton prénom (affiché sur les rapports)" autocomplete="given-name">
+    </div>
+    <div class="field-group">
+      <label>Adresse e-mail</label>
+      <input type="email" id="r-email" placeholder="nom@exemple.fr" autocomplete="email">
+    </div>
+    <div class="field-group">
+      <label>Mot de passe</label>
+      <input type="password" id="r-pwd" placeholder="Minimum 6 caractères" autocomplete="new-password">
+    </div>
+    <div class="field-group">
+      <label>Confirmer le mot de passe</label>
+      <input type="password" id="r-pwd2" placeholder="Répéter le mot de passe" autocomplete="new-password">
+    </div>
+    <button class="btn-login" id="btn-register" onclick="doRegister()">Créer mon compte</button>
+    <div class="login-err" id="register-err"></div>
+    <div class="login-switch">Déjà un compte ? <span onclick="showLogin()">Se connecter</span></div>
+  </div>
+</div>
+
+<!-- CLASSEUR HSA — LIEN PUBLIC (lecture seule, sans connexion) -->
+<div id="classeur-share-screen" style="display:none;max-width:480px;margin:0 auto;min-height:100vh">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">🐚</div>
+      <div>
+        <div class="topbar-title">Moule & Smile</div>
+        <div class="topbar-sub">Classeur HSA — lecture seule</div>
+      </div>
+    </div>
+  </div>
+  <div class="content" style="padding:12px">
+    <div id="classeur-share-body"><div class="empty-state">Chargement...</div></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">🐚</div>
+      <div>
+        <div class="topbar-title">Moule & Smile <span style="font-size:10px;font-weight:400;opacity:.6">v.21/10/2026 10:45 TEST</span></div>
+        <div class="topbar-sub" id="topbar-date">—</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span class="sync-label" id="sync-label">Sync</span>
+      <div class="topbar-user" id="topbar-user">—</div>
+      <button class="btn-logout" onclick="doLogout()">⏏</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ACCUEIL -->
+    <div class="page active" id="page-home">
+      <!-- Bannières alertes relevés manquants -->
+      <div id="alertes-container"></div>
+      <div class="chips">
+        <div class="chip"><div class="chip-num" id="s-ok">0</div><div class="chip-lbl">OK aujourd'hui</div></div>
+        <div class="chip"><div class="chip-num" id="s-nc" style="color:var(--red)">0</div><div class="chip-lbl">Non-conformités</div></div>
+        <div class="chip"><div class="chip-num" id="s-pct">0%</div><div class="chip-lbl">Complété</div></div>
+      </div>
+      <div class="progress-wrap"><div class="progress-bar" id="prog-bar" style="width:0%"></div></div>
+
+      <div class="section-label">Modules de contrôle</div>
+      <div class="home-grid">
+        <button class="home-tile" onclick="goTo('temps')">
+          <div class="tile-icon icon-blue"><svg viewBox="0 0 24 24"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg></div>
+          <div class="tile-title">Températures</div>
+          <div class="tile-meta" id="ht-temps">Frigos &amp; congélos</div>
+        </button>
+        <button class="home-tile" onclick="goTo('reception')">
+          <div class="tile-icon icon-teal"><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+          <div class="tile-title">Réception</div>
+          <div class="tile-meta" id="ht-recep">Marchandises</div>
+        </button>
+        <button class="home-tile" onclick="goTo('nettoyage')">
+          <div class="tile-icon icon-amber"><svg viewBox="0 0 24 24"><path d="M3 21l1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></svg></div>
+          <div class="tile-title">Nettoyage</div>
+          <div class="tile-meta" id="ht-nett">Plan de nettoyage</div>
+        </button>
+        <button class="home-tile" onclick="goTo('huile')">
+          <div class="tile-icon icon-coral"><svg viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></div>
+          <div class="tile-title">Huile friture</div>
+          <div class="tile-meta" id="ht-huile">F1 → F4</div>
+        </button>
+        <button class="home-tile" onclick="goTo('fournisseurs')">
+          <div class="tile-icon icon-purple"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+          <div class="tile-title">Traçabilité</div>
+          <div class="tile-meta" id="ht-fourn">Fournisseurs &amp; lots</div>
+        </button>
+        <button class="home-tile" onclick="goTo('nc')">
+          <div class="tile-icon icon-red"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div class="tile-title">Non-conform.</div>
+          <div class="tile-meta" id="ht-nc">Actions correctives</div>
+        </button>
+      </div>
+
+      <div class="section-label">Derniers enregistrements</div>
+      <div class="card" id="recent-list"><div class="empty-state">Aucun enregistrement aujourd'hui</div></div>
+    </div>
+
+    <!-- TEMPÉRATURES -->
+    <div class="page" id="page-temps">
+      <button class="back-btn" onclick="goTo('home')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg> Retour</button>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon icon-blue"><svg viewBox="0 0 24 24"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg></div>
+          <div style="flex:1"><div class="card-title">Relevé de températures</div><div class="card-sub" id="t-date-sub">—</div></div>
+          <button onclick="goTo('config')" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:4px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Gérer
+          </button>
+        </div>
+        <div class="grid2">
+          <div class="field" style="margin:0"><label>Session</label><select id="t-session"><option>Ouverture</option><option>Midi</option><option>Fermeture</option></select></div>
+          <div class="field" style="margin:0"><label>Responsable</label><input type="text" id="t-agent" placeholder="Prénom"></div>
+        </div>
+        <!-- Grille dynamique générée par JS -->
+        <div id="temps-dynamic-grid"></div>
+        <div class="field"><label>Observations</label><textarea id="t-obs" placeholder="RAS — ou détails d'une anomalie..."></textarea></div>
+        <div class="photo-zone" id="photo-zone-temps">
+          <label>📷 Photo (thermomètre, appareil, anomalie)</label>
+          <div class="photo-picker" id="photo-picker-temps">
+            <button type="button" class="photo-add-btn" onclick="triggerPhoto('temps')">
+              <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              Ajouter
+            </button>
+          </div>
+          <input type="file" id="photo-input-temps" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this,'temps')">
+        </div>
+        <button class="btn btn-blue" id="save-temps-btn" onclick="saveTemps()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Enregistrer le relevé
+        </button>
+      </div>
+    </div>
+
+    <!-- RÉCEPTION -->
+    <div class="page" id="page-reception">
+      <button class="back-btn" onclick="goTo('home')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg> Retour</button>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon icon-teal"><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+          <div><div class="card-title">Réception marchandises</div><div class="card-sub">Contrôle à la livraison</div></div>
+        </div>
+        <div class="field"><label>Fournisseur</label>
+          <select id="r-fourn"><option value="">— Sélectionner —</option></select>
+        </div>
+        <div class="grid2">
+          <div class="field" style="margin:0"><label>N° BL / Bon livraison</label><input type="text" id="r-bl" placeholder="BL-2025-..."></div>
+          <div class="field" style="margin:0"><label>Temp. livraison (°C)</label><input type="number" id="r-temp" placeholder="°C" oninput="chkRTemp()"></div>
+        </div>
+        <div id="r-temp-info" style="font-size:12px;margin:-6px 0 10px;font-weight:500"></div>
+        <div class="section-label">Points de contrôle</div>
+        <div id="r-checks">
+          <div class="check-item"><div class="check-box" id="rc1" onclick="tog('rc1')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="check-text">Température de livraison conforme</span></div>
+          <div class="check-item"><div class="check-box" id="rc2" onclick="tog('rc2')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="check-text">Emballages intacts et non percés</span></div>
+          <div class="check-item"><div class="check-box" id="rc3" onclick="tog('rc3')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="check-text">DLC / DDM vérifiées et conformes</span></div>
+          <div class="check-item"><div class="check-box" id="rc4" onclick="tog('rc4')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="check-text">Étiquetage complet et lisible</span></div>
+          <div class="check-item"><div class="check-box" id="rc5" onclick="tog('rc5')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="check-text">Aspect visuel et olfactif satisfaisant</span></div>
+          <div class="check-item"><div class="check-box" id="rc6" onclick="tog('rc6')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="check-text">Véhicule de livraison propre et isotherme</span></div>
+        </div>
+        <div class="field" style="margin-top:12px"><label>Observations / Réserves</label><textarea id="r-obs" placeholder="Produits refusés, réserves émises, anomalies..."></textarea></div>
+        <div class="photo-zone">
+          <label>📷 Photo (BL, produits, thermomètre, anomalie)</label>
+          <div class="photo-picker" id="photo-picker-reception">
+            <button type="button" class="photo-add-btn" onclick="triggerPhoto('reception')">
+              <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              Ajouter
+            </button>
+          </div>
+          <input type="file" id="photo-input-reception" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this,'reception')">
+        </div>
+        <div class="sign-row">
+          <input class="sign-input" type="text" id="r-signe" placeholder="Signé par (prénom)">
+          <button class="btn btn-teal" style="flex:1;margin-top:0" onclick="saveReception()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Valider
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NETTOYAGE -->
+    <div class="page" id="page-nettoyage">
+      <button class="back-btn" onclick="goTo('home')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg> Retour</button>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon icon-amber"><svg viewBox="0 0 24 24"><path d="M3 21l1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></svg></div>
+          <div><div class="card-title">Plan de nettoyage</div><div class="card-sub">Désinfection &amp; hygiène</div></div>
+        </div>
+        <div class="grid2">
+          <div class="field" style="margin:0"><label>Zone</label>
+            <select id="n-zone"><option>Cuisine chaude</option><option>Plonge</option><option>Frigos</option><option>Congélateurs</option><option>Plans de travail</option><option>Friteuses F1-F4</option><option>Chaudrons vapeur (50L)</option><option>Sol cuisine</option><option>Sol salle</option><option>Sanitaires</option><option>Bar / Comptoir</option><option>Terrasse</option></select>
+          </div>
+          <div class="field" style="margin:0"><label>Type</label>
+            <select id="n-type"><option>Nettoyage quotidien</option><option>Désinfection</option><option>Nettoyage fond (hebdo)</option><option>Dégraissage profond</option></select>
+          </div>
+        </div>
+        <div class="section-label">Étapes réalisées</div>
+        <div id="n-checks">
+          <div class="check-item"><div class="check-box" id="nc1" onclick="tog('nc1')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="check-text">Débarrassage &amp; pré-rinçage</span></div>
+          <div class="check-item"><div class="check-box" id="nc2" onclick="tog('nc2')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="check-text">Application du produit nettoyant</span></div>
+          <div class="check-item"><div class="check-box" id="nc3" onclick="tog('nc3')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="check-text">Temps de contact respecté</span></div>
+          <div class="check-item"><div class="check-box" id="nc4" onclick="tog('nc4')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="check-text">Rinçage à l'eau potable</span></div>
+          <div class="check-item"><div class="check-box" id="nc5" onclick="tog('nc5')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="check-text">Désinfectant appliqué</span></div>
+          <div class="check-item"><div class="check-box" id="nc6" onclick="tog('nc6')"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><span class="check-text">Séchage / essuyage final</span></div>
+        </div>
+        <div class="field" style="margin-top:12px"><label>Produit(s) utilisé(s)</label><input type="text" id="n-produit" placeholder="Ex: Dégraissant Pro, Javel 0.5%, Désinfectant alimentaire..."></div>
+        <div class="sign-row">
+          <input class="sign-input" type="text" id="n-signe" placeholder="Signé par (prénom)">
+          <button class="btn btn-blue" style="flex:1;margin-top:0" onclick="saveNettoyage()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>Enregistrer
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HUILE -->
+    <div class="page" id="page-huile">
+      <button class="back-btn" onclick="goTo('home')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg> Retour</button>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon icon-coral"><svg viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></div>
+          <div><div class="card-title">Contrôle huile de friture</div><div class="card-sub">Qualité &amp; traçabilité (seuil légal 25% TPM)</div></div>
+        </div>
+        <div class="grid2">
+          <div class="field" style="margin:0"><label>Friteuse</label><select id="h-friteuse"><option>F1 — Principale</option><option>F2 — Secondaire</option><option>F3 — Auxiliaire</option><option>F4 — Allergènes séparés</option></select></div>
+          <div class="field" style="margin:0"><label>Heure de mesure</label><input type="time" id="h-heure"></div>
+        </div>
+        <div class="tpm-meter">
+          <div class="tpm-value" id="tpm-val" style="color:var(--teal)">0.0%</div>
+          <div class="tpm-sub">Valeur polaires TPM</div>
+          <input type="range" min="0" max="40" value="0" step="0.5" id="h-tpm" oninput="updTPM(this.value)" style="width:100%">
+          <div class="tpm-bar-wrap"><div class="tpm-bar" id="tpm-bar" style="width:0%;background:var(--teal)"></div></div>
+          <div class="tpm-legend">0% ——————————— 25% seuil ——————————— 40%+</div>
+        </div>
+        <div class="grid2">
+          <div class="field" style="margin:0"><label>Temp. huile (°C)</label><input type="number" id="h-temp" placeholder="170"></div>
+          <div class="field" style="margin:0"><label>Couleur visuelle</label><select id="h-couleur"><option>Dorée (OK)</option><option>Brune claire (attention)</option><option>Brune foncée (à changer)</option><option>Noire (à rejeter impérativement)</option></select></div>
+        </div>
+        <div class="field"><label>Action effectuée</label><select id="h-action"><option>Aucune — huile conforme</option><option>Filtrage effectué</option><option>Appoint d'huile neuve (complément)</option><option>Vidange complète et renouvellement total</option></select></div>
+        <div class="sign-row">
+          <input class="sign-input" type="text" id="h-signe" placeholder="Signé par (prénom)">
+          <button class="btn btn-blue" style="flex:1;margin-top:0" onclick="saveHuile()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/></svg>Enregistrer
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOURNISSEURS -->
+    <div class="page" id="page-fournisseurs">
+      <button class="back-btn" onclick="goTo('home')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg> Retour</button>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon icon-purple"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+          <div><div class="card-title">Traçabilité fournisseurs</div><div class="card-sub">Enregistrement des lots reçus</div></div>
+        </div>
+        <div class="field"><label>Fournisseur</label>
+          <select id="f-fourn"><option value="">— Sélectionner —</option></select>
+        </div>
+        <div class="grid2">
+          <div class="field" style="margin:0"><label>Produit</label><input type="text" id="f-produit" placeholder="Ex: Moules 1kg"></div>
+          <div class="field" style="margin:0"><label>N° de lot</label><input type="text" id="f-lot" placeholder="L2025-..."></div>
+        </div>
+        <div class="grid2">
+          <div class="field" style="margin:0"><label>DLC / DDM</label><input type="date" id="f-dlc"></div>
+          <div class="field" style="margin:0"><label>Quantité reçue</label><input type="text" id="f-qte" placeholder="Ex: 50 kg"></div>
+        </div>
+        <div class="field"><label>Stockage / emplacement</label>
+          <select id="f-stockage"><option>Frigo 1</option><option>Frigo 2</option><option>Congélateur 1</option><option>Congélateur 2</option><option>Bac marinade</option><option>Réserve sèche</option></select>
+        </div>
+        <div class="photo-zone">
+          <label>📷 Photo (étiquette sanitaire, bon de livraison, lot)</label>
+          <div class="photo-picker" id="photo-picker-fournisseur">
+            <button type="button" class="photo-add-btn" onclick="triggerPhoto('fournisseur')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              Ajouter
+            </button>
+          </div>
+          <input type="file" id="photo-input-fournisseur" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this,'fournisseur')">
+        </div>
+        <div class="sign-row">
+          <input class="sign-input" type="text" id="f-signe" placeholder="Signé par (prénom)">
+          <button class="btn btn-blue" style="flex:1;margin-top:0" onclick="saveFourn()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/></svg>Enregistrer
+          </button>
+        </div>
+      </div>
+      <div class="section-label">Lots enregistrés aujourd'hui</div>
+      <div class="card" id="fourn-list"><div class="empty-state">Aucun lot enregistré aujourd'hui</div></div>
+    </div>
+
+    <!-- NC -->
+    <div class="page" id="page-nc">
+      <button class="back-btn" onclick="goTo('home')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg> Retour</button>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon icon-red"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div><div class="card-title">Non-conformité</div><div class="card-sub">Signalement &amp; action corrective</div></div>
+        </div>
+        <div class="field"><label>Type de non-conformité</label>
+          <select id="ncf-type"><option>Température hors cible</option><option>Produit non-conforme à réception</option><option>DLC dépassée</option><option>Contamination croisée</option><option>Défaut de nettoyage</option><option>Anomalie matériel / équipement</option><option>Rupture chaîne du froid</option><option>Problème allergène</option><option>Autre</option></select>
+        </div>
+        <div class="field"><label>Description détaillée</label><textarea id="ncf-desc" placeholder="Décrire précisément le problème constaté..." style="min-height:80px"></textarea></div>
+        <div class="grid2">
+          <div class="field" style="margin:0"><label>Gravité</label>
+            <select id="ncf-grav"><option value="1">🟡 Mineure</option><option value="2">🟠 Modérée</option><option value="3">🔴 Critique</option></select>
+          </div>
+          <div class="field" style="margin:0"><label>Signalé par</label><input type="text" id="ncf-agent" placeholder="Prénom"></div>
+        </div>
+        <div class="field"><label>Action corrective immédiate effectuée</label><textarea id="ncf-action" placeholder="Ex: produit écarté, frigo réglé, livraison refusée..."></textarea></div>
+        <div class="field"><label>Statut</label>
+          <select id="ncf-statut"><option value="open">En cours de traitement</option><option value="closed">Clôturée / résolue</option></select>
+        </div>
+        <div class="photo-zone">
+          <label>📷 Photo de la non-conformité (preuve visuelle)</label>
+          <div class="photo-picker" id="photo-picker-nc">
+            <button type="button" class="photo-add-btn" onclick="triggerPhoto('nc')">
+              <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              Ajouter
+            </button>
+          </div>
+          <input type="file" id="photo-input-nc" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this,'nc')">
+        </div>
+        <button class="btn btn-red" onclick="saveNC()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+          Enregistrer la NC
+        </button>
+      </div>
+      <div class="section-label">Non-conformités récentes</div>
+      <div class="card" id="nc-list"><div class="empty-state">Aucune NC enregistrée</div></div>
+    </div>
+
+    <!-- HISTORIQUE -->
+    <div class="page" id="page-history">
+      <div class="section-label" style="margin-top:4px">Historique &amp; Export PDF</div>
+
+      <!-- Filtres -->
+      <div class="filter-bar">
+        <input type="date" id="hist-date-from" title="Du">
+        <input type="date" id="hist-date-to" title="Au">
+        <select id="hist-type">
+          <option value="">Tous les types</option>
+          <option value="temps">🌡 Températures</option>
+          <option value="reception">🚚 Réception</option>
+          <option value="nettoyage">🧹 Nettoyage</option>
+          <option value="huile">🔥 Huile friture</option>
+          <option value="fournisseur">📦 Traçabilité</option>
+          <option value="nc">⚠ Non-conformités</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button class="btn" style="flex:1;background:var(--blue);color:white;padding:9px" onclick="applyHistFilter()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Filtrer
+        </button>
+        <button class="btn-pdf" onclick="exportPDF()">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          Exporter PDF
+        </button>
+      </div>
+
+      <!-- Stats rapides -->
+      <div class="hist-stats" id="hist-stats" style="display:none">
+        <div class="hist-stat"><div class="hist-stat-num" id="hs-total">0</div><div class="hist-stat-lbl">Enregistrements</div></div>
+        <div class="hist-stat"><div class="hist-stat-num" id="hs-nc" style="color:var(--red)">0</div><div class="hist-stat-lbl">Non-conformités</div></div>
+        <div class="hist-stat"><div class="hist-stat-num" id="hs-days">0</div><div class="hist-stat-lbl">Jours couverts</div></div>
+      </div>
+
+      <div class="card" id="history-list"><div class="empty-state">Chargement...</div></div>
+    </div>
+
+    <!-- DOCUMENTS HACCP -->
+    <div class="page" id="page-docs">
+      <div class="section-label" style="margin-top:4px">Documents officiels HACCP</div>
+      <div class="info-block">
+        <p>Ces documents constituent votre Plan de Maîtrise Sanitaire (PMS). Conservez-les 3 ans minimum. Présentez-les lors de tout contrôle DDPP.</p>
+      </div>
+      <div class="doc-card" onclick="downloadHACCPDoc()">
+        <div class="doc-card-icon icon-blue"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg></div>
+        <div class="doc-card-body">
+          <div class="doc-card-title">Plan HACCP complet — Moule & Smile</div>
+          <div class="doc-card-sub">Document Word (.docx) · 12 chapitres · Analyse des dangers, CCP, procédures, allergènes, traçabilité</div>
+          <div class="doc-card-badge" style="background:#E6F1FB;color:#185FA5">⬇ Télécharger .docx</div>
+        </div>
+      </div>
+      <div class="section-label">Points Critiques (CCP) — Aide-mémoire</div>
+      <div class="ccp-item">
+        <div style="display:flex;align-items:flex-start">
+          <span class="ccp-num ccp-red">CCP1</span>
+          <div><div style="font-size:13px;font-weight:600">Cuisson moules vapeur</div><div style="font-size:12px;color:var(--text2);margin-top:2px">T° cœur ≥ 90°C · ≥ 8 min · Coquilles ouvertes</div><div style="font-size:12px;color:var(--red);margin-top:2px">NC → prolonger cuisson ou écarter lot</div></div>
+        </div>
+      </div>
+      <div class="ccp-item">
+        <div style="display:flex;align-items:flex-start">
+          <span class="ccp-num ccp-red">CCP2</span>
+          <div><div style="font-size:13px;font-weight:600">Service moules — maintien chaud</div><div style="font-size:12px;color:var(--text2);margin-top:2px">Service ≤ 10 min post-cuisson · T° ≥ 63°C</div><div style="font-size:12px;color:var(--red);margin-top:2px">NC → remettre en cuisson ou écarter</div></div>
+        </div>
+      </div>
+      <div class="ccp-item">
+        <div style="display:flex;align-items:flex-start">
+          <span class="ccp-num ccp-warn">CCP3</span>
+          <div><div style="font-size:13px;font-weight:600">Huile friture — TPM</div><div style="font-size:12px;color:var(--text2);margin-top:2px">TPM &lt; 25% obligatoire (Arrêté 15/03/2018)</div><div style="font-size:12px;color:var(--amber);margin-top:2px">NC → filtrage si 18-24% · Vidange si ≥ 25%</div></div>
+        </div>
+      </div>
+      <div class="ccp-item">
+        <div style="display:flex;align-items:flex-start">
+          <span class="ccp-num ccp-warn">CCP4</span>
+          <div><div style="font-size:13px;font-weight:600">Allergènes — Friteuse F4 dédiée</div><div style="font-size:12px;color:var(--text2);margin-top:2px">F4 = usage exclusif · Zéro contamination croisée</div><div style="font-size:12px;color:var(--amber);margin-top:2px">NC → nettoyage complet + changement huile + NC app</div></div>
+        </div>
+      </div>
+      <div class="section-label">Températures cibles</div>
+      <div class="card">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text2);margin-bottom:4px">Frigos 1 &amp; 2</div><div style="font-size:18px;font-weight:700;color:var(--blue)">-2 → +4°C</div></div>
+          <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text2);margin-bottom:4px">Bac légumes</div><div style="font-size:18px;font-weight:700;color:var(--blue)">0 → +6°C</div></div>
+          <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text2);margin-bottom:4px">Congélateurs</div><div style="font-size:18px;font-weight:700;color:var(--teal)">-25 → -15°C</div></div>
+          <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text2);margin-bottom:4px">Service moules</div><div style="font-size:18px;font-weight:700;color:var(--teal)">≥ 63°C</div></div>
+          <div style="background:var(--bg);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text2);margin-bottom:4px">Huile friture</div><div style="font-size:18px;font-weight:700;color:var(--amber)">170→180°C</div></div>
+          <div style="background:#FCEBEB;border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--text2);margin-bottom:4px">TPM max légal</div><div style="font-size:18px;font-weight:700;color:var(--red)">25% TPM</div></div>
+        </div>
+      </div>
+      <div class="section-label">Suivi administratif</div>
+      <div class="card">
+        <div class="record-item"><div><div class="rec-title">Formation hygiène 14h</div><div class="rec-meta">Thomas — Validée</div></div><span class="status-pill pill-ok">✓ OK</span></div>
+        <div class="record-item"><div><div class="rec-title">Déclaration DDPP Aude</div><div class="rec-meta">Prévue février 2027</div></div><span class="status-pill pill-warn">Prévu</span></div>
+        <div class="record-item"><div><div class="rec-title">Grande Licence Restaurant (IV)</div><div class="rec-meta">Mairie de Fleury</div></div><span class="status-pill pill-warn">À faire</span></div>
+        <div class="record-item"><div><div class="rec-title">Licence III</div><div class="rec-meta">Quota Fleury à vérifier</div></div><span class="status-pill pill-warn">À vérifier</span></div>
+        <div class="record-item" style="border:none"><div><div class="rec-title">Contrat antiparasitaire</div><div class="rec-meta">Dératisation / désinsectisation</div></div><span class="status-pill pill-nc">À contractualiser</span></div>
+      </div>
+    </div>
+
+    <!-- CLASSEUR HSA -->
+    <div class="page" id="page-classeur">
+      <div class="section-label" style="margin-top:4px">Classeur HSA — Documents &amp; justificatifs</div>
+      <div class="info-block">
+        <p>Contrats, attestations, déclarations et rapports à présenter en cas de contrôle DDPP — en complément des relevés quotidiens des autres onglets.</p>
+      </div>
+
+      <div class="rapport-card">
+        <div class="share-row">
+          <div>
+            <div style="font-size:13px;font-weight:600">Lien de visibilité auditeur</div>
+            <div style="font-size:11.5px;color:var(--text2)" id="classeur-share-state">Désactivé</div>
+          </div>
+          <div class="toggle-sw" id="classeur-share-toggle" onclick="toggleClasseurShare()"><div class="knob"></div></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn btn-blue" style="flex:1" onclick="copyClasseurShareLink()">🔗 Copier le lien</button>
+          <button class="btn" style="flex:1;background:var(--bg);color:var(--text);border:1px solid var(--border)" onclick="downloadClasseurBinder()">📦 Télécharger tout</button>
+        </div>
+      </div>
+
+      <div class="cat-scroll" id="classeur-cat-scroll"></div>
+      <p class="classeur-tip" id="classeur-cat-tip"></p>
+
+      <div class="card" id="classeur-doc-list"><div class="empty-state">Chargement...</div></div>
+
+      <button class="btn btn-blue" style="margin-top:4px" onclick="openAddClasseurDocModal()">+ Ajouter un document</button>
+    </div>
+
+    <!-- CONFIG APPAREILS -->
+    <div class="page" id="page-config">
+      <button class="back-btn" onclick="goTo('temps')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg> Retour</button>
+      <div class="section-label" style="margin-top:4px">Configuration du restaurant</div>
+      <div class="info-block">
+        <p>Gérez vos fournisseurs et vos appareils de froid. Les modifications s'appliquent immédiatement sur tous les supports.</p>
+      </div>
+
+      <!-- FOURNISSEURS -->
+      <div class="section-label">Gestion des fournisseurs</div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon icon-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+          <div><div class="card-title">Ajouter un fournisseur</div><div class="card-sub">Apparaîtra dans Réception et Traçabilité</div></div>
+        </div>
+        <div class="grid2">
+          <div class="field" style="margin:0"><label>Nom du fournisseur</label><input type="text" id="cfg-fourn-nom" placeholder="Ex: La Noisette d'Oc, Metro..."></div>
+          <div class="field" style="margin:0"><label>Produits fournis</label><input type="text" id="cfg-fourn-produits" placeholder="Ex: Moules, Boissons..."></div>
+        </div>
+        <button class="btn btn-teal" style="margin-top:10px" onclick="addFournisseur()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Ajouter le fournisseur
+        </button>
+      </div>
+      <div class="section-label">Fournisseurs configurés</div>
+      <div id="cfg-fourn-list"><div class="empty-state">Chargement...</div></div>
+
+      <div class="section-label">Gestion des appareils de froid</div>
+
+      <!-- Ajouter un appareil -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-icon icon-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+          <div><div class="card-title">Ajouter un appareil</div><div class="card-sub">Frigo, congélateur, bac spécial...</div></div>
+        </div>
+        <div class="grid2">
+          <div class="field" style="margin:0">
+            <label>Nom de l'appareil</label>
+            <input type="text" id="cfg-nom" placeholder="Ex: Frigo 3, Chambre froide...">
+          </div>
+          <div class="field" style="margin:0">
+            <label>Type</label>
+            <select id="cfg-type">
+              <option value="frigo">Réfrigérateur (-2°C → +4°C)</option>
+              <option value="legumes">Bac légumes (0°C → +6°C)</option>
+              <option value="congelateur">Congélateur (-25°C → -15°C)</option>
+              <option value="custom">Personnalisé</option>
+            </select>
+          </div>
+        </div>
+        <div id="cfg-custom-row" style="display:none" class="grid2">
+          <div class="field" style="margin:0"><label>T° min (°C)</label><input type="number" id="cfg-tmin" placeholder="-2"></div>
+          <div class="field" style="margin:0"><label>T° max (°C)</label><input type="number" id="cfg-tmax" placeholder="4"></div>
+        </div>
+        <button class="btn btn-blue" style="margin-top:10px" onclick="addAppareil()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Ajouter l'appareil
+        </button>
+      </div>
+
+      <!-- Liste des appareils -->
+      <div class="section-label">Appareils configurés</div>
+      <div id="cfg-list"><div class="empty-state">Chargement...</div></div>
+    </div>
+
+    <!-- PAGE ADMIN -->
+    <div class="page" id="page-admin">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <button class="back-btn" style="margin:0" onclick="goTo('home')"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg> Retour</button>
+        <span class="admin-badge">👑 Administration</span>
+      </div>
+
+      <!-- Raccourci vers Config -->
+      <div class="section-label">Configuration</div>
+      <div class="rapport-card" style="display:flex;align-items:center;gap:12px;padding:14px">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600">Fournisseurs &amp; appareils</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px">Gérer vos fournisseurs, frigos et congélateurs</div>
+        </div>
+        <button onclick="goTo('config')" style="background:var(--blue);color:white;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer">
+          ⚙️ Ouvrir
+        </button>
+      </div>
+      <div class="section-label">Alertes relevés manquants</div>
+      <div class="rapport-card">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px">Notifications push — Rappels automatiques</div>
+        <div id="notif-status" class="info-block"><p>Chargement...</p></div>
+        <button class="btn btn-blue" style="margin-top:8px" onclick="toggleNotifications()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span id="notif-btn-label">Activer les notifications</span>
+        </button>
+        <div style="font-size:11px;color:var(--text2);margin-top:8px">Rappels si aucun relevé de températures n'a été fait à 10h30, 15h et 20h.</div>
+      </div>
+
+      <div class="section-label">Gestion des employés &amp; rôles</div>
+      <div class="rapport-card">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:10px">Le rôle <b>Manager</b> permet de gérer les appareils de froid. Tu restes le seul admin.</div>
+        <div id="emp-list"><div class="empty-state">Chargement...</div></div>
+      </div>
+
+      <div class="section-label">Rapport de période — Classeur HACCP</div>
+      <div class="rapport-card">
+        <div style="font-size:13px;font-weight:600;margin-bottom:12px">Générer un rapport complet</div>
+        <div class="grid2">
+          <div class="field" style="margin:0"><label>Du</label><input type="date" id="rpt-from"></div>
+          <div class="field" style="margin:0"><label>Au</label><input type="date" id="rpt-to"></div>
+        </div>
+        <div class="field" style="margin-top:10px"><label>Modules à inclure</label>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;background:var(--bg);padding:5px 10px;border-radius:6px;border:1px solid var(--border);cursor:pointer"><input type="checkbox" value="temps" checked> 🌡 Températures</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;background:var(--bg);padding:5px 10px;border-radius:6px;border:1px solid var(--border);cursor:pointer"><input type="checkbox" value="reception" checked> 🚚 Réception</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;background:var(--bg);padding:5px 10px;border-radius:6px;border:1px solid var(--border);cursor:pointer"><input type="checkbox" value="nettoyage" checked> 🧹 Nettoyage</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;background:var(--bg);padding:5px 10px;border-radius:6px;border:1px solid var(--border);cursor:pointer"><input type="checkbox" value="huile" checked> 🔥 Huile</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;background:var(--bg);padding:5px 10px;border-radius:6px;border:1px solid var(--border);cursor:pointer"><input type="checkbox" value="fournisseur" checked> 📦 Traçabilité</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:12px;background:var(--bg);padding:5px 10px;border-radius:6px;border:1px solid var(--border);cursor:pointer"><input type="checkbox" value="nc" checked> ⚠ NC</label>
+          </div>
+        </div>
+        <div id="rpt-preview" style="display:none" class="rapport-stat"></div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn btn-blue" style="flex:1" onclick="previewRapport()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Aperçu
+          </button>
+          <button class="btn-pdf" onclick="exportRapportPDF()">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> PDF
+          </button>
+          <button onclick="exportRapportWord()" style="display:flex;align-items:center;gap:5px;padding:9px 14px;background:#0F6E56;color:white;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg> Word
+          </button>
+        </div>
+        <button class="btn btn-blue" style="margin-top:8px" onclick="saveRapportToClasseur()">
+          📥 Enregistrer dans le Classeur HSA
+        </button>
+        <div style="font-size:11px;color:var(--text2);margin-top:6px">Génère le PDF et le range automatiquement dans la catégorie « Rapports de période » du Classeur — pas de téléchargement/reupload manuel.</div>
+      </div>
+    </div>
+
+  </div>
+  <nav class="nav">
+    <button class="nav-btn active" id="nav-home" onclick="goTo('home')">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span class="nav-label">Accueil</span>
+    </button>
+    <button class="nav-btn" id="nav-temps" onclick="goTo('temps')">
+      <svg viewBox="0 0 24 24"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>
+      <span class="nav-label">Temp.</span>
+    </button>
+    <button class="nav-btn" id="nav-reception" onclick="goTo('reception')">
+      <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      <span class="nav-label">Récept.</span>
+    </button>
+    <button class="nav-btn" id="nav-nc" onclick="goTo('nc')">
+      <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span class="nav-label">NC</span>
+    </button>
+    <button class="nav-btn" id="nav-docs" onclick="goTo('docs')">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <span class="nav-label">HACCP</span>
+    </button>
+    <button class="nav-btn" id="nav-classeur" onclick="goTo('classeur')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      <span class="nav-label">Classeur</span>
+    </button>
+    <button class="nav-btn" id="nav-history" onclick="goTo('history')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span class="nav-label">Historique</span>
+    </button>
+    <button class="nav-btn admin-only" id="nav-admin" onclick="goTo('admin')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span class="nav-label">Admin</span>
+      <div class="notif-dot" id="nav-notif-dot" style="display:none"></div>
+    </button>
+  </nav>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- MODAL AJOUT DOCUMENT — CLASSEUR HSA -->
+<div class="modal-overlay" id="classeur-modal" onclick="closeClasseurModalBg(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Ajouter un document</div>
+      <button class="modal-close" onclick="closeClasseurModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Catégorie / fournisseur</label>
+        <select id="cm-category"></select>
+      </div>
+      <div class="field">
+        <label>Nom du document</label>
+        <input type="text" id="cm-name" placeholder="Ex : Contrat dératisation Rentokil 2026">
+      </div>
+      <div class="type-seg">
+        <button type="button" id="cm-type-upload" class="active" onclick="setClasseurModalType('upload')">📄 Fichier</button>
+        <button type="button" id="cm-type-link" onclick="setClasseurModalType('link')">🔗 Lien</button>
+      </div>
+      <div class="field" id="cm-field-file">
+        <label>Fichier</label>
+        <input type="file" id="cm-file">
+      </div>
+      <div class="field" id="cm-field-url" style="display:none">
+        <label>URL</label>
+        <input type="text" id="cm-url" placeholder="https://...">
+      </div>
+      <div class="field">
+        <label>Date d'échéance (optionnel)</label>
+        <input type="date" id="cm-expiry">
+      </div>
+      <button class="btn btn-blue" id="cm-save-btn" onclick="saveClasseurDoc()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DÉTAIL ENREGISTREMENT -->
+<div class="modal-overlay" id="detail-modal" onclick="closeModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Détail</div>
+      <button class="modal-close" onclick="closeDetailModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div id="modal-photos" style="padding:0 18px 12px;display:none">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">📷 Photos</div>
+      <div class="detail-photos" id="detail-photos-list"></div>
+    </div>
+    <button class="modal-pdf-btn" onclick="exportSinglePDF()">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      Exporter cet enregistrement en PDF
+    </button>
+  </div>
+</div>
+
+<!-- FIREBASE SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, query, where, orderBy, limit,
+  getDocs, getDoc, setDoc, doc, deleteDoc, serverTimestamp, enableIndexedDbPersistence }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCRZDRNtVF95yX7qYCvc__9NjGa41JTdMQ",
+  authDomain: "menutest-f4629.firebaseapp.com",
+  projectId: "menutest-f4629",
+  storageBucket: "menutest-f4629.firebasestorage.app",
+  messagingSenderId: "834088175472",
+  appId: "1:834088175472:web:d45de5bc283c205608b1b5"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+const db = getFirestore(firebaseApp);
+const storage = getStorage(firebaseApp);
+
+try { await enableIndexedDbPersistence(db); } catch(e) {}
+
+window._auth = auth;
+window._db = db;
+window._col = (name) => collection(db, name);
+window._doc = (col, id) => doc(db, col, id);
+window._addDoc = addDoc;
+window._setDoc = setDoc;
+window._getDoc = getDoc;
+window._serverTS = serverTimestamp;
+window._query = query;
+window._where = where;
+window._orderBy = orderBy;
+window._limit = limit;
+window._getDocs = getDocs;
+window._deleteDoc = deleteDoc;
+window._signOut = signOut;
+window._signIn = (e,p) => signInWithEmailAndPassword(auth, e, p);
+window._signUp = (e,p) => createUserWithEmailAndPassword(auth, e, p);
+window._storage = storage;
+window._storageRef = (path) => ref(storage, path);
+window._uploadBytes = uploadBytes;
+window._getDownloadURL = getDownloadURL;
+window._deleteObject = deleteObject;
+
+onAuthStateChanged(auth, async user => {
+  document.getElementById('loading').style.display = 'none';
+  if(new URLSearchParams(window.location.search).has('classeurshare')){
+    if(window.renderClasseurShareView) window.renderClasseurShareView();
+    return;
+  }
+  if(user){
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'flex';
+    window._uid = user.uid;
+    window._userEmail = user.email;
+    // Charger le profil ET le rôle depuis Firestore avant initApp
+    try {
+      const snap = await window._getDoc(window._doc('users', user.uid));
+      if(snap.exists()) {
+        window._prenom = snap.data().prenom || '';
+        window._userRole = snap.data().role || 'employe';
+      } else {
+        window._prenom = '';
+        window._userRole = 'employe';
+      }
+    } catch(e){ window._prenom = ''; window._userRole = 'employe'; }
+    // MODE TEST : le compte de l'équipe de test est administrateur HACCP
+    if(window._userEmail==='tmjumeaux@gmail.com') window._userRole='admin';
+    await initApp();
+  } else {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app-screen').style.display = 'none';
+    window._uid = null;
+    window._prenom = '';
+    window._userRole = 'employe';
+  }
+});
+
+window.addEventListener('online', () => setSyncState('ok'));
+window.addEventListener('offline', () => setSyncState('offline'));
+</script>
+
+<script>
+// ── UTILS ──────────────────────────────────────────────────────────────
+const NOW = new Date();
+const TODAY = NOW.toISOString().split('T')[0];
+const JOURS = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+const MOIS = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+
+function setSyncState(s){
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  if(s==='ok'){ dot.className='sync-dot'; lbl.textContent='Sync'; }
+  else if(s==='syncing'){ dot.className='sync-dot syncing'; lbl.textContent='Synchro...'; }
+  else{ dot.className='sync-dot offline'; lbl.textContent='Hors ligne'; }
+}
+
+function showToast(msg, dur=2800){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function fmtDate(d){ return JOURS[d.getDay()] + ' ' + d.getDate() + ' ' + MOIS[d.getMonth()] + ' ' + d.getFullYear(); }
+function timeNow(){ return NOW.getHours().toString().padStart(2,'0') + ':' + NOW.getMinutes().toString().padStart(2,'0'); }
+function setBtn(id, loading){
+  const b = document.getElementById(id);
+  if(!b) return;
+  if(loading){ b.classList.add('btn-loading'); b.disabled=true; }
+  else { b.classList.remove('btn-loading'); b.disabled=false; }
+}
+
+// ── SYSTÈME PHOTOS ──────────────────────────────────────────────────────
+// Stocke les photos en attente (avant enregistrement) : { module -> {dataURL, file} }
+const _pendingPhotos = {};
+
+function triggerPhoto(module) {
+  document.getElementById('photo-input-' + module)?.click();
+}
+window.triggerPhoto = triggerPhoto;
+
+async function handlePhoto(input, module) {
+  const file = input.files[0];
+  if(!file) return;
+  // Compresser avant preview
+  const dataURL = await compressImage(file, 1200, 0.82);
+  _pendingPhotos[module] = { dataURL, file: dataURLtoFile(dataURL, file.name) };
+  // Afficher la preview
+  renderPhotoPicker(module, dataURL);
+  input.value = '';
+}
+window.handlePhoto = handlePhoto;
+
+function renderPhotoPicker(module, dataURL) {
+  const picker = document.getElementById('photo-picker-' + module);
+  if(!picker) return;
+  picker.innerHTML = `
+    <div class="photo-thumb-wrap">
+      <img class="photo-thumb" src="${dataURL}" alt="photo">
+      <button class="photo-del" onclick="removePhoto('${module}')" title="Supprimer">×</button>
+    </div>
+    <button type="button" class="photo-add-btn" onclick="triggerPhoto('${module}')" style="opacity:.5;pointer-events:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      1/1
+    </button>`;
+}
+
+function removePhoto(module) {
+  delete _pendingPhotos[module];
+  const picker = document.getElementById('photo-picker-' + module);
+  if(!picker) return;
+  picker.innerHTML = `
+    <button type="button" class="photo-add-btn" onclick="triggerPhoto('${module}')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      Ajouter
+    </button>
+    <input type="file" id="photo-input-${module}" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this,'${module}')">`;
+}
+window.removePhoto = removePhoto;
+
+// Upload une photo vers Firebase Storage et retourne l'URL
+async function uploadPhoto(module, docId) {
+  const pending = _pendingPhotos[module];
+  if(!pending) return null;
+  try {
+    setSyncState('syncing');
+    const path = `haccp/${TODAY}/${module}/${docId}_${Date.now()}.jpg`;
+    const storageRef = window._storageRef(path);
+    await window._uploadBytes(storageRef, pending.file);
+    const url = await window._getDownloadURL(storageRef);
+    delete _pendingPhotos[module];
+    setSyncState('ok');
+    return url;
+  } catch(e) {
+    console.error('Upload photo error:', e);
+    setSyncState('ok');
+    return null;
+  }
+}
+
+// Reset le picker photo d'un module
+function resetPhotoPicker(module) {
+  delete _pendingPhotos[module];
+  const picker = document.getElementById('photo-picker-' + module);
+  if(!picker) return;
+  picker.innerHTML = `
+    <button type="button" class="photo-add-btn" onclick="triggerPhoto('${module}')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      Ajouter
+    </button>
+    <input type="file" id="photo-input-${module}" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this,'${module}')">`;
+}
+
+// Compression image côté client
+function compressImage(file, maxW=1200, quality=0.82) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        if(w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function dataURLtoFile(dataURL, filename) {
+  const arr = dataURL.split(',');
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while(n--) u8arr[n] = bstr.charCodeAt(n);
+  return new File([u8arr], filename, { type: mime });
+}
+
+// Ouvrir une photo en plein écran
+function openPhotoFullscreen(url) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer';
+  overlay.innerHTML = `<img src="${url}" style="max-width:95vw;max-height:95vh;border-radius:8px;object-fit:contain">`;
+  overlay.onclick = () => overlay.remove();
+  document.body.appendChild(overlay);
+}
+window.openPhotoFullscreen = openPhotoFullscreen;
+
+// ── LOGIN / INSCRIPTION ────────────────────────────────────────────────
+function showRegister(){
+  document.getElementById('panel-login').style.display='none';
+  document.getElementById('panel-register').style.display='block';
+  document.getElementById('register-err').textContent='';
+}
+function showLogin(){
+  document.getElementById('panel-register').style.display='none';
+  document.getElementById('panel-login').style.display='block';
+  document.getElementById('login-err').textContent='';
+}
+window.showRegister = showRegister;
+window.showLogin = showLogin;
+
+async function doLogin(){
+  const email = document.getElementById('l-email').value.trim();
+  const pwd = document.getElementById('l-pwd').value;
+  const btn = document.getElementById('btn-login');
+  const err = document.getElementById('login-err');
+  err.textContent = '';
+  if(!email || !pwd){ err.textContent='Veuillez remplir tous les champs.'; return; }
+  btn.disabled = true; btn.textContent = 'Connexion...';
+  try {
+    await window._signIn(email, pwd);
+  } catch(e){
+    err.textContent = e.code === 'auth/invalid-credential' ? 'Email ou mot de passe incorrect.' : 'Erreur : ' + e.message;
+    btn.disabled = false; btn.textContent = 'Se connecter';
+  }
+}
+window.doLogin = doLogin;
+
+async function doRegister(){
+  const prenom = document.getElementById('r-prenom').value.trim();
+  const email = document.getElementById('r-email').value.trim();
+  const pwd = document.getElementById('r-pwd').value;
+  const pwd2 = document.getElementById('r-pwd2').value;
+  const btn = document.getElementById('btn-register');
+  const err = document.getElementById('register-err');
+  err.textContent = '';
+  if(!prenom){ err.textContent='Ton prénom est obligatoire.'; return; }
+  if(!email){ err.textContent='L\'email est obligatoire.'; return; }
+  if(pwd.length < 6){ err.textContent='Le mot de passe doit faire au moins 6 caractères.'; return; }
+  if(pwd !== pwd2){ err.textContent='Les mots de passe ne correspondent pas.'; return; }
+  btn.disabled = true; btn.textContent = 'Création...';
+  try {
+    const cred = await window._signUp(email, pwd);
+    // Sauvegarder le prénom dans Firestore collection "users"
+    await window._setDoc(window._doc('users', cred.user.uid), {
+      prenom, email, createdAt: window._serverTS()
+    });
+    // onAuthStateChanged va prendre le relais automatiquement
+  } catch(e){
+    const msgs = {
+      'auth/email-already-in-use': 'Cet email est déjà utilisé.',
+      'auth/invalid-email': 'Email invalide.',
+      'auth/weak-password': 'Mot de passe trop faible (6 caractères min).'
+    };
+    err.textContent = msgs[e.code] || 'Erreur : ' + e.message;
+    btn.disabled = false; btn.textContent = 'Créer mon compte';
+  }
+}
+window.doRegister = doRegister;
+
+document.addEventListener('keydown', e => {
+  if(e.key==='Enter'){
+    const reg = document.getElementById('panel-register');
+    if(reg && reg.style.display!=='none') doRegister();
+    else doLogin();
+  }
+});
+
+async function doLogout(){ await window._signOut(window._auth); }
+window.doLogout = doLogout;
+
+// ── INIT ────────────────────────────────────────────────────────────────
+async function initApp(){
+  document.getElementById('topbar-date').textContent = fmtDate(NOW);
+  document.getElementById('t-date-sub').textContent = fmtDate(NOW);
+  // Afficher le prénom dans la topbar
+  const prenom = window._prenom || '';
+  if(prenom) document.getElementById('topbar-user').textContent = prenom;
+  // Pré-remplir tous les champs "agent/signé par" avec le prénom
+  fillPrenom(prenom);
+  // Set heure friture
+  const hh = document.getElementById('h-heure');
+  if(hh) hh.value = NOW.getHours().toString().padStart(2,'0') + ':' + NOW.getMinutes().toString().padStart(2,'0');
+  // Pré-sélectionner la session selon l'heure
+  const h = NOW.getHours();
+  let session = 'Ouverture';
+  if(h >= 11 && h < 16) session = 'Midi';
+  else if(h >= 18 && h < 23) session = 'Fermeture';
+  const sel = document.getElementById('t-session');
+  if(sel) sel.value = session;
+  setSyncState('ok');
+  refreshHome();
+  loadAppareils();
+  await loadFournisseurs();
+  await initAdmin();
+  checkAlertes();
+  // Dates par défaut du rapport
+  const rptTo = document.getElementById('rpt-to');
+  const rptFrom = document.getElementById('rpt-from');
+  if(rptTo) rptTo.value = TODAY;
+  if(rptFrom){ const d=new Date(); d.setDate(d.getDate()-30); rptFrom.value=d.toISOString().split('T')[0]; }
+}
+
+// Pré-remplir tous les champs prénom de l'appli et les bloquer
+function fillPrenom(prenom){
+  if(!prenom) return;
+  const ids = ['t-agent','r-signe','n-signe','h-signe','f-signe','ncf-agent'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.value = prenom;
+    el.readOnly = true;
+    el.style.cssText += ';background:#E6F1FB;color:#185FA5;font-weight:600;cursor:not-allowed;border-color:#B5D4F4';
+  });
+}
+
+// ── NAVIGATION ──────────────────────────────────────────────────────────
+function goTo(page){
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  const nb = document.getElementById('nav-'+page);
+  if(nb) nb.classList.add('active');
+  // Re-pré-remplir le prénom à chaque navigation
+  fillPrenom(window._prenom || '');
+  if(page==='home') refreshHome();
+  if(page==='history') renderHistory();
+  if(page==='fournisseurs') renderFournList();
+  if(page==='nc') renderNCList();
+  if(page==='classeur') renderClasseur();
+  if(page==='config') { renderCfgList(); refreshFournSelects(); }
+}
+window.goTo = goTo;
+
+// ── CHECKLIST ───────────────────────────────────────────────────────────
+const checks = {};
+function tog(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  checks[id] = !checks[id];
+  el.classList.toggle('on', checks[id]);
+}
+window.tog = tog;
+function countChecks(prefix, total){
+  return Object.keys(checks).filter(k => k.startsWith(prefix) && checks[k]).length + '/' + total;
+}
+function resetChecks(prefix){
+  Object.keys(checks).filter(k => k.startsWith(prefix)).forEach(k => {
+    checks[k] = false;
+    const el = document.getElementById(k);
+    if(el) el.classList.remove('on');
+  });
+}
+
+// ── ADMIN / RÔLES ───────────────────────────────────────────────────────
+// ─── Admin détecté via le rôle Firestore (role:'admin') ───
+function isAdmin() {
+  return window._userRole === 'admin';
+}
+
+
+function isManager() {
+  return window._userRole === 'manager' || isAdmin();
+}
+
+async function initAdmin() {
+  // Le rôle est déjà chargé dans onAuthStateChanged — on applique juste les droits
+  console.log('[ADMIN] role:', window._userRole, '→ isAdmin:', isAdmin());
+
+  if(isAdmin()) {
+    document.body.classList.add('is-admin');
+  } else {
+    document.body.classList.remove('is-admin');
+  }
+
+  // Mettre à jour le bouton Gérer dans la page températures (visible si manager ou admin)
+  const cfgBtn = document.querySelector('[onclick="goTo(\'config\')"]');
+  if(cfgBtn) cfgBtn.style.display = isManager() ? 'flex' : 'none';
+
+  // Onglet Classeur HSA réservé au gérant/manager (contrats, licences...)
+  const classeurBtn = document.getElementById('nav-classeur');
+  if(classeurBtn) classeurBtn.style.display = isManager() ? 'flex' : 'none';
+}
+
+// Protéger la page config : seul manager/admin peut y accéder
+const _origGoTo = window.goTo;
+window.goTo = function(page) {
+  if(page === 'config' && !isManager() && !isAdmin()) { showToast('Accès réservé au gérant ou manager'); return; }
+  if(page === 'classeur' && !isManager()) { showToast('Accès réservé au gérant ou manager'); return; }
+  if(page === 'admin' && !isAdmin()) { showToast('Accès réservé à Thomas'); return; }
+  _origGoTo(page);
+  if(page === 'admin') loadAdminPage();
+};
+
+async function loadAdminPage() {
+  loadEmpList();
+  updateNotifStatus();
+}
+
+// ── GESTION EMPLOYÉS ────────────────────────────────────────────────────
+async function loadEmpList() {
+  const el = document.getElementById('emp-list');
+  if(!el) return;
+  try {
+    const q = window._query(window._col('users'), window._limit(50));
+    const snap = await window._getDocs(q);
+    if(snap.empty) { el.innerHTML='<div class="empty-state">Aucun employé inscrit</div>'; return; }
+    el.innerHTML = snap.docs.map(d => {
+      const u = d.data();
+      const uid = d.id;
+      const role = u.role || 'employe';
+      const isSelf = uid === window._uid;
+      const isAdminUser = role === 'admin';
+
+      // Sa propre ligne ou un autre admin → pas de bouton
+      if(isSelf) return `<div class="emp-item">
+        <div class="emp-avatar">${(u.prenom||'?')[0]}</div>
+        <div class="emp-body">
+          <div class="emp-name">${u.prenom||'—'} <span style="font-size:10px">👑</span></div>
+          <div class="emp-role">Administrateur — vous-même</div>
+        </div>
+        <span class="status-pill pill-ok" style="font-size:11px">Admin</span>
+      </div>`;
+
+      if(isAdminUser) return `<div class="emp-item">
+        <div class="emp-avatar">${(u.prenom||'?')[0]}</div>
+        <div class="emp-body">
+          <div class="emp-name">${u.prenom||'—'} <span style="font-size:10px">👑</span></div>
+          <div class="emp-role">Administrateur</div>
+        </div>
+        <span class="status-pill pill-ok" style="font-size:11px">Admin</span>
+      </div>`;
+
+      return `<div class="emp-item">
+        <div class="emp-avatar">${(u.prenom||'?')[0]}</div>
+        <div class="emp-body">
+          <div class="emp-name">${u.prenom||'—'}</div>
+          <div class="emp-role">${role==='manager'?'👔 Manager':'👤 Employé'}</div>
+        </div>
+        <button class="role-toggle" onclick="toggleRole('${uid}','${role}','${u.prenom||''}')">
+          ${role==='manager'?'Rétrograder':'→ Manager'}
+        </button>
+      </div>`;
+    }).join('');
+  } catch(e) { el.innerHTML='<div class="empty-state">Erreur de chargement</div>'; }
+}
+
+async function toggleRole(uid, currentRole, prenom) {
+  // Double sécurité — jamais toucher à un admin ni à soi-même
+  if(uid === window._uid) { showToast('Impossible de modifier votre propre rôle'); return; }
+  if(currentRole === 'admin') { showToast('Impossible de modifier un administrateur'); return; }
+  const newRole = currentRole === 'manager' ? 'employe' : 'manager';
+  const label = newRole === 'manager' ? `Promouvoir ${prenom} en Manager ?` : `Rétrograder ${prenom} en Employé ?`;
+  if(!confirm(label)) return;
+  try {
+    await window._setDoc(window._doc('users', uid), { role: newRole }, { merge: true });
+    showToast(`✓ ${prenom} → ${newRole==='manager'?'Manager':'Employé'}`);
+    loadEmpList();
+  } catch(e) { showToast('Erreur : ' + e.message); }
+}
+window.toggleRole = toggleRole;
+
+// ── ALERTES RELEVÉS MANQUANTS ───────────────────────────────────────────
+const SESSIONS_HEURES = [
+  { session:'Ouverture', heure:10, minute:30 },
+  { session:'Midi',      heure:15, minute:0  },
+  { session:'Fermeture', heure:20, minute:0  },
+];
+
+async function checkAlertes() {
+  // Vérifier si les relevés du jour ont été faits
+  try {
+    const q = window._query(window._col('haccp_records'),
+      window._where('type','==','temps'),
+      window._where('date','==',TODAY), window._limit(20));
+    const snap = await window._getDocs(q);
+    const sessions = snap.docs.map(d => d.data().session);
+    const hNow = NOW.getHours() * 60 + NOW.getMinutes();
+
+    let manquants = [];
+    SESSIONS_HEURES.forEach(s => {
+      const deadline = s.heure * 60 + s.minute;
+      if(hNow > deadline && !sessions.includes(s.session)) {
+        manquants.push(s.session);
+      }
+    });
+
+    // Afficher bannières sur l'accueil
+    renderAlertes(manquants);
+    // Badge rouge nav admin
+    const dot = document.getElementById('nav-notif-dot');
+    if(dot) dot.style.display = manquants.length > 0 ? 'block' : 'none';
+  } catch(e) {}
+}
+
+function renderAlertes(manquants) {
+  const container = document.getElementById('alertes-container');
+  if(!container) return;
+  if(manquants.length === 0) { container.innerHTML=''; return; }
+  container.innerHTML = manquants.map(s => `
+    <div class="alert-banner">
+      <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <div class="alert-banner-body">
+        <div class="alert-banner-title">Relevé ${s} non effectué</div>
+        <div class="alert-banner-sub">Le relevé de températures de la session ${s} n'a pas encore été enregistré aujourd'hui.</div>
+      </div>
+      <button onclick="goTo('temps')" style="background:var(--red);color:white;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">Faire →</button>
+    </div>`).join('');
+}
+
+// Notifications Web Push
+async function toggleNotifications() {
+  if(!('Notification' in window)) { showToast('Notifications non supportées sur ce navigateur'); return; }
+  if(Notification.permission === 'granted') {
+    showToast('Notifications déjà activées ✓');
+    scheduleNotifChecks();
+    return;
+  }
+  const perm = await Notification.requestPermission();
+  if(perm === 'granted') {
+    scheduleNotifChecks();
+    showToast('✓ Notifications activées !');
+    updateNotifStatus();
+  } else {
+    showToast('Notifications refusées — vérifier les paramètres du navigateur');
+  }
+}
+window.toggleNotifications = toggleNotifications;
+
+function scheduleNotifChecks() {
+  // Vérifier toutes les 5 minutes
+  setInterval(async () => {
+    if(Notification.permission !== 'granted') return;
+    const now = new Date();
+    const hNow = now.getHours() * 60 + now.getMinutes();
+    try {
+      const q = window._query(window._col('haccp_records'),
+        window._where('type','==','temps'),
+        window._where('date','==',TODAY), window._limit(20));
+      const snap = await window._getDocs(q);
+      const sessions = snap.docs.map(d=>d.data().session);
+      SESSIONS_HEURES.forEach(s => {
+        const deadline = s.heure * 60 + s.minute;
+        // Déclencher dans les 10 min suivant la deadline
+        if(hNow >= deadline && hNow < deadline + 10 && !sessions.includes(s.session)) {
+          new Notification('⚠ HACCP — Moule & Smile', {
+            body: `Relevé de températures "${s.session}" non effectué !`,
+            icon: '/favicon.ico',
+            tag: 'haccp-' + s.session
+          });
+        }
+      });
+    } catch(e) {}
+  }, 5 * 60 * 1000);
+}
+
+function updateNotifStatus() {
+  const el = document.getElementById('notif-status');
+  const btn = document.getElementById('notif-btn-label');
+  if(!el) return;
+  if(!('Notification' in window)) {
+    el.innerHTML='<p>Notifications non disponibles sur ce navigateur.</p>'; return;
+  }
+  if(Notification.permission === 'granted') {
+    el.style.background='#E1F5EE'; el.style.borderColor='#0F6E56';
+    el.innerHTML='<p style="color:#0F6E56">✓ Notifications activées — rappels automatiques à 10h30, 15h et 20h</p>';
+    if(btn) btn.textContent = 'Notifications activées ✓';
+  } else if(Notification.permission === 'denied') {
+    el.style.background='#FCEBEB'; el.style.borderColor='#A32D2D';
+    el.innerHTML='<p style="color:#A32D2D">✕ Notifications bloquées — autoriser dans les réglages du navigateur</p>';
+    if(btn) btn.textContent = 'Débloquer dans les réglages';
+  } else {
+    el.innerHTML='<p>Appuie sur le bouton pour activer les rappels automatiques sur cet appareil.</p>';
+    if(btn) btn.textContent = 'Activer les notifications';
+  }
+}
+
+// ── RAPPORT DE PÉRIODE ──────────────────────────────────────────────────
+let _rapportRecs = [];
+
+async function previewRapport() {
+  const from = document.getElementById('rpt-from').value;
+  const to = document.getElementById('rpt-to').value;
+  if(!from || !to) { showToast('Sélectionner une période'); return; }
+  const modules = [...document.querySelectorAll('#page-admin input[type=checkbox]:checked')].map(c=>c.value);
+  showToast('⏳ Chargement des données...');
+  try {
+    const q = window._query(window._col('haccp_records'), window._limit(1000));
+    const snap = await window._getDocs(q);
+    _rapportRecs = snap.docs.map(d=>d.data())
+      .filter(r => r.date >= from && r.date <= to && modules.includes(r.type))
+      .sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));
+
+    const prev = document.getElementById('rpt-preview');
+    prev.style.display = 'grid';
+    const ncCount = _rapportRecs.filter(r=>r.hasNC).length;
+    const days = new Set(_rapportRecs.map(r=>r.date)).size;
+    prev.innerHTML = `
+      <div class="rapport-stat-item"><div class="rapport-stat-num">${_rapportRecs.length}</div><div class="rapport-stat-lbl">Enregistrements</div></div>
+      <div class="rapport-stat-item"><div class="rapport-stat-num" style="color:var(--red)">${ncCount}</div><div class="rapport-stat-lbl">Non-conformités</div></div>
+      <div class="rapport-stat-item"><div class="rapport-stat-num">${days}</div><div class="rapport-stat-lbl">Jours couverts</div></div>
+      <div class="rapport-stat-item"><div class="rapport-stat-num">${modules.length}</div><div class="rapport-stat-lbl">Modules inclus</div></div>`;
+    showToast(`✓ ${_rapportRecs.length} enregistrements trouvés`);
+  } catch(e) { showToast('Erreur : ' + e.message); }
+}
+window.previewRapport = previewRapport;
+
+async function exportRapportPDF() {
+  if(_rapportRecs.length === 0) { await previewRapport(); }
+  if(_rapportRecs.length === 0) { showToast('Aucune donnée pour cette période'); return; }
+  const from = document.getElementById('rpt-from').value;
+  const to = document.getElementById('rpt-to').value;
+  showToast('⏳ Génération PDF...');
+  const ok = await loadJsPDF();
+  if(!ok) { showToast('Erreur chargement PDF'); return; }
+  const doc = buildPDFContent(_rapportRecs, `Rapport HACCP — Moule & Smile`, `${from} → ${to}`);
+  doc.save(`Rapport_HACCP_${from}_${to}.pdf`);
+  showToast('✓ PDF exporté !');
+}
+window.exportRapportPDF = exportRapportPDF;
+
+async function exportRapportWord() {
+  if(_rapportRecs.length === 0) { await previewRapport(); }
+  if(_rapportRecs.length === 0) { showToast('Aucune donnée pour cette période'); return; }
+  showToast('⏳ Génération Word...');
+  const from = document.getElementById('rpt-from').value;
+  const to   = document.getElementById('rpt-to').value;
+
+  const typeLabFr = {temps:'Températures',reception:'Réception',nettoyage:'Nettoyage',
+    huile:'Huile friture',fournisseur:'Traçabilité',nc:'Non-conformité'};
+  const ncCount = _rapportRecs.filter(r=>r.hasNC).length;
+  const days    = new Set(_rapportRecs.map(r=>r.date)).size;
+
+  // ── Helpers XML ──────────────────────────────────────────────────────
+  function esc(s){ return String(s||'—').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function wRun(text, opts={}){
+    const rpr = [
+      opts.bold    ? '<w:b/>'              : '',
+      opts.italic  ? '<w:i/>'              : '',
+      opts.color   ? `<w:color w:val="${opts.color}"/>` : '',
+      opts.size    ? `<w:sz w:val="${opts.size}"/><w:szCs w:val="${opts.size}"/>` : '<w:sz w:val="20"/><w:szCs w:val="20"/>',
+      '<w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>',
+    ].join('');
+    return `<w:r><w:rPr>${rpr}</w:rPr><w:t xml:space="preserve">${esc(text)}</w:t></w:r>`;
+  }
+
+  function wPar(runs, opts={}){
+    const ppr = [
+      opts.center ? '<w:jc w:val="center"/>' : '',
+      opts.before || opts.after ? `<w:spacing w:before="${opts.before||0}" w:after="${opts.after||80}"/>` : '',
+      opts.borderBottom ? `<w:pBdr><w:bottom w:val="single" w:sz="6" w:space="2" w:color="185FA5"/></w:pBdr>` : '',
+    ].join('');
+    return `<w:p><w:pPr>${ppr}</w:pPr>${runs}</w:p>`;
+  }
+
+  function wCell(text, opts={}){
+    const tcp = [
+      opts.fill  ? `<w:shd w:val="clear" w:color="auto" w:fill="${opts.fill}"/>` : '',
+      opts.width ? `<w:tcW w:w="${opts.width}" w:type="dxa"/>` : '',
+      `<w:tcMar><w:top w:w="60" w:type="dxa"/><w:bottom w:w="60" w:type="dxa"/><w:left w:w="80" w:type="dxa"/><w:right w:w="80" w:type="dxa"/></w:tcMar>`,
+    ].join('');
+    const bdr = `<w:tcBorders><w:top w:val="single" w:sz="2" w:color="E0E0D8"/><w:bottom w:val="single" w:sz="2" w:color="E0E0D8"/><w:left w:val="single" w:sz="2" w:color="E0E0D8"/><w:right w:val="single" w:sz="2" w:color="E0E0D8"/></w:tcBorders>`;
+    const runOpts = { size: opts.size||18, bold: opts.bold||false, color: opts.color||'1A1A18' };
+    return `<w:tc><w:tcPr>${bdr}${tcp}</w:tcPr>${wPar(wRun(text, runOpts))}</w:tc>`;
+  }
+
+  function wHeaderRow(headers, widths){
+    const cells = headers.map((h,i) => wCell(h, {fill:'185FA5', width:widths[i], bold:true, color:'FFFFFF', size:16})).join('');
+    return `<w:tr><w:trPr><w:tblHeader/></w:trPr>${cells}</w:tr>`;
+  }
+  function wDataRow(vals, widths, ri, isNC){
+    const fill = ri%2===0 ? 'FFFFFF' : 'F5F5F3';
+    const cells = vals.map((v,i) => {
+      const isLast = i===vals.length-1;
+      const color = isLast && (String(v)==='NC'||String(v)==='Critique') ? 'A32D2D'
+                  : isLast && (String(v)==='OK'||String(v)==='Résolue')  ? '0F6E56' : '1A1A18';
+      return wCell(v, {fill, width:widths[i], color, bold:isLast, size:17});
+    }).join('');
+    return `<w:tr>${cells}</w:tr>`;
+  }
+  function wTable(headers, rows, widths, isNCArr){
+    const total = widths.reduce((a,b)=>a+b,0);
+    const dataRows = rows.map((row,ri) => wDataRow(row, widths, ri, isNCArr&&isNCArr[ri])).join('');
+    return `<w:tbl>
+      <w:tblPr><w:tblW w:w="${total}" w:type="dxa"/><w:tblBorders>
+        <w:insideH w:val="single" w:sz="2" w:color="E0E0D8"/>
+        <w:insideV w:val="single" w:sz="2" w:color="E0E0D8"/>
+      </w:tblBorders></w:tblPr>
+      <w:tblGrid>${widths.map(w=>`<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>
+      ${wHeaderRow(headers,widths)}${dataRows}
+    </w:tbl>`;
+  }
+  function spacer(){ return '<w:p><w:pPr><w:spacing w:before="0" w:after="120"/></w:pPr></w:p>'; }
+
+  // ── Contenu du document ───────────────────────────────────────────────
+  let body = '';
+
+  // Titre
+  body += wPar(wRun('RAPPORT HACCP — MOULE & SMILE', {bold:true, size:32, color:'185FA5'}), {center:true, after:100});
+  body += wPar(wRun(`Période : ${from} → ${to}`, {italic:true, size:22, color:'6B6B65'}), {center:true, after:80});
+  body += wPar(wRun(`Généré le ${new Date().toLocaleDateString('fr-FR')} · ${_rapportRecs.length} enregistrements · ${ncCount} NC · ${days} jours couverts`, {size:18, color:'6B6B65'}), {center:true, after:200});
+
+  // Résumé
+  body += wPar(wRun('Résumé par module', {bold:true, size:24, color:'185FA5'}), {before:200, after:100, borderBottom:true});
+  body += spacer();
+  body += wTable(
+    ['Module','Enregistrements','Non-conformités'],
+    Object.entries(typeLabFr).map(([k,v])=>{
+      const recs=_rapportRecs.filter(r=>r.type===k);
+      return [v, recs.length.toString(), recs.filter(r=>r.hasNC).length.toString()];
+    }),
+    [5000,2000,2026], null
+  );
+  body += spacer();
+
+  // Détail par type
+  const types = [...new Set(_rapportRecs.map(r=>r.type))];
+  types.forEach(type => {
+    const group = _rapportRecs.filter(r=>r.type===type);
+    if(!group.length) return;
+    body += wPar(wRun((typeLabFr[type]||type)+` — ${group.length} enregistrement(s)`, {bold:true, size:22, color:'185FA5'}), {before:240, after:100, borderBottom:true});
+    body += spacer();
+
+    if(type==='temps'){
+      const appIds=new Set();
+      group.forEach(r=>{ if(r.releves)Object.keys(r.releves).forEach(k=>appIds.add(k)); else ['frigo1','frigo2','marinade','legumes','cong1','cong2'].forEach(k=>{if(r[k]!=null)appIds.add(k);}); });
+      const appList=[...appIds];
+      const appNoms={};
+      group.forEach(r=>{if(r.appareils)r.appareils.forEach(a=>{appNoms[a.id]=a.nom;});});
+      appList.forEach(k=>{if(!appNoms[k])appNoms[k]=k;});
+      const baseW=9026-60; const fixedW=1600+1400+1400+1200;
+      const aW=Math.max(800,Math.floor((baseW-fixedW)/Math.max(appList.length,1)));
+      const headers=['Date','Session','Agent',...appList.map(k=>appNoms[k]||k),'Observations','Statut'];
+      const widths=[1400,1200,1400,...appList.map(()=>aW),2400,1226];
+      const rows=group.map(r=>[r.date,r.session||'—',r.agent||'—',...appList.map(k=>{const v=r.releves?r.releves[k]:r[k];return v!=null?v+'°C':'—';}),(r.obs||'').substring(0,30),r.hasNC?'NC':'OK']);
+      body += wTable(headers, rows, widths, group.map(r=>r.hasNC));
+    } else if(type==='huile'){
+      body += wTable(
+        ['Date','Heure','Friteuse','TPM %','T° huile','Couleur','Action effectuée','Agent','Statut'],
+        group.map(r=>[r.date,r.heure||r.time,r.friteuse||'—',r.tpm+'%',r.temp?r.temp+'°C':'—',(r.couleur||'').substring(0,20),(r.action||'').substring(0,30),r.signe||'—',r.hasNC?'NC':'OK']),
+        [1200,900,1800,900,1000,2000,2500,1400,1326], group.map(r=>r.hasNC)
+      );
+    } else if(type==='reception'){
+      body += wTable(
+        ['Date','Heure','Fournisseur','N° BL','T° livraison','Contrôles','Observations','Signé par','Statut'],
+        group.map(r=>[r.date,r.time,(r.fourn||'—').substring(0,25),r.bl||'—',r.temp?r.temp+'°C':'—',r.checks||'—',(r.obs||'').substring(0,25),r.signe||'—',r.hasNC?'NC':'OK']),
+        [1200,900,2400,1400,1200,1000,2500,1500,926], group.map(r=>r.hasNC)
+      );
+    } else if(type==='nettoyage'){
+      body += wTable(
+        ['Date','Heure','Zone','Type','Produit utilisé','Étapes','Signé par'],
+        group.map(r=>[r.date,r.time,r.zone||'—',r.typeN||'—',(r.produit||'—').substring(0,30),r.checks||'—',r.signe||'—']),
+        [1200,900,2000,1800,2800,900,1426], null
+      );
+    } else if(type==='fournisseur'){
+      body += wTable(
+        ['Date','Heure','Fournisseur','Produit','N° Lot','DLC','Quantité','Stockage','Signé par'],
+        group.map(r=>[r.date,r.time,(r.fourn||'—').substring(0,20),r.produit||'—',r.lot||'—',r.dlc||'—',r.qte||'—',r.stockage||'—',r.signe||'—']),
+        [1200,900,2200,1600,1400,1200,1000,1600,1926], null
+      );
+    } else if(type==='nc'){
+      const gM={'1':'Mineure','2':'Modérée','3':'Critique'};
+      body += wTable(
+        ['Date','Heure','Type NC','Gravité','Agent','Action corrective','Statut'],
+        group.map(r=>[r.date,r.time,(r.typeNC||'—').substring(0,30),gM[r.grav]||'—',r.agent||'—',(r.action||'—').substring(0,40),r.statut==='closed'?'Résolue':'En cours']),
+        [1200,900,2800,1200,1400,2800,1726], group.map(r=>r.statut!=='closed')
+      );
+    }
+    body += spacer();
+  });
+
+  // Pied
+  body += wPar(wRun('Moule & Smile · Saint-Pierre-la-Mer · Rapport HACCP · Conserver 3 ans minimum', {size:16, color:'9B9B95', italic:true}), {center:true, before:400});
+
+  // ── Assemblage XML OOXML ─────────────────────────────────────────────
+  const docXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas"
+  xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+  xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">
+<w:body>
+<w:sectPr>
+  <w:pgSz w:w="11906" w:h="16838"/>
+  <w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134"/>
+</w:sectPr>
+${body}
+</w:body></w:document>`;
+
+  const relsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`;
+
+  const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:docDefaults><w:rPrDefault><w:rPr>
+    <w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>
+    <w:sz w:val="20"/><w:szCs w:val="20"/>
+  </w:rPr></w:rPrDefault></w:docDefaults>
+</w:styles>`;
+
+  const contentTypes = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+  <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+</Types>`;
+
+  const rootRels = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`;
+
+  // ── Créer le ZIP (docx) sans dépendance ─────────────────────────────
+  // Utiliser JSZip depuis CDN
+  const zipOk = await new Promise(res=>{
+    if(window.JSZip){res(true);return;}
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+    s.onload=()=>res(true); s.onerror=()=>res(false);
+    document.head.appendChild(s);
+  });
+  if(!zipOk){showToast('Erreur chargement JSZip');return;}
+
+  const zip = new window.JSZip();
+  zip.file('[Content_Types].xml', contentTypes);
+  zip.file('_rels/.rels', rootRels);
+  zip.file('word/document.xml', docXml);
+  zip.file('word/styles.xml', stylesXml);
+  zip.file('word/_rels/document.xml.rels', relsXml);
+
+  const blob = await zip.generateAsync({type:'blob', mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=`Rapport_HACCP_${from}_${to}.docx`; a.click();
+  URL.revokeObjectURL(url);
+  showToast('✓ Word exporté !');
+}
+window.exportRapportWord = exportRapportWord;
+
+// ── CONFIG FOURNISSEURS ─────────────────────────────────────────────────
+let _fournisseurs = [];
+
+async function loadFournisseurs() {
+  try {
+    const snap = await window._getDoc(window._doc('config', 'fournisseurs'));
+    if(snap.exists() && snap.data().list) {
+      _fournisseurs = snap.data().list;
+    } else {
+      // Fournisseurs par défaut Moule & Smile
+      _fournisseurs = [
+        { nom: 'La Noisette d\'Oc', produits: 'Moules de Bouzigues' },
+        { nom: 'V and B Narbonne', produits: 'Boissons, bières' },
+        { nom: 'Café 1988 / Halles de Narbonne', produits: 'Café, condiments' },
+        { nom: 'Grossiste légumes', produits: 'Légumes frais' },
+        { nom: 'Grossiste sec / surgelés', produits: 'Frites, surgelés' },
+      ];
+      await saveFournisseurs();
+    }
+  } catch(e) { _fournisseurs = []; }
+  renderFournConfig();
+  refreshFournSelects();
+}
+
+async function saveFournisseurs() {
+  try {
+    await window._setDoc(window._doc('config', 'fournisseurs'), { list: _fournisseurs });
+  } catch(e) {}
+}
+
+function refreshFournSelects() {
+  ['r-fourn', 'f-fourn'].forEach(id => {
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    const current = sel.value;
+    sel.innerHTML = '<option value="">— Sélectionner —</option>';
+    _fournisseurs.forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f.nom;
+      opt.textContent = f.produits ? `${f.nom} (${f.produits})` : f.nom;
+      sel.appendChild(opt);
+    });
+    const autre = document.createElement('option');
+    autre.value = 'Autre fournisseur'; autre.textContent = 'Autre fournisseur';
+    sel.appendChild(autre);
+    if(current) sel.value = current;
+  });
+}
+
+function renderFournConfig() {
+  const el = document.getElementById('cfg-fourn-list');
+  if(!el) return;
+  if(_fournisseurs.length === 0) { el.innerHTML = '<div class="empty-state">Aucun fournisseur configuré</div>'; return; }
+  el.innerHTML = _fournisseurs.map((f, i) => `
+    <div class="appareil-item">
+      <div class="appareil-icon icon-teal" style="font-size:18px">🚚</div>
+      <div class="appareil-body">
+        <div class="appareil-name">${f.nom}</div>
+        <div class="appareil-range">${f.produits || 'Produits non précisés'}</div>
+      </div>
+      <button class="appareil-del" onclick="delFournisseur(${i})" title="Supprimer">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      </button>
+    </div>`).join('');
+}
+
+async function addFournisseur() {
+  const nom = document.getElementById('cfg-fourn-nom')?.value.trim();
+  const produits = document.getElementById('cfg-fourn-produits')?.value.trim();
+  if(!nom) { showToast('Saisir le nom du fournisseur'); return; }
+  if(_fournisseurs.find(f => f.nom === nom)) { showToast('Ce fournisseur existe déjà'); return; }
+  _fournisseurs.push({ nom, produits: produits || '' });
+  await saveFournisseurs();
+  renderFournConfig(); refreshFournSelects();
+  document.getElementById('cfg-fourn-nom').value = '';
+  document.getElementById('cfg-fourn-produits').value = '';
+  showToast(`✓ "${nom}" ajouté`);
+}
+window.addFournisseur = addFournisseur;
+
+async function delFournisseur(idx) {
+  const nom = _fournisseurs[idx].nom;
+  if(!confirm(`Supprimer "${nom}" ?`)) return;
+  _fournisseurs.splice(idx, 1);
+  await saveFournisseurs();
+  renderFournConfig(); refreshFournSelects();
+  showToast(`"${nom}" supprimé`);
+}
+window.delFournisseur = delFournisseur;
+
+// ── APPAREILS DYNAMIQUES ────────────────────────────────────────────────
+// Appareils par défaut
+const DEFAULT_APPAREILS = [
+  { id:'frigo1',   nom:'Frigo 1',       type:'frigo',       tmin:-2, tmax:4  },
+  { id:'frigo2',   nom:'Frigo 2',       type:'frigo',       tmin:-2, tmax:4  },
+  { id:'marinade', nom:'Bac marinade',  type:'frigo',       tmin:-2, tmax:4  },
+  { id:'legumes',  nom:'Légumes',       type:'legumes',     tmin:0,  tmax:6  },
+  { id:'cong1',    nom:'Congél. 1',     type:'congelateur', tmin:-25,tmax:-15 },
+  { id:'cong2',    nom:'Congél. 2',     type:'congelateur', tmin:-25,tmax:-15 },
+];
+
+const TYPE_META = {
+  frigo:       { icon:'❄️', label:'Réfrigérateur', defaultMin:-2,  defaultMax:4   },
+  legumes:     { icon:'🥬', label:'Bac légumes',   defaultMin:0,   defaultMax:6   },
+  congelateur: { icon:'🧊', label:'Congélateur',   defaultMin:-25, defaultMax:-15 },
+  custom:      { icon:'🌡', label:'Personnalisé',  defaultMin:-2,  defaultMax:4   },
+};
+
+let _appareils = []; // liste chargée depuis Firestore ou défaut
+
+async function loadAppareils() {
+  try {
+    const snap = await window._getDoc(window._doc('config', 'appareils'));
+    if (snap.exists() && snap.data().list && snap.data().list.length > 0) {
+      _appareils = snap.data().list;
+    } else {
+      _appareils = [...DEFAULT_APPAREILS];
+      await saveAppareils();
+    }
+  } catch(e) {
+    _appareils = [...DEFAULT_APPAREILS];
+  }
+  renderTempsGrid();
+  renderCfgList();
+}
+
+async function saveAppareils() {
+  try {
+    setSyncState('syncing');
+    await window._setDoc(window._doc('config', 'appareils'), { list: _appareils });
+    setSyncState('ok');
+  } catch(e) { setSyncState('offline'); }
+}
+
+// Génère la grille dynamique dans la page températures
+function renderTempsGrid() {
+  const container = document.getElementById('temps-dynamic-grid');
+  if (!container) return;
+
+  const frigos = _appareils.filter(a => a.type !== 'congelateur');
+  const congs  = _appareils.filter(a => a.type === 'congelateur');
+
+  let html = '';
+  if (frigos.length > 0) {
+    html += `<div class="section-label">Réfrigérateurs &amp; bacs froids</div><div class="temps-grid">`;
+    frigos.forEach(a => {
+      const rangeLabel = `${a.tmin} → +${a.tmax}°C`;
+      html += `<div class="temp-box" id="tb-${a.id}">
+        <label>${a.nom} (°C)</label>
+        <input type="number" id="tv-${a.id}" placeholder="—" oninput="chkT(this,'${a.id}',${a.tmin},${a.tmax})">
+        <div class="temp-status st-ok" id="ts-${a.id}">${rangeLabel}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  if (congs.length > 0) {
+    html += `<div class="section-label">Congélateurs</div><div class="temps-grid">`;
+    congs.forEach(a => {
+      const rangeLabel = `${a.tmin} → ${a.tmax}°C`;
+      html += `<div class="temp-box" id="tb-${a.id}">
+        <label>${a.nom} (°C)</label>
+        <input type="number" id="tv-${a.id}" placeholder="—" oninput="chkT(this,'${a.id}',${a.tmin},${a.tmax})">
+        <div class="temp-status st-ok" id="ts-${a.id}">${rangeLabel}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  container.innerHTML = html;
+  // Re-pré-remplir le prénom si connecté
+  fillPrenom(window._prenom || '');
+}
+
+// Affiche la liste de config avec bouton supprimer
+function renderCfgList() {
+  const el = document.getElementById('cfg-list');
+  if (!el) return;
+  if (_appareils.length === 0) { el.innerHTML = '<div class="empty-state">Aucun appareil configuré</div>'; return; }
+  el.innerHTML = _appareils.map((a, i) => {
+    const meta = TYPE_META[a.type] || TYPE_META.custom;
+    const range = a.type === 'congelateur' ? `${a.tmin}°C → ${a.tmax}°C` : `${a.tmin}°C → +${a.tmax}°C`;
+    return `<div class="appareil-item">
+      <div class="appareil-icon" style="background:${a.type==='congelateur'?'#E6F1FB':a.type==='legumes'?'#E1F5EE':'#E6F1FB'}">${meta.icon}</div>
+      <div class="appareil-body">
+        <div class="appareil-name">${a.nom}</div>
+        <div class="appareil-range">${meta.label} · Cible : ${range}</div>
+      </div>
+      <button class="appareil-del" onclick="delAppareil(${i})" title="Supprimer">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      </button>
+    </div>`;
+  }).join('');
+}
+
+// Afficher/masquer les champs custom selon le type sélectionné
+document.addEventListener('change', e => {
+  if (e.target && e.target.id === 'cfg-type') {
+    document.getElementById('cfg-custom-row').style.display = e.target.value === 'custom' ? 'grid' : 'none';
+  }
+});
+
+async function addAppareil() {
+  const nom = document.getElementById('cfg-nom').value.trim();
+  const type = document.getElementById('cfg-type').value;
+  if (!nom) { showToast('Saisir un nom pour l\'appareil'); return; }
+
+  const meta = TYPE_META[type];
+  let tmin = meta.defaultMin, tmax = meta.defaultMax;
+  if (type === 'custom') {
+    tmin = parseFloat(document.getElementById('cfg-tmin').value);
+    tmax = parseFloat(document.getElementById('cfg-tmax').value);
+    if (isNaN(tmin) || isNaN(tmax)) { showToast('Saisir les températures min et max'); return; }
+  }
+
+  // Générer un ID unique
+  const id = 'app_' + Date.now();
+  _appareils.push({ id, nom, type, tmin, tmax });
+  await saveAppareils();
+  renderTempsGrid();
+  renderCfgList();
+
+  // Réinitialiser le formulaire
+  document.getElementById('cfg-nom').value = '';
+  document.getElementById('cfg-type').value = 'frigo';
+  document.getElementById('cfg-custom-row').style.display = 'none';
+  showToast(`✓ "${nom}" ajouté`);
+}
+window.addAppareil = addAppareil;
+
+async function delAppareil(idx) {
+  const nom = _appareils[idx].nom;
+  if (!confirm(`Supprimer "${nom}" ? Les enregistrements existants ne seront pas affectés.`)) return;
+  _appareils.splice(idx, 1);
+  await saveAppareils();
+  renderTempsGrid();
+  renderCfgList();
+  showToast(`"${nom}" supprimé`);
+}
+window.delAppareil = delAppareil;
+
+// ── TEMPÉRATURES ────────────────────────────────────────────────────────
+const tBounds = {};
+function chkT(inp, name, min, max){
+  const v = parseFloat(inp.value);
+  const box = document.getElementById('tb-'+name);
+  const st = document.getElementById('ts-'+name);
+  if(isNaN(v)){ box.className='temp-box'; st.className='temp-status st-ok'; st.textContent=min+'→+'+max+'°C'; tBounds[name]=null; return; }
+  if(v < min-3 || v > max+3){ box.className='temp-box nc'; st.className='temp-status st-nc'; st.textContent='⚠ HORS CIBLE'; tBounds[name]='nc'; }
+  else if(v < min || v > max){ box.className='temp-box warn'; st.className='temp-status st-warn'; st.textContent='↗ Limite'; tBounds[name]='warn'; }
+  else{ box.className='temp-box ok'; st.className='temp-status st-ok'; st.textContent='✓ Conforme'; tBounds[name]='ok'; }
+}
+window.chkT = chkT;
+
+async function saveTemps(){
+  const btn = document.getElementById('save-temps-btn');
+  btn.disabled=true; btn.textContent='Enregistrement...';
+  const releves = {};
+  let hasNC = false;
+  _appareils.forEach(a => {
+    const val = document.getElementById('tv-'+a.id)?.value;
+    releves[a.id] = val !== '' && val != null ? parseFloat(val) : null;
+    if(tBounds[a.id] === 'nc') hasNC = true;
+  });
+  const rec = {
+    type:'temps', date:TODAY, time:timeNow(), uid:window._uid,
+    session: document.getElementById('t-session').value,
+    agent: document.getElementById('t-agent').value || 'N/A',
+    releves,
+    appareils: _appareils.map(a=>({ id:a.id, nom:a.nom, tmin:a.tmin, tmax:a.tmax })),
+    obs: document.getElementById('t-obs').value || '',
+    hasNC, ts: window._serverTS()
+  };
+  try {
+    setSyncState('syncing');
+    const docRef_temps = await window._addDoc(window._col('haccp_records'), rec);
+    const photoURL_temps = await uploadPhoto('temps', docRef_temps.id);
+    if(photoURL_temps) await window._setDoc(docRef_temps, { photoURL: photoURL_temps }, { merge:true });
+    setSyncState('ok');
+    showToast('✓ Relevé enregistré et synchronisé');
+    if(hasNC) setTimeout(()=>showToast('⚠ Anomalie détectée — créer une non-conformité',3500),3000);
+    _appareils.forEach(a => {
+      const el = document.getElementById('tv-'+a.id);
+      if(el) el.value='';
+      const box = document.getElementById('tb-'+a.id);
+      if(box) box.className='temp-box';
+    });
+    Object.keys(tBounds).forEach(k=>delete tBounds[k]);
+    document.getElementById('t-obs').value='';
+    resetPhotoPicker('temps');
+    goTo('home');
+  } catch(e){ setSyncState('offline'); showToast('⚠ Sauvegardé en local'); goTo('home'); }
+  finally{ btn.disabled=false; btn.textContent='Enregistrer le relevé'; }
+}
+window.saveTemps = saveTemps;
+
+// ── RÉCEPTION ───────────────────────────────────────────────────────────
+function chkRTemp(){
+  const v = parseFloat(document.getElementById('r-temp').value);
+  const el = document.getElementById('r-temp-info');
+  if(isNaN(v)){ el.textContent=''; return; }
+  if(v<=4){ el.style.color='var(--teal)'; el.textContent='✓ Conforme pour denrées réfrigérées'; }
+  else if(v<=8){ el.style.color='var(--amber)'; el.textContent='⚠ Limite — vérifier produit par produit'; }
+  else { el.style.color='var(--red)'; el.textContent='✕ Non conforme — refus recommandé'; }
+}
+window.chkRTemp = chkRTemp;
+
+async function saveReception(){
+  if(!document.getElementById('r-fourn').value){ showToast('Sélectionner un fournisseur'); return; }
+  const rec = {
+    type:'reception', date:TODAY, time:timeNow(), uid:window._uid,
+    fourn: document.getElementById('r-fourn').value,
+    bl: document.getElementById('r-bl').value || '',
+    temp: document.getElementById('r-temp').value || '',
+    obs: document.getElementById('r-obs').value || '',
+    signe: document.getElementById('r-signe').value || 'N/A',
+    checks: countChecks('rc', 6),
+    hasNC: false, ts: window._serverTS()
+  };
+  try {
+    setSyncState('syncing');
+    const docRef_recep = await window._addDoc(window._col('haccp_records'), rec);
+    const photoURL_recep = await uploadPhoto('reception', docRef_recep.id);
+    if(photoURL_recep) await window._setDoc(docRef_recep, { photoURL: photoURL_recep }, { merge:true });
+    setSyncState('ok');
+    showToast('✓ Réception enregistrée et synchronisée');
+    resetChecks('rc');
+    document.getElementById('r-fourn').value='';
+    document.getElementById('r-bl').value='';
+    document.getElementById('r-temp').value='';
+    document.getElementById('r-obs').value='';
+    document.getElementById('r-signe').value='';
+    document.getElementById('r-temp-info').textContent='';
+    resetPhotoPicker('reception');
+    goTo('home');
+  } catch(e){ setSyncState('offline'); showToast('⚠ Sauvegardé en local'); goTo('home'); }
+}
+window.saveReception = saveReception;
+
+// ── NETTOYAGE ───────────────────────────────────────────────────────────
+async function saveNettoyage(){
+  const rec = {
+    type:'nettoyage', date:TODAY, time:timeNow(), uid:window._uid,
+    zone: document.getElementById('n-zone').value,
+    typeN: document.getElementById('n-type').value,
+    produit: document.getElementById('n-produit').value || '',
+    signe: document.getElementById('n-signe').value || 'N/A',
+    checks: countChecks('nc', 6),
+    hasNC: false, ts: window._serverTS()
+  };
+  try {
+    setSyncState('syncing');
+    await window._addDoc(window._col('haccp_records'), rec);
+    setSyncState('ok');
+    showToast('✓ Nettoyage enregistré et synchronisé');
+    resetChecks('nc');
+    document.getElementById('n-produit').value='';
+    document.getElementById('n-signe').value='';
+    goTo('home');
+  } catch(e){ setSyncState('offline'); showToast('⚠ Sauvegardé en local'); goTo('home'); }
+}
+window.saveNettoyage = saveNettoyage;
+
+// ── HUILE ───────────────────────────────────────────────────────────────
+function updTPM(v){
+  const val = parseFloat(v);
+  const bar = document.getElementById('tpm-bar');
+  const disp = document.getElementById('tpm-val');
+  const pct = Math.min(val/40*100, 100).toFixed(1);
+  bar.style.width = pct + '%';
+  if(val < 20){ bar.style.background='var(--teal)'; disp.style.color='var(--teal)'; }
+  else if(val < 25){ bar.style.background='#f59e0b'; disp.style.color='var(--amber)'; }
+  else { bar.style.background='var(--red)'; disp.style.color='var(--red)'; }
+  disp.textContent = val.toFixed(1) + '% TPM';
+}
+window.updTPM = updTPM;
+
+async function saveHuile(){
+  const tpm = parseFloat(document.getElementById('h-tpm').value);
+  const rec = {
+    type:'huile', date:TODAY, time:timeNow(), uid:window._uid,
+    friteuse: document.getElementById('h-friteuse').value,
+    heure: document.getElementById('h-heure').value,
+    tpm: tpm,
+    temp: document.getElementById('h-temp').value || '',
+    couleur: document.getElementById('h-couleur').value,
+    action: document.getElementById('h-action').value,
+    signe: document.getElementById('h-signe').value || 'N/A',
+    hasNC: tpm >= 25, ts: window._serverTS()
+  };
+  try {
+    setSyncState('syncing');
+    await window._addDoc(window._col('haccp_records'), rec);
+    setSyncState('ok');
+    showToast(tpm>=25 ? '⚠ Huile non-conforme — action requise !' : '✓ Contrôle huile synchronisé');
+    document.getElementById('h-tpm').value=0; updTPM(0);
+    document.getElementById('h-temp').value='';
+    document.getElementById('h-signe').value='';
+    goTo('home');
+  } catch(e){ setSyncState('offline'); showToast('⚠ Sauvegardé en local'); goTo('home'); }
+}
+window.saveHuile = saveHuile;
+
+// ── FOURNISSEURS ────────────────────────────────────────────────────────
+async function saveFourn(){
+  if(!document.getElementById('f-fourn').value){ showToast('Sélectionner un fournisseur'); return; }
+  const rec = {
+    type:'fournisseur', date:TODAY, time:timeNow(), uid:window._uid,
+    fourn: document.getElementById('f-fourn').value,
+    produit: document.getElementById('f-produit').value || '',
+    lot: document.getElementById('f-lot').value || '',
+    dlc: document.getElementById('f-dlc').value || '',
+    qte: document.getElementById('f-qte').value || '',
+    stockage: document.getElementById('f-stockage').value,
+    signe: document.getElementById('f-signe').value || 'N/A',
+    hasNC: false, ts: window._serverTS()
+  };
+  try {
+    setSyncState('syncing');
+    const docRef_fourn = await window._addDoc(window._col('haccp_records'), rec);
+    const photoURL_fourn = await uploadPhoto('fournisseur', docRef_fourn.id);
+    if(photoURL_fourn) await window._setDoc(docRef_fourn, { photoURL: photoURL_fourn }, { merge:true });
+    setSyncState('ok');
+    showToast('✓ Lot enregistré et synchronisé');
+    document.getElementById('f-fourn').value='';
+    ['f-produit','f-lot','f-dlc','f-qte','f-signe'].forEach(id => document.getElementById(id).value='');
+    resetPhotoPicker('fournisseur');
+    renderFournList();
+  } catch(e){ setSyncState('offline'); showToast('⚠ Sauvegardé en local'); }
+}
+window.saveFourn = saveFourn;
+
+async function renderFournList(){
+  const el = document.getElementById('fourn-list');
+  if(!el) return;
+  try {
+    const q = window._query(window._col('haccp_records'),
+      window._where('type','==','fournisseur'),
+      window._limit(50));
+    const snap = await window._getDocs(q);
+    const recs = snap.docs.map(d=>d.data()).filter(r=>r.date===TODAY).sort((a,b)=>(b.time||'').localeCompare(a.time||''));
+    if(recs.length===0){ el.innerHTML='<div class="empty-state">Aucun lot enregistré aujourd\'hui</div>'; return; }
+    el.innerHTML = recs.map(r=>`<div class="supp-row"><div class="supp-avatar">${(r.fourn||'?')[0]}</div><div><div style="font-size:13px;font-weight:600">${r.produit||'—'}</div><div style="font-size:11px;color:var(--text2)">${r.fourn} · Lot: ${r.lot||'N/A'} · DLC: ${r.dlc||'—'} · ${r.stockage}</div></div></div>`).join('');
+  } catch(e){ el.innerHTML='<div class="empty-state">Erreur: '+e.message+'</div>'; }
+}
+
+// ── NC ──────────────────────────────────────────────────────────────────
+async function saveNC(){
+  const rec = {
+    type:'nc', date:TODAY, time:timeNow(), uid:window._uid,
+    typeNC: document.getElementById('ncf-type').value,
+    desc: document.getElementById('ncf-desc').value || '',
+    grav: document.getElementById('ncf-grav').value,
+    agent: document.getElementById('ncf-agent').value || 'N/A',
+    action: document.getElementById('ncf-action').value || '',
+    statut: document.getElementById('ncf-statut').value,
+    hasNC: true, ts: window._serverTS()
+  };
+  try {
+    setSyncState('syncing');
+    const docRef_nc = await window._addDoc(window._col('haccp_records'), rec);
+    const photoURL_nc = await uploadPhoto('nc', docRef_nc.id);
+    if(photoURL_nc) await window._setDoc(docRef_nc, { photoURL: photoURL_nc }, { merge:true });
+    setSyncState('ok');
+    showToast('✓ Non-conformité enregistrée');
+    document.getElementById('ncf-desc').value='';
+    document.getElementById('ncf-action').value='';
+    document.getElementById('ncf-agent').value='';
+    renderNCList();
+  } catch(e){ setSyncState('offline'); showToast('⚠ Sauvegardé en local'); }
+}
+window.saveNC = saveNC;
+
+async function renderNCList(){
+  const el = document.getElementById('nc-list');
+  if(!el) return;
+  try {
+    const q = window._query(window._col('haccp_records'),
+      window._where('type','==','nc'),
+      window._limit(50));
+    const snap = await window._getDocs(q);
+    const recs = snap.docs.map(d=>d.data()).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time)).slice(0,10);
+    if(recs.length===0){ el.innerHTML='<div class="empty-state">Aucune NC enregistrée</div>'; return; }
+    const gravMap = {'1':'🟡 Mineure','2':'🟠 Modérée','3':'🔴 Critique'};
+    el.innerHTML = recs.map(r=>`<div class="record-item"><div><div class="rec-title">${r.typeNC}</div><div class="rec-meta">${r.date} · ${r.time} · ${r.agent} · ${gravMap[r.grav]||''}</div></div><span class="status-pill ${r.statut==='closed'?'pill-ok':'pill-nc'}">${r.statut==='closed'?'Résolue':'En cours'}</span></div>`).join('');
+  } catch(e){ el.innerHTML='<div class="empty-state">Erreur: '+e.message+'</div>'; }
+}
+
+// ── HOME REFRESH ────────────────────────────────────────────────────────
+const typeLabels = {
+  temps:'🌡 Températures', reception:'🚚 Réception', nettoyage:'🧹 Nettoyage',
+  huile:'🔥 Huile friture', fournisseur:'📦 Traçabilité', nc:'⚠ Non-conformité'
+};
+async function refreshHome(){
+  if(!window._uid) return;
+  checkAlertes();
+  try {
+    const q = window._query(window._col('haccp_records'),
+      window._where('date','==',TODAY),
+      window._limit(50));
+    const snap = await window._getDocs(q);
+    const recs = snap.docs.map(d => d.data()).sort((a,b)=>(b.time||'').localeCompare(a.time||''));
+
+    const ncCount = recs.filter(r => r.hasNC).length;
+    const okCount = recs.filter(r => !r.hasNC).length;
+    const modules = ['temps','reception','nettoyage','huile','fournisseur','nc'];
+    const done = modules.filter(m => recs.some(r => r.type===m)).length;
+    const pct = Math.round(done/6*100);
+
+    document.getElementById('s-ok').textContent = okCount;
+    document.getElementById('s-nc').textContent = ncCount;
+    document.getElementById('s-pct').textContent = pct + '%';
+    document.getElementById('prog-bar').style.width = pct + '%';
+
+    const rl = document.getElementById('recent-list');
+    if(recs.length===0){ rl.innerHTML='<div class="empty-state">Aucun enregistrement aujourd\'hui</div>'; return; }
+    rl.innerHTML = recs.slice(0,8).map(r =>
+      `<div class="record-item">
+        <div><div class="rec-title">${typeLabels[r.type]||r.type}</div>
+        <div class="rec-meta">${r.time} · ${r.agent||r.signe||r.fourn||'—'}</div></div>
+        <span class="status-pill ${r.hasNC?'pill-nc':'pill-ok'}">${r.hasNC?'NC':'OK'}</span>
+      </div>`
+    ).join('');
+
+    modules.forEach(m => {
+      const count = recs.filter(r=>r.type===m).length;
+      const el = document.getElementById('ht-'+m.replace('fournisseur','fourn').replace('nettoyage','nett').replace('reception','recep'));
+      if(el && count > 0) el.innerHTML = `<span>${count} enregistrement${count>1?'s':''} aujourd'hui</span>`;
+    });
+  } catch(e){ console.log('refresh error', e); }
+}
+
+// ── TÉLÉCHARGEMENT DOCUMENT HACCP ───────────────────────────────────────
+function downloadHACCPDoc(){
+  // Lien vers le fichier .docx hébergé sur GitHub Pages (à mettre à jour après déploiement)
+  // En attendant, ouvre un lien de téléchargement direct
+  const DOCX_URL = 'Plan_HACCP_MouleSmile.docx';
+  const a = document.createElement('a');
+  a.href = DOCX_URL;
+  a.download = 'Plan_HACCP_MouleSmile.docx';
+  a.click();
+  showToast('⬇ Téléchargement du plan HACCP...');
+}
+window.downloadHACCPDoc = downloadHACCPDoc;
+let _allHistRecs = [];
+let _filteredRecs = [];
+let _currentRec = null;
+
+async function renderHistory(){
+  const el = document.getElementById('history-list');
+  if(!el) return;
+  el.innerHTML = '<div class="empty-state">Chargement...</div>';
+  // Dates par défaut : 30 derniers jours
+  const today = new Date();
+  const d30 = new Date(); d30.setDate(d30.getDate()-30);
+  const df = document.getElementById('hist-date-from');
+  const dt = document.getElementById('hist-date-to');
+  if(!df.value) df.value = d30.toISOString().split('T')[0];
+  if(!dt.value) dt.value = today.toISOString().split('T')[0];
+  try {
+    const q = window._query(window._col('haccp_records'), window._limit(500));
+    const snap = await window._getDocs(q);
+    _allHistRecs = snap.docs.map(d=>d.data()).sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time));
+    applyHistFilter();
+  } catch(e){ el.innerHTML='<div class="empty-state">Erreur : ' + e.message + '</div>'; }
+}
+
+function applyHistFilter(){
+  const from = document.getElementById('hist-date-from').value;
+  const to = document.getElementById('hist-date-to').value;
+  const type = document.getElementById('hist-type').value;
+  _filteredRecs = _allHistRecs.filter(r => {
+    if(from && r.date < from) return false;
+    if(to && r.date > to) return false;
+    if(type && r.type !== type) return false;
+    return true;
+  });
+  renderHistList(_filteredRecs);
+}
+window.applyHistFilter = applyHistFilter;
+
+function renderHistList(recs){
+  const el = document.getElementById('history-list');
+  const stats = document.getElementById('hist-stats');
+  if(!el) return;
+  if(recs.length===0){ el.innerHTML='<div class="empty-state">Aucun enregistrement pour cette période</div>'; stats.style.display='none'; return; }
+  // Stats
+  stats.style.display='grid';
+  document.getElementById('hs-total').textContent = recs.length;
+  document.getElementById('hs-nc').textContent = recs.filter(r=>r.hasNC).length;
+  document.getElementById('hs-days').textContent = new Set(recs.map(r=>r.date)).size;
+  // Liste
+  el.innerHTML = recs.map((r,i)=>`
+    <div class="record-item" onclick="openDetail(${i})">
+      <div>
+        <div class="rec-title">${typeLabels[r.type]||r.type}</div>
+        <div class="rec-meta">${r.date} · ${r.time} · ${r.agent||r.signe||r.fourn||'—'}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="status-pill ${r.hasNC?'pill-nc':'pill-ok'}">${r.hasNC?'NC':'OK'}</span>
+        <svg class="rec-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </div>`).join('');
+}
+window.renderHistList = renderHistList;
+
+// ── MODAL DÉTAIL ────────────────────────────────────────────────────────
+const typeLabelsLong = {
+  temps:'Relevé de températures', reception:'Réception marchandises',
+  nettoyage:'Nettoyage / Désinfection', huile:'Contrôle huile de friture',
+  fournisseur:'Traçabilité fournisseur', nc:'Non-conformité'
+};
+
+function buildDetailRows(r){
+  const rows = [];
+  const add = (k,v,cls='') => v && rows.push({k,v,cls});
+  add('Date', r.date);
+  add('Heure', r.time);
+  if(r.type==='temps'){
+    add('Session', r.session);
+    add('Responsable', r.agent);
+    if(r.frigo1) add('Frigo 1', r.frigo1+'°C', parseFloat(r.frigo1)>4||parseFloat(r.frigo1)<-2?'nc':'ok');
+    if(r.frigo2) add('Frigo 2', r.frigo2+'°C', parseFloat(r.frigo2)>4||parseFloat(r.frigo2)<-2?'nc':'ok');
+    if(r.marinade) add('Bac marinade', r.marinade+'°C', parseFloat(r.marinade)>4||parseFloat(r.marinade)<-2?'nc':'ok');
+    if(r.legumes) add('Légumes', r.legumes+'°C', parseFloat(r.legumes)>6||parseFloat(r.legumes)<0?'nc':'ok');
+    if(r.cong1) add('Congélateur 1', r.cong1+'°C', parseFloat(r.cong1)>-15?'nc':'ok');
+    if(r.cong2) add('Congélateur 2', r.cong2+'°C', parseFloat(r.cong2)>-15?'nc':'ok');
+    if(r.obs) add('Observations', r.obs);
+  } else if(r.type==='reception'){
+    add('Fournisseur', r.fourn);
+    add('N° BL', r.bl);
+    add('Temp. livraison', r.temp ? r.temp+'°C' : '—', parseFloat(r.temp)>4?'nc':'ok');
+    add('Points contrôle', r.checks);
+    if(r.obs) add('Observations', r.obs);
+    add('Signé par', r.signe);
+  } else if(r.type==='nettoyage'){
+    add('Zone', r.zone);
+    add('Type', r.typeN);
+    add('Produit(s)', r.produit||'Non renseigné');
+    add('Étapes réalisées', r.checks);
+    add('Signé par', r.signe);
+  } else if(r.type==='huile'){
+    add('Friteuse', r.friteuse);
+    add('Heure mesure', r.heure);
+    add('TPM (%)', r.tpm+'%', r.tpm>=25?'nc':'ok');
+    add('Temp. huile', r.temp ? r.temp+'°C' : '—');
+    add('Couleur', r.couleur);
+    add('Action effectuée', r.action);
+    add('Signé par', r.signe);
+  } else if(r.type==='fournisseur'){
+    add('Fournisseur', r.fourn);
+    add('Produit', r.produit);
+    add('N° de lot', r.lot);
+    add('DLC / DDM', r.dlc);
+    add('Quantité', r.qte);
+    add('Stockage', r.stockage);
+    add('Signé par', r.signe);
+  } else if(r.type==='nc'){
+    add('Type NC', r.typeNC);
+    add('Description', r.desc);
+    add('Gravité', {'1':'🟡 Mineure','2':'🟠 Modérée','3':'🔴 Critique'}[r.grav]||r.grav);
+    add('Signalé par', r.agent);
+    add('Action corrective', r.action);
+    add('Statut', r.statut==='closed'?'✅ Résolue':'🔄 En cours', r.statut==='closed'?'ok':'nc');
+  }
+  return rows;
+}
+
+function openDetail(idx){
+  _currentRec = _filteredRecs[idx];
+  const r = _currentRec;
+  document.getElementById('modal-title').textContent = typeLabelsLong[r.type]||r.type;
+  const rows = buildDetailRows(r);
+  document.getElementById('modal-body').innerHTML = `
+    <div class="detail-section">
+      <div class="detail-section-title">Informations</div>
+      ${rows.map(row=>`<div class="detail-row"><span class="detail-key">${row.k}</span><span class="detail-val ${row.cls||''}">${row.v}</span></div>`).join('')}
+    </div>
+    <div style="margin-top:8px">
+      <span class="status-pill ${r.hasNC?'pill-nc':'pill-ok'}" style="font-size:13px;padding:5px 12px">${r.hasNC?'⚠ Non-conforme':'✓ Conforme'}</span>
+    </div>`;
+  // Afficher la photo si présente
+  const photoSection = document.getElementById('modal-photos');
+  const photoList = document.getElementById('detail-photos-list');
+  if(r.photoURL) {
+    photoSection.style.display = 'block';
+    photoList.innerHTML = `<img class="detail-photo" src="${r.photoURL}" alt="photo" onclick="openPhotoFullscreen('${r.photoURL}')">`;
+  } else {
+    photoSection.style.display = 'none';
+    photoList.innerHTML = '';
+  }
+  document.getElementById('detail-modal').classList.add('open');
+}
+window.openDetail = openDetail;
+
+function closeDetailModal(){
+  document.getElementById('detail-modal').classList.remove('open');
+}
+window.closeDetailModal = closeDetailModal;
+
+function closeModal(e){
+  if(e.target===document.getElementById('detail-modal')) closeDetailModal();
+}
+window.closeModal = closeModal;
+
+// ── EXPORT PDF ──────────────────────────────────────────────────────────
+function buildPDFContent(recs, titre, periode){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
+  const W=297, H=210, M=10;
+  const typeLabPDF={temps:'Températures',reception:'Réception',nettoyage:'Nettoyage',huile:'Huile friture',fournisseur:'Traçabilité',nc:'Non-conformité'};
+
+  function drawHeader(pn,tp){
+    doc.setFillColor(24,95,165); doc.rect(0,0,W,18,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(12); doc.setFont('helvetica','bold');
+    doc.text('HACCP — Moule & Smile', M, 8);
+    doc.setFontSize(7.5); doc.setFont('helvetica','normal');
+    doc.text('Saint-Pierre-la-Mer · Fleury', M, 13);
+    doc.text(titre+' | '+periode+' | '+recs.length+' enreg.', W/2, 13, {align:'center'});
+    doc.text('Page '+pn+'/'+tp, W-M, 13, {align:'right'});
+  }
+  function drawTblHeaders(headers, colWidths, x, y){
+    const tot=colWidths.reduce((a,b)=>a+b,0);
+    doc.setFillColor(24,95,165); doc.rect(x,y-4,tot,6.5,'F');
+    doc.setFontSize(7); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+    let cx=x;
+    headers.forEach((h,i)=>{ doc.text(String(h),cx+1,y+0.5,{maxWidth:colWidths[i]-2}); cx+=colWidths[i]; });
+  }
+  function drawTblRow(vals, colWidths, x, y, ri, isNC){
+    const tot=colWidths.reduce((a,b)=>a+b,0);
+    doc.setFillColor(ri%2===0?255:248); doc.rect(x,y-3.5,tot,6,'F');
+    doc.setFontSize(7); let cx=x;
+    vals.forEach((v,i)=>{
+      const s=String(v||'—');
+      const isLast=i===vals.length-1;
+      if(isLast&&(s==='NC'||s==='Critique')){doc.setTextColor(163,45,45);doc.setFont('helvetica','bold');}
+      else if(isLast&&(s==='OK'||s==='Résolue')){doc.setTextColor(15,110,86);doc.setFont('helvetica','bold');}
+      else{doc.setTextColor(26,26,24);doc.setFont('helvetica','normal');}
+      doc.text(s,cx+1,y+0.5,{maxWidth:colWidths[i]-2});
+      cx+=colWidths[i];
+    });
+    doc.setDrawColor(224,224,216); doc.line(x,y+2.5,x+tot,y+2.5);
+  }
+
+  const types=[...new Set(recs.map(r=>r.type))];
+  let firstPage=true, y=22;
+
+  types.forEach(type=>{
+    const group=recs.filter(r=>r.type===type);
+    if(!group.length) return;
+    if(!firstPage){doc.addPage();y=22;}
+    firstPage=false;
+
+    doc.setFillColor(230,241,251); doc.rect(M,y-4,W-M*2,8,'F');
+    doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(12,68,124);
+    doc.text(typeLabPDF[type]||type, M+3, y+0.5);
+    doc.setFontSize(7.5); doc.setFont('helvetica','normal'); doc.setTextColor(100,100,100);
+    doc.text(group.length+' enregistrement(s)', W-M-3, y+0.5, {align:'right'});
+    y+=10;
+
+    if(type==='temps'){
+      const appIds=new Set();
+      group.forEach(r=>{ if(r.releves)Object.keys(r.releves).forEach(k=>appIds.add(k)); else ['frigo1','frigo2','marinade','legumes','cong1','cong2'].forEach(k=>{if(r[k]!=null)appIds.add(k);}); });
+      const appList=[...appIds];
+      const appNoms={};
+      group.forEach(r=>{ if(r.appareils)r.appareils.forEach(a=>{appNoms[a.id]=a.nom;}); });
+      appList.forEach(k=>{if(!appNoms[k])appNoms[k]=k;});
+      const baseW=W-M*2; const fixedW=22+20+22+35+16; const remW=baseW-fixedW;
+      const aW=Math.max(14,Math.floor(remW/Math.max(appList.length,1)));
+      const headers=['Date','Session','Agent',...appList.map(k=>appNoms[k]||k),'Obs.','Statut'];
+      const colWidths=[22,20,22,...appList.map(()=>aW),35,16];
+      drawTblHeaders(headers,colWidths,M,y); y+=7;
+      group.forEach((r,ri)=>{
+        if(y>H-15){doc.addPage();y=22;drawHeader(doc.getNumberOfPages(),'?');}
+        const vals=[r.date,r.session||'—',r.agent||'—',
+          ...appList.map(k=>{const v=r.releves?r.releves[k]:r[k];return v!=null?v+'°':'—';}),
+          (r.obs||'').substring(0,18), r.hasNC?'NC':'OK'];
+        drawTblRow(vals,colWidths,M,y,ri,r.hasNC); y+=6;
+      });
+    } else if(type==='huile'){
+      const h=['Date','Heure','Friteuse','TPM %','T° huile','Couleur','Action','Agent','Statut'];
+      const cw=[22,14,30,16,16,38,50,25,16];
+      drawTblHeaders(h,cw,M,y); y+=7;
+      group.forEach((r,ri)=>{
+        if(y>H-15){doc.addPage();y=22;}
+        drawTblRow([r.date,r.heure||r.time,r.friteuse||'—',r.tpm+'%',r.temp?r.temp+'°':'—',(r.couleur||'').substring(0,18),(r.action||'').substring(0,24),r.signe||'—',r.hasNC?'NC':'OK'],cw,M,y,ri,r.hasNC); y+=6;
+      });
+    } else if(type==='reception'){
+      const h=['Date','Heure','Fournisseur','N° BL','T° liv.','Contrôles','Observations','Signé','Statut'];
+      const cw=[22,14,44,22,14,16,54,22,16];
+      drawTblHeaders(h,cw,M,y); y+=7;
+      group.forEach((r,ri)=>{
+        if(y>H-15){doc.addPage();y=22;}
+        drawTblRow([r.date,r.time,(r.fourn||'—').substring(0,22),r.bl||'—',r.temp?r.temp+'°':'—',r.checks||'—',(r.obs||'').substring(0,27),r.signe||'—',r.hasNC?'NC':'OK'],cw,M,y,ri,r.hasNC); y+=6;
+      });
+    } else if(type==='nettoyage'){
+      const h=['Date','Heure','Zone','Type','Produit','Étapes','Signé'];
+      const cw=[22,14,36,32,60,14,35];
+      drawTblHeaders(h,cw,M,y); y+=7;
+      group.forEach((r,ri)=>{
+        if(y>H-15){doc.addPage();y=22;}
+        drawTblRow([r.date,r.time,r.zone||'—',r.typeN||'—',(r.produit||'—').substring(0,30),r.checks||'—',r.signe||'—'],cw,M,y,ri,false); y+=6;
+      });
+    } else if(type==='fournisseur'){
+      const h=['Date','Heure','Fournisseur','Produit','N° Lot','DLC','Qté','Stockage','Signé'];
+      const cw=[22,14,42,30,22,20,18,25,24];
+      drawTblHeaders(h,cw,M,y); y+=7;
+      group.forEach((r,ri)=>{
+        if(y>H-15){doc.addPage();y=22;}
+        drawTblRow([r.date,r.time,(r.fourn||'—').substring(0,20),r.produit||'—',r.lot||'—',r.dlc||'—',r.qte||'—',r.stockage||'—',r.signe||'—'],cw,M,y,ri,false); y+=6;
+      });
+    } else if(type==='nc'){
+      const gM={'1':'Mineure','2':'Modérée','3':'Critique'};
+      const h=['Date','Heure','Type NC','Gravité','Agent','Action corrective','Statut'];
+      const cw=[22,14,52,18,22,120,19];
+      drawTblHeaders(h,cw,M,y); y+=7;
+      group.forEach((r,ri)=>{
+        if(y>H-15){doc.addPage();y=22;}
+        drawTblRow([r.date,r.time,(r.typeNC||'—').substring(0,28),gM[r.grav]||'—',r.agent||'—',(r.action||'—').substring(0,60),r.statut==='closed'?'Résolue':'En cours'],cw,M,y,ri,r.statut!=='closed'); y+=6;
+      });
+    }
+    y+=6;
+
+    // ── Photo si présente (pour export enregistrement unique) ──
+    group.forEach(r => {
+      if(r._photoB64 && r.type) {
+        try {
+          if(y > H-60){ doc.addPage(); y=22; }
+          doc.setFontSize(8); doc.setTextColor(100,100,100); doc.setFont('helvetica','bold');
+          doc.text('📷 Photo jointe :', M, y); y+=4;
+          const imgW=80, imgH=60;
+          doc.addImage(r._photoB64, 'JPEG', M, y, imgW, imgH);
+          y += imgH + 6;
+        } catch(e) {}
+      }
+    });
+  });
+
+  const tp=doc.getNumberOfPages();
+  for(let i=1;i<=tp;i++){
+    doc.setPage(i); drawHeader(i,tp);
+    doc.setFontSize(7); doc.setTextColor(150,150,150); doc.setFont('helvetica','normal');
+    doc.text('Moule & Smile — HACCP — Conserver 3 ans minimum', W/2, H-3, {align:'center'});
+  }
+  return doc;
+}
+
+async function loadJsPDF(){
+  if(window.jspdf) return true;
+  return new Promise(resolve=>{
+    const s = document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload=()=>resolve(true); s.onerror=()=>resolve(false);
+    document.head.appendChild(s);
+  });
+}
+
+async function exportPDF(){
+  if(_filteredRecs.length===0){ showToast('Aucun enregistrement à exporter'); return; }
+  showToast('⏳ Génération du PDF...');
+  const ok = await loadJsPDF();
+  if(!ok){ showToast('Erreur chargement PDF'); return; }
+  const from = document.getElementById('hist-date-from').value;
+  const to = document.getElementById('hist-date-to').value;
+  const type = document.getElementById('hist-type').value;
+  const typeStr = type ? typeLabels[type] : 'Tous modules';
+  const titre = 'Registre HACCP — ' + typeStr;
+  const periode = (from||'—') + ' → ' + (to||'—');
+  const doc = buildPDFContent(_filteredRecs, titre, periode);
+  doc.save('HACCP_MouleSmile_' + (from||'') + '_' + (to||'') + '.pdf');
+  showToast('✓ PDF exporté !');
+}
+window.exportPDF = exportPDF;
+
+async function exportSinglePDF(){
+  if(!_currentRec){ showToast('Aucun enregistrement sélectionné'); return; }
+  showToast('⏳ Génération du PDF...');
+  const ok = await loadJsPDF();
+  if(!ok){ showToast('Erreur chargement PDF'); return; }
+  const r = _currentRec;
+
+  // Si photo présente, la charger en base64 d'abord
+  if(r.photoURL) {
+    try {
+      const resp = await fetch(r.photoURL);
+      const blob = await resp.blob();
+      const b64 = await new Promise(res => {
+        const reader = new FileReader();
+        reader.onload = () => res(reader.result);
+        reader.readAsDataURL(blob);
+      });
+      r._photoB64 = b64;
+    } catch(e) { r._photoB64 = null; }
+  }
+
+  const titre = typeLabelsLong[r.type]||r.type;
+  const doc = buildPDFContent([r], titre, r.date + ' · ' + r.time);
+  doc.save('HACCP_' + r.type + '_' + r.date + '_' + r.time.replace(':','h') + '.pdf');
+  closeDetailModal();
+  showToast('✓ PDF exporté !');
+}
+window.exportSinglePDF = exportSinglePDF;
+
+// ══════════════════════════════════════════════════════════════════════
+// CLASSEUR HSA — Documents & justificatifs (module ajouté)
+// ══════════════════════════════════════════════════════════════════════
+const CLASSEUR_DEFAULT_CATEGORIES = [
+  "Rapports de période",
+  "Formation hygiène alimentaire",
+  "Déclarations & agréments",
+  "Contrats & licences",
+  "Lutte contre les nuisibles (3D)",
+  "Allergènes & étiquetage",
+  "Analyses & contrôle de l'eau"
+];
+const CLASSEUR_CATEGORY_TIPS = {
+  "Rapports de période": "Générés automatiquement depuis Admin → Rapport de période.",
+  "Formation hygiène alimentaire": "Conserver les attestations toute la durée d'emploi + 5 ans.",
+  "Déclarations & agréments": "Conserver sans limite de durée.",
+  "Contrats & licences": "Vérifier régulièrement les dates de renouvellement.",
+  "Lutte contre les nuisibles (3D)": "Contrat + derniers passages ; PV à conserver au moins 2 ans.",
+  "Allergènes & étiquetage": "À tenir à jour, cohérent avec la carte actuelle.",
+  "Analyses & contrôle de l'eau": "Conserver les résultats d'autocontrôles 5 ans."
+};
+
+let _classeurConfig = { categories: [...CLASSEUR_DEFAULT_CATEGORIES], docCounter: 0, shareEnabled: false };
+let _classeurDocs = [];
+let _classeurActiveCat = null;
+let _classeurModalType = 'upload';
+
+function classeurEsc(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function classeurSanitizeFilename(s){ return (s||'fichier').replace(/[\/\\:*?"<>|]/g,'-').trim(); }
+function classeurFmtDate(ts){
+  if(!ts) return '—';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('fr-FR');
+}
+function classeurDaysUntil(dateStr){
+  if(!dateStr) return null;
+  return Math.ceil((new Date(dateStr) - new Date())/(1000*60*60*24));
+}
+
+async function loadClasseurConfig(){
+  try{
+    const snap = await window._getDoc(window._doc('classeurConfig','main'));
+    if(snap.exists()){
+      _classeurConfig = snap.data();
+      if(!_classeurConfig.categories || !_classeurConfig.categories.length) _classeurConfig.categories = [...CLASSEUR_DEFAULT_CATEGORIES];
+    } else {
+      _classeurConfig = { categories:[...CLASSEUR_DEFAULT_CATEGORIES], docCounter:0, shareEnabled:false };
+      await window._setDoc(window._doc('classeurConfig','main'), _classeurConfig);
+    }
+  }catch(e){ console.error('loadClasseurConfig', e); }
+}
+
+async function loadClasseurDocs(){
+  try{
+    const q = window._query(window._col('classeurDocuments'), window._orderBy('addedAt','desc'));
+    const snap = await window._getDocs(q);
+    _classeurDocs = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+  }catch(e){ console.error('loadClasseurDocs', e); _classeurDocs = []; }
+}
+
+async function renderClasseur(){
+  document.getElementById('classeur-doc-list').innerHTML = '<div class="empty-state">Chargement...</div>';
+  await loadClasseurConfig();
+  await loadClasseurDocs();
+  if(!_classeurActiveCat || !_classeurConfig.categories.includes(_classeurActiveCat)){
+    _classeurActiveCat = _classeurConfig.categories[0];
+  }
+  const enabled = _classeurConfig.shareEnabled === true;
+  document.getElementById('classeur-share-toggle').classList.toggle('on', enabled);
+  document.getElementById('classeur-share-state').textContent = enabled ? 'Activé — consultable' : 'Désactivé';
+  renderClasseurCats();
+  renderClasseurDocPanel();
+}
+window.renderClasseur = renderClasseur;
+
+function renderClasseurCats(){
+  const counts = {};
+  _classeurDocs.forEach(d => { counts[d.category] = (counts[d.category]||0)+1; });
+  let html = '';
+  _classeurConfig.categories.forEach(cat => {
+    html += `<div class="cat-chip ${cat===_classeurActiveCat?'active':''}" onclick="selectClasseurCat('${cat.replace(/'/g,"\\'")}')">${classeurEsc(cat)}<span class="cnt">${counts[cat]||0}</span></div>`;
+  });
+  html += `<button class="cat-add-chip" onclick="addClasseurCategory()">+ Catégorie</button>`;
+  document.getElementById('classeur-cat-scroll').innerHTML = html;
+}
+
+function selectClasseurCat(cat){ _classeurActiveCat = cat; renderClasseurCats(); renderClasseurDocPanel(); }
+window.selectClasseurCat = selectClasseurCat;
+
+async function addClasseurCategory(){
+  const name = prompt('Nom de la catégorie ou du fournisseur (ex : Rentokil — Dératisation)');
+  if(!name || !name.trim()) return;
+  const trimmed = name.trim();
+  if(_classeurConfig.categories.includes(trimmed)){ showToast('Cette catégorie existe déjà'); return; }
+  const previous = [..._classeurConfig.categories];
+  _classeurConfig.categories.push(trimmed);
+  renderClasseurCats();
+  try{
+    await window._setDoc(window._doc('classeurConfig','main'), _classeurConfig);
+    _classeurActiveCat = trimmed;
+    renderClasseurCats(); renderClasseurDocPanel();
+    showToast('Catégorie ajoutée');
+  }catch(e){
+    _classeurConfig.categories = previous;
+    renderClasseurCats();
+    showToast('Échec : ' + (e.code === 'permission-denied' ? 'règles Firestore à mettre à jour (voir guide)' : e.message));
+  }
+}
+window.addClasseurCategory = addClasseurCategory;
+
+function renderClasseurDocPanel(){
+  document.getElementById('classeur-cat-tip').textContent = CLASSEUR_CATEGORY_TIPS[_classeurActiveCat] || '';
+  const items = _classeurDocs.filter(d => d.category === _classeurActiveCat);
+  const list = document.getElementById('classeur-doc-list');
+  if(items.length === 0){
+    list.innerHTML = `<div class="empty-state">Aucun document dans « ${classeurEsc(_classeurActiveCat)} » pour le moment.</div>`;
+    return;
+  }
+  list.innerHTML = items.map(docItem => {
+    const days = docItem.expiryDate ? classeurDaysUntil(docItem.expiryDate) : null;
+    let expTxt = '', expColor = 'var(--text2)';
+    if(docItem.expiryDate){
+      expTxt = new Date(docItem.expiryDate).toLocaleDateString('fr-FR');
+      if(days < 0){ expTxt = 'Expiré'; expColor = 'var(--red)'; }
+      else if(days <= 30){ expTxt += ' (bientôt)'; expColor = 'var(--amber)'; }
+    }
+    return `<div class="doc-row">
+      <div class="doc-row-icon" style="background:${docItem.type==='upload'?'var(--blue-light)':'var(--purple-light)'};color:${docItem.type==='upload'?'var(--blue)':'var(--purple)'}">${docItem.type==='upload'?'📄':'🔗'}</div>
+      <div class="doc-row-body">
+        <div class="doc-row-title">${classeurEsc(docItem.name)}</div>
+        <div class="doc-row-meta">
+          <span>${classeurEsc(docItem.ref||'')}</span>
+          <span>·</span>
+          <span>${classeurFmtDate(docItem.addedAt)}</span>
+          ${docItem.expiryDate ? `<span>·</span><span style="color:${expColor};font-weight:600">${expTxt}</span>` : ''}
+        </div>
+      </div>
+      <div class="doc-row-actions">
+        <a href="${docItem.url}" target="_blank" rel="noopener" title="Ouvrir">↗</a>
+        <button onclick="deleteClasseurDoc('${docItem.id}')" title="Supprimer">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function deleteClasseurDoc(id){
+  const target = _classeurDocs.find(d => d.id === id);
+  if(!target) return;
+  if(!confirm(`Supprimer « ${target.name} » ?`)) return;
+  try{
+    await window._deleteDoc(window._doc('classeurDocuments', id));
+    if(target.type === 'upload' && target.storagePath){
+      try{ await window._deleteObject(window._storageRef(target.storagePath)); }catch(e){}
+    }
+    await loadClasseurDocs();
+    renderClasseurCats(); renderClasseurDocPanel();
+    showToast('Document supprimé');
+  }catch(e){ showToast('Erreur : ' + e.message); }
+}
+window.deleteClasseurDoc = deleteClasseurDoc;
+
+function openAddClasseurDocModal(){
+  const sel = document.getElementById('cm-category');
+  sel.innerHTML = _classeurConfig.categories.map(c => `<option value="${classeurEsc(c)}" ${c===_classeurActiveCat?'selected':''}>${classeurEsc(c)}</option>`).join('');
+  document.getElementById('cm-name').value = '';
+  document.getElementById('cm-url').value = '';
+  document.getElementById('cm-expiry').value = '';
+  document.getElementById('cm-file').value = '';
+  setClasseurModalType('upload');
+  document.getElementById('classeur-modal').classList.add('open');
+}
+window.openAddClasseurDocModal = openAddClasseurDocModal;
+
+function setClasseurModalType(t){
+  _classeurModalType = t;
+  document.getElementById('cm-type-upload').classList.toggle('active', t==='upload');
+  document.getElementById('cm-type-link').classList.toggle('active', t==='link');
+  document.getElementById('cm-field-file').style.display = t==='upload' ? 'block' : 'none';
+  document.getElementById('cm-field-url').style.display = t==='link' ? 'block' : 'none';
+}
+window.setClasseurModalType = setClasseurModalType;
+
+function closeClasseurModal(){ document.getElementById('classeur-modal').classList.remove('open'); }
+window.closeClasseurModal = closeClasseurModal;
+function closeClasseurModalBg(e){ if(e.target === document.getElementById('classeur-modal')) closeClasseurModal(); }
+window.closeClasseurModalBg = closeClasseurModalBg;
+
+async function saveClasseurDoc(){
+  const category = document.getElementById('cm-category').value;
+  const name = document.getElementById('cm-name').value.trim();
+  const expiry = document.getElementById('cm-expiry').value || null;
+  if(!name){ showToast('Indique un nom de document'); return; }
+
+  let url='', type=_classeurModalType, storagePath=null, fileName=null;
+  const btn = document.getElementById('cm-save-btn');
+
+  if(_classeurModalType === 'upload'){
+    const fileInput = document.getElementById('cm-file');
+    if(!fileInput.files.length){ showToast('Choisis un fichier'); return; }
+    const file = fileInput.files[0];
+    fileName = file.name;
+    storagePath = `classeur/${Date.now()}_${file.name}`;
+    btn.disabled = true; btn.textContent = 'Envoi en cours...';
+    try{
+      const sref = window._storageRef(storagePath);
+      await window._uploadBytes(sref, file);
+      url = await window._getDownloadURL(sref);
+    }catch(e){
+      showToast('Échec upload : ' + e.message);
+      btn.disabled = false; btn.textContent = 'Enregistrer';
+      return;
+    }
+  } else {
+    url = document.getElementById('cm-url').value.trim();
+    if(!url){ showToast('Indique un lien'); return; }
+    if(!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  }
+
+  const newCounter = (_classeurConfig.docCounter || 0) + 1;
+  const year = new Date().getFullYear();
+  const ref = `HSA-${year}-${String(newCounter).padStart(4,'0')}`;
+
+  try{
+    await window._addDoc(window._col('classeurDocuments'), {
+      category, name, type, url, storagePath, fileName, expiryDate: expiry, ref,
+      addedAt: window._serverTS(),
+      addedBy: window._userEmail || ''
+    });
+    _classeurConfig.docCounter = newCounter;
+    await window._setDoc(window._doc('classeurConfig','main'), _classeurConfig);
+  }catch(e){
+    showToast('Erreur enregistrement : ' + e.message);
+    btn.disabled = false; btn.textContent = 'Enregistrer';
+    return;
+  }
+
+  closeClasseurModal();
+  _classeurActiveCat = category;
+  await loadClasseurDocs();
+  renderClasseurCats(); renderClasseurDocPanel();
+  showToast('Document ajouté');
+  btn.disabled = false; btn.textContent = 'Enregistrer';
+}
+window.saveClasseurDoc = saveClasseurDoc;
+
+async function toggleClasseurShare(){
+  const newVal = !(_classeurConfig.shareEnabled === true);
+  // Mise à jour visuelle immédiate (avant l'écriture réseau)
+  document.getElementById('classeur-share-toggle').classList.toggle('on', newVal);
+  document.getElementById('classeur-share-state').textContent = newVal ? 'Activé — consultable' : 'Désactivé';
+  const previous = _classeurConfig.shareEnabled;
+  _classeurConfig.shareEnabled = newVal;
+  try{
+    await window._setDoc(window._doc('classeurConfig','main'), _classeurConfig);
+    showToast(newVal ? 'Partage activé' : 'Partage désactivé');
+  }catch(e){
+    // Écriture refusée (le plus souvent : règles Firestore pas encore mises à jour) → on annule visuellement
+    _classeurConfig.shareEnabled = previous;
+    document.getElementById('classeur-share-toggle').classList.toggle('on', previous === true);
+    document.getElementById('classeur-share-state').textContent = previous === true ? 'Activé — consultable' : 'Désactivé';
+    showToast('Échec : ' + (e.code === 'permission-denied' ? 'règles Firestore à mettre à jour (voir guide)' : e.message));
+  }
+}
+window.toggleClasseurShare = toggleClasseurShare;
+
+async function copyClasseurShareLink(){
+  if(_classeurConfig.shareEnabled !== true){ await toggleClasseurShare(); }
+  const url = `${location.origin}${location.pathname}?classeurshare=1`;
+  try{ await navigator.clipboard.writeText(url); showToast('Lien copié'); }
+  catch(e){ prompt('Copie le lien :', url); }
+}
+window.copyClasseurShareLink = copyClasseurShareLink;
+
+async function downloadClasseurBinder(){
+  if(_classeurDocs.length === 0){ showToast('Aucun document à télécharger'); return; }
+  showToast('⏳ Préparation du zip...');
+  const zipOk = await new Promise(res=>{
+    if(window.JSZip){res(true);return;}
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+    s.onload=()=>res(true); s.onerror=()=>res(false);
+    document.head.appendChild(s);
+  });
+  if(!zipOk){ showToast('Erreur chargement JSZip'); return; }
+  try{
+    const zip = new window.JSZip();
+    const byCat = {};
+    _classeurDocs.forEach(d => { (byCat[d.category] = byCat[d.category]||[]).push(d); });
+    let sommaire = "CLASSEUR HSA — MOULE & SMILE\nGénéré le " + new Date().toLocaleDateString('fr-FR') + "\n" + "=".repeat(50) + "\n";
+    for(const cat of Object.keys(byCat)){
+      const folder = zip.folder(classeurSanitizeFilename(cat));
+      sommaire += `\n\n${cat.toUpperCase()}\n${'-'.repeat(cat.length)}\n`;
+      for(const docItem of byCat[cat]){
+        const exp = docItem.expiryDate ? `, échéance ${new Date(docItem.expiryDate).toLocaleDateString('fr-FR')}` : '';
+        sommaire += `[${docItem.ref}] ${docItem.name} — ajouté le ${classeurFmtDate(docItem.addedAt)}${exp}\n`;
+        if(docItem.type === 'upload'){
+          try{
+            const resp = await fetch(docItem.url);
+            const blob = await resp.blob();
+            folder.file(classeurSanitizeFilename(docItem.fileName || docItem.name), blob);
+          }catch(e){ sommaire += `   (fichier non récupéré automatiquement)\n`; }
+        } else {
+          sommaire += `   Lien : ${docItem.url}\n`;
+        }
+      }
+    }
+    zip.file('sommaire.txt', sommaire);
+    const blob = await zip.generateAsync({type:'blob'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `Classeur-HSA-${new Date().toISOString().slice(0,10)}.zip`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    showToast('✓ Classeur téléchargé');
+  }catch(e){ showToast('Erreur lors de la génération du zip'); }
+}
+window.downloadClasseurBinder = downloadClasseurBinder;
+
+// ── Archivage automatique du rapport de période vers le Classeur ────────
+async function saveRapportToClasseur(){
+  if(_rapportRecs.length === 0){ await previewRapport(); }
+  if(_rapportRecs.length === 0){ showToast('Aucune donnée pour cette période'); return; }
+  const from = document.getElementById('rpt-from').value;
+  const to = document.getElementById('rpt-to').value;
+  if(!from || !to){ showToast('Sélectionner une période'); return; }
+  showToast('⏳ Génération et enregistrement...');
+  const ok = await loadJsPDF();
+  if(!ok){ showToast('Erreur chargement PDF'); return; }
+  try{
+    const pdfDoc = buildPDFContent(_rapportRecs, `Rapport HACCP — Moule & Smile`, `${from} → ${to}`);
+    const blob = pdfDoc.output('blob');
+    const fileName = `Rapport_HACCP_${from}_${to}.pdf`;
+    const storagePath = `classeur/${Date.now()}_${fileName}`;
+    const sref = window._storageRef(storagePath);
+    await window._uploadBytes(sref, blob);
+    const url = await window._getDownloadURL(sref);
+
+    await loadClasseurConfig();
+    const category = "Rapports de période";
+    if(!_classeurConfig.categories.includes(category)){
+      _classeurConfig.categories.unshift(category);
+    }
+    const newCounter = (_classeurConfig.docCounter || 0) + 1;
+    const year = new Date().getFullYear();
+    const ref = `HSA-${year}-${String(newCounter).padStart(4,'0')}`;
+
+    await window._addDoc(window._col('classeurDocuments'), {
+      category, name: `Rapport HACCP ${from} → ${to}`, type:'upload',
+      url, storagePath, fileName, expiryDate:null, ref,
+      addedAt: window._serverTS(), addedBy: window._userEmail || ''
+    });
+    _classeurConfig.docCounter = newCounter;
+    await window._setDoc(window._doc('classeurConfig','main'), _classeurConfig);
+
+    showToast('✓ Rapport enregistré dans le Classeur HSA');
+  }catch(e){
+    showToast('Erreur : ' + e.message);
+  }
+}
+window.saveRapportToClasseur = saveRapportToClasseur;
+
+// ── Lien public de partage (lecture seule, sans connexion) ──────────────
+async function renderClasseurShareView(){
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('classeur-share-screen').style.display = 'block';
+  const body = document.getElementById('classeur-share-body');
+  try{
+    const cfgSnap = await window._getDoc(window._doc('classeurConfig','main'));
+    const cfg = cfgSnap.exists() ? cfgSnap.data() : null;
+    if(!cfg || cfg.shareEnabled !== true){
+      body.innerHTML = '<div class="empty-state">Ce lien a été désactivé, ou n\'existe pas.</div>';
+      return;
+    }
+    const q = window._query(window._col('classeurDocuments'), window._orderBy('addedAt','desc'));
+    const snap = await window._getDocs(q);
+    const docs = snap.docs.map(d => d.data());
+    const categories = cfg.categories && cfg.categories.length ? cfg.categories : CLASSEUR_DEFAULT_CATEGORIES;
+    const byCat = {};
+    docs.forEach(d => { (byCat[d.category] = byCat[d.category]||[]).push(d); });
+    const allCats = [...new Set([...categories, ...Object.keys(byCat)])];
+    let html = '';
+    allCats.forEach(cat => {
+      const items = byCat[cat] || [];
+      if(items.length === 0) return;
+      html += `<div class="section-label">${classeurEsc(cat)}</div><div class="card">`;
+      items.forEach(docItem => {
+        const days = docItem.expiryDate ? classeurDaysUntil(docItem.expiryDate) : null;
+        let expTxt = docItem.expiryDate ? new Date(docItem.expiryDate).toLocaleDateString('fr-FR') : '';
+        let expColor = 'var(--text2)';
+        if(days !== null){
+          if(days < 0){ expTxt='Expiré'; expColor='var(--red)'; }
+          else if(days<=30){ expTxt+=' (bientôt)'; expColor='var(--amber)'; }
+        }
+        html += `<div class="doc-row">
+          <div class="doc-row-icon" style="background:${docItem.type==='upload'?'var(--blue-light)':'var(--purple-light)'};color:${docItem.type==='upload'?'var(--blue)':'var(--purple)'}">${docItem.type==='upload'?'📄':'🔗'}</div>
+          <div class="doc-row-body">
+            <div class="doc-row-title">${classeurEsc(docItem.name)}</div>
+            <div class="doc-row-meta"><span>${classeurEsc(docItem.ref||'')}</span><span>·</span><span>${classeurFmtDate(docItem.addedAt)}</span>${docItem.expiryDate?`<span>·</span><span style="color:${expColor};font-weight:600">${expTxt}</span>`:''}</div>
+          </div>
+          <div class="doc-row-actions"><a href="${docItem.url}" target="_blank" rel="noopener">↗</a></div>
+        </div>`;
+      });
+      html += `</div>`;
+    });
+    body.innerHTML = html || '<div class="empty-state">Aucun document disponible pour le moment.</div>';
+  }catch(e){
+    body.innerHTML = '<div class="empty-state">Impossible de charger le classeur.</div>';
+  }
+}
+window.renderClasseurShareView = renderClasseurShareView;
+
+
+</script>
+</body>
+</html>

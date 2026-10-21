@@ -1,0 +1,2068 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>[TEST] Étiquettes DLC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<style>
+:root {
+  --navy: #0d2136;
+  --navy-mid: #1a3a56;
+  --navy-light: #2a5070;
+  --copper: #c87941;
+  --copper-light: #e8a96a;
+  --cream: #f7f4ee;
+  --white: #ffffff;
+  --text: #0d2136;
+  --text-muted: #5a7a90;
+  --border: #cdd8e0;
+  --danger: #c0392b;
+  --success: #1a7a4a;
+  --warn: #b85c00;
+  --radius: 10px;
+  --shadow: 0 2px 12px rgba(13,33,54,0.10);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--cream);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* === HEADER === */
+header {
+  background: var(--navy);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--copper);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.logo h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.1;
+}
+
+.logo p {
+  font-size: 11px;
+  color: var(--copper-light);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* === BUTTONS === */
+.btn {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: var(--copper);
+  color: var(--white);
+}
+.btn-primary:hover { background: var(--copper-light); }
+
+.btn-navy {
+  background: var(--navy-mid);
+  color: var(--white);
+}
+.btn-navy:hover { background: var(--navy-light); }
+
+.btn-outline {
+  background: transparent;
+  color: var(--navy);
+  border: 1.5px solid var(--border);
+}
+.btn-outline:hover { border-color: var(--navy-mid); }
+
+.btn-print {
+  background: var(--navy);
+  color: var(--white);
+  padding: 8px 14px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+.btn-print:hover { background: var(--navy-light); }
+
+.btn-lg {
+  padding: 14px 24px;
+  font-size: 16px;
+  border-radius: 12px;
+}
+
+/* === MAIN LAYOUT === */
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px;
+}
+
+/* === TOOLBAR === */
+.toolbar {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  box-shadow: var(--shadow);
+}
+
+.search-box {
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+}
+
+.search-box svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  width: 16px;
+  height: 16px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 10px 14px 10px 38px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text);
+  background: var(--cream);
+}
+.search-box input:focus { outline: none; border-color: var(--navy-mid); }
+
+.filter-select {
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text);
+  background: var(--cream);
+  cursor: pointer;
+  min-width: 160px;
+}
+.filter-select:focus { outline: none; border-color: var(--navy-mid); }
+
+.employee-select {
+  padding: 10px 14px;
+  border: 1.5px solid var(--copper);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text);
+  background: #fff8f2;
+  cursor: pointer;
+  min-width: 160px;
+}
+.employee-select:focus { outline: none; border-color: var(--copper); }
+
+.count-badge {
+  background: var(--navy);
+  color: var(--white);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* === EMPTY STATE === */
+.empty-state {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 60px 24px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.empty-icon {
+  font-size: 56px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  color: var(--text-muted);
+  font-size: 15px;
+  margin-bottom: 24px;
+}
+
+/* === PRODUCT GRID === */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.product-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: transform 0.15s, box-shadow 0.15s;
+  border: 1.5px solid transparent;
+}
+.product-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(13,33,54,0.14);
+  border-color: var(--border);
+}
+
+.card-header {
+  background: var(--navy);
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.card-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--white);
+  line-height: 1.2;
+}
+
+.card-sub {
+  font-size: 13px;
+  color: var(--copper-light);
+  margin-top: 3px;
+}
+
+.cat-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.card-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.info-label {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.info-val {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.dlc-chip {
+  background: var(--cream);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dlc-number {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.dlc-unit {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.allergen-tag {
+  display: inline-block;
+  background: #fff3cd;
+  color: #805600;
+  border: 1px solid #f0c040;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin: 2px;
+}
+
+.allergen-none {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-style: italic;
+}
+
+.card-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--cream);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qty-input {
+  width: 56px;
+  padding: 7px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  text-align: center;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text);
+}
+.qty-input:focus { outline: none; border-color: var(--copper); }
+
+.qty-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* === CATEGORY COLORS === */
+.cat-froid    { background: #dbeafe; color: #1e40af; }
+.cat-chaud    { background: #fee2e2; color: #991b1b; }
+.cat-ambiante { background: #dcfce7; color: #166534; }
+.cat-surgele  { background: #e0e7ff; color: #3730a3; }
+.cat-dessert  { background: #fce7f3; color: #9d174d; }
+.cat-sauce    { background: #ffedd5; color: #9a3412; }
+.cat-default  { background: #f1f5f9; color: #475569; }
+
+/* === MODAL OVERLAY (normal-flow faux viewport) === */
+.modal-wrap {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(13,33,54,0.55);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-wrap.open { display: flex; }
+
+.modal {
+  background: var(--white);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 60px rgba(13,33,54,0.3);
+  overflow: hidden;
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  background: var(--navy);
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  font-family: 'Syne', sans-serif;
+  color: var(--white);
+  font-size: 18px;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  color: var(--white);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: background 0.15s;
+}
+.modal-close:hover { background: rgba(255,255,255,0.25); }
+
+.modal-body {
+  padding: 24px;
+}
+
+/* === LABEL PREVIEW === */
+.label-preview {
+  background: var(--white);
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  padding: 8px 6px;
+  width: 116px;
+  min-height: 361px;
+  margin: 0 auto 20px;
+  font-size: 11px;
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  box-sizing: border-box;
+}
+
+.label-preview .lp-brand {
+  font-family: 'Syne', sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--navy);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding-bottom: 4px;
+  border-bottom: 1.5px solid var(--navy);
+  margin-bottom: 2px;
+}
+
+.label-preview .lp-product {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.2;
+}
+
+.label-preview .lp-flavor {
+  font-size: 9px;
+  color: var(--copper);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.label-preview .lp-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 2px;
+}
+
+.label-preview .lp-key {
+  font-size: 7px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.label-preview .lp-value {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.label-preview .lp-expiry {
+  background: var(--navy);
+  color: var(--white);
+  border-radius: 4px;
+  padding: 5px 6px;
+  margin: 3px 0;
+}
+
+.label-preview .lp-expiry .lp-key { color: rgba(255,255,255,0.6); }
+.label-preview .lp-expiry .lp-value { font-size: 10px; color: var(--white); }
+
+.label-preview .lp-allergens {
+  margin-top: auto;
+  padding-top: 4px;
+  border-top: 1px dashed var(--border);
+  font-size: 8px;
+  color: #805600;
+  line-height: 1.3;
+}
+
+.modal-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.modal-field label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.modal-field select,
+.modal-field input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text);
+  background: var(--cream);
+}
+.modal-field select:focus,
+.modal-field input:focus { outline: none; border-color: var(--copper); }
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid var(--cream);
+}
+
+/* === IMPORT GUIDE === */
+.import-guide {
+  background: var(--navy);
+  color: var(--white);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.import-guide strong { color: var(--copper-light); }
+
+.import-guide code {
+  background: rgba(255,255,255,0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+/* === PRINT STYLES DK-1201 — 29mm x 90.3mm === */
+@media print {
+  @page {
+    size: 29mm 90.3mm;
+    margin: 0;
+  }
+  * { visibility: hidden; }
+  #printArea, #printArea * { visibility: visible; }
+  #printArea {
+    position: absolute;
+    left: 0; top: 0;
+    width: 29mm;
+    margin: 0; padding: 0;
+  }
+  .print-label {
+    width: 29mm;
+    height: 90.3mm;
+    padding: 4mm 2mm 2mm 2mm;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+    page-break-after: always;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8mm;
+    box-sizing: border-box;
+  }
+  .pl-brand {
+    font-size: 7pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-bottom: 0.5pt solid #000;
+    padding-bottom: 1mm;
+  }
+  .pl-product {
+    font-size: 14pt;
+    font-weight: bold;
+    line-height: 1.1;
+  }
+  .pl-flavor {
+    font-size: 10pt;
+    font-style: italic;
+  }
+  .pl-section {
+    margin-bottom: 0.3mm;
+  }
+  .pl-key {
+    font-size: 7pt;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #555;
+  }
+  .pl-val {
+    font-size: 10pt;
+    font-weight: bold;
+    line-height: 1.2;
+  }
+  .pl-expiry-box {
+    border: 1pt solid #000;
+    padding: 1.2mm;
+    margin: 0.8mm 0;
+  }
+  .pl-expiry-box .pl-key { color: #000; font-size: 7pt; }
+  .pl-expiry-box .pl-val { font-size: 11pt; }
+  .pl-allergens {
+    border-top: 0.5pt dashed #aaa;
+    padding-top: 1mm;
+    margin-top: auto;
+    font-size: 7.5pt;
+    line-height: 1.3;
+  }
+  .pl-allergen-label {
+    font-weight: bold;
+    font-size: 7.5pt;
+  }
+  .pl-employee {
+    border-top: 0.5pt solid #ccc;
+    padding-top: 0.8mm;
+    font-size: 7.5pt;
+    color: #555;
+  }
+}
+/* === EDIT / PIN === */
+.btn-edit {
+  background: none;
+  border: 1.5px solid var(--border);
+  color: var(--text-muted);
+  padding: 6px 10px;
+  border-radius: 7px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-edit:hover { border-color: var(--copper); color: var(--copper); background: #fff8f2; }
+
+.pin-dots {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 16px 0;
+}
+.pin-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background 0.15s;
+}
+.pin-dot.filled { background: var(--navy); }
+
+.pin-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.pin-key {
+  padding: 14px;
+  font-size: 18px;
+  font-weight: 600;
+  font-family: 'Syne', sans-serif;
+  background: var(--cream);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.1s;
+  text-align: center;
+}
+.pin-key:hover { background: var(--navy); color: var(--white); border-color: var(--navy); }
+.pin-key:active { transform: scale(0.95); }
+.pin-error {
+  text-align: center;
+  color: var(--danger);
+  font-size: 13px;
+  min-height: 20px;
+  margin-bottom: 4px;
+}
+
+.edit-field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+/* PIN dans settings */
+.pin-setting-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--cream);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.pin-setting-row label { font-weight: 500; flex: 1; }
+.pin-setting-row input {
+  width: 100px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 16px;
+  text-align: center;
+  letter-spacing: 0.2em;
+  font-family: 'DM Sans', sans-serif;
+}
+.pin-setting-row input:focus { outline: none; border-color: var(--copper); }
+
+/* === SETTINGS MODAL === */
+.settings-tabs {
+  display: flex;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 20px;
+}
+.settings-tab {
+  padding: 10px 20px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s;
+}
+.settings-tab.active {
+  color: var(--navy);
+  border-bottom-color: var(--copper);
+  font-weight: 600;
+}
+.settings-panel { display: none; }
+.settings-panel.active { display: block; }
+
+.employee-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.employee-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--cream);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.employee-item .emp-name { flex: 1; }
+.btn-del {
+  background: none;
+  border: none;
+  color: var(--danger);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+.btn-del:hover { background: #fee2e2; }
+
+.add-employee-row {
+  display: flex;
+  gap: 8px;
+}
+.add-employee-row input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+}
+.add-employee-row input:focus { outline: none; border-color: var(--copper); }
+
+.printer-option {
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.printer-option:hover { border-color: var(--navy-mid); }
+.printer-option.selected { border-color: var(--copper); background: #fff8f2; }
+.printer-option-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.printer-option-header input[type=radio] { accent-color: var(--copper); width: 18px; height: 18px; }
+.printer-option-title { font-weight: 600; font-size: 15px; }
+.printer-option-desc { font-size: 12px; color: var(--text-muted); margin-left: 30px; }
+.printer-ip-row {
+  margin-top: 12px;
+  display: none;
+}
+.printer-ip-row.visible { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.printer-ip-row input {
+  flex: 1;
+  min-width: 160px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'DM Sans', sans-serif;
+}
+.printer-ip-row input:focus { outline: none; border-color: var(--copper); }
+.btn-test {
+  padding: 10px 14px;
+  background: var(--navy-mid);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-test:hover { background: var(--navy-light); }
+.test-result {
+  font-size: 12px;
+  margin-top: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  display: none;
+}
+.test-result.ok { background: #dcfce7; color: #166534; display: block; }
+.test-result.err { background: #fee2e2; color: #991b1b; display: block; }
+
+.modal-wide { max-width: 560px; }
+</style>
+</head>
+<body>
+<div id="bandeauModeTest" style="position:fixed;top:3px;left:50%;transform:translateX(-50%);z-index:2147483647;pointer-events:none;background:#d6332a;color:#fff;font:bold 11px/1 Arial,sans-serif;letter-spacing:1px;padding:5px 12px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,.5);opacity:.93;white-space:nowrap">🧪 MODE TEST · base menutest · rien n'est réel</div>
+<script>window.MODE_TEST=true;</script>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🐚</div>
+    <div>
+      <h1>Restaurant TEST</h1>
+      <p>HACCP — Étiquettes DLC · <span style="opacity:.7">v.21/10/2026 11:20 TEST</span></p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <label for="excelFile" class="btn btn-primary">
+      📂 Importer Excel
+    </label>
+    <input type="file" id="excelFile" accept=".xlsx,.xls" style="display:none" onchange="importExcel()">
+    <button class="btn btn-navy" onclick="showAddManual()">+ Saisie manuelle</button>
+    <button class="btn btn-outline" onclick="clearAll()" style="color:#c0392b;border-color:#e0b0b0">🗑 Vider</button>
+    <button class="btn btn-navy" onclick="openSettings()">⚙️ Paramètres</button>
+  </div>
+</header>
+
+<main>
+
+  <div class="import-guide" id="importGuide">
+    <span>📋</span>
+    <span>
+      Colonnes Excel attendues :
+      <code>Catégorie</code> <code>Produit</code> <code>Sous-produit / Saveur</code>
+      <code>DLC</code> <code>Unité DLC</code> <code>Température</code> <code>Allergènes</code>
+      — <strong>Unité DLC</strong> : <code>heures</code> ou <code>jours</code>
+    </span>
+  </div>
+
+  <div class="toolbar" id="toolbar" style="display:none">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+      </svg>
+      <input type="text" id="searchInput" placeholder="Rechercher un produit…" oninput="filterTable()">
+    </div>
+    <select class="filter-select" id="catFilter" onchange="filterTable()">
+      <option value="">Toutes les catégories</option>
+    </select>
+    <select class="employee-select" id="employeeSelect">
+      <option value="">— Préparé par —</option>
+    </select>
+    <span class="count-badge" id="countBadge">0 produits</span>
+  </div>
+
+  <div id="fbStatus" style="display:none;font-size:13px;color:var(--text-muted);margin-bottom:12px;align-items:center;gap:8px">
+    <span id="fbDot" style="width:8px;height:8px;border-radius:50%;background:#ccc;display:inline-block"></span>
+    <span id="fbMsg">Connexion Firebase…</span>
+    <span id="fbLastImport" style="margin-left:auto;font-size:12px;color:var(--text-muted)"></span>
+  </div>
+
+  <div id="emptyState" class="empty-state">
+    <div class="empty-icon">🫙</div>
+    <h2>Aucun produit chargé</h2>
+    <p>Importez votre fichier Excel pour afficher et imprimer vos étiquettes DLC.</p>
+    <label for="excelFile" class="btn btn-primary btn-lg" style="display:inline-flex; cursor:pointer">
+      📂 Choisir un fichier Excel
+    </label>
+  </div>
+
+  <div id="productGrid" class="product-grid" style="display:none"></div>
+
+</main>
+
+<!-- MODAL ÉTIQUETTE -->
+<div class="modal-wrap" id="modalWrap" onclick="closeModalOutside(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <h2>🏷️ Imprimer l'étiquette</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="labelPreview" class="label-preview"></div>
+      <div class="modal-info">
+        <div class="modal-field">
+          <label>Employé</label>
+          <select id="modalEmployee">
+            <option value="">— Préparé par —</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label>Nombre de copies</label>
+          <input type="number" id="modalQty" value="1" min="1" max="20">
+        </div>
+        <div class="modal-field" style="grid-column: 1/-1;">
+          <label>Date/heure de préparation</label>
+          <input type="datetime-local" id="modalDatetime">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal()">Annuler</button>
+        <button class="btn btn-primary btn-lg" onclick="executePrint()">🖨️ Imprimer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SAISIE MANUELLE -->
+<div class="modal-wrap" id="manualWrap" onclick="closeManualOutside(event)">
+  <div class="modal" id="manualModal">
+    <div class="modal-header">
+      <h2>✏️ Saisie manuelle</h2>
+      <button class="modal-close" onclick="closeManual()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-info">
+        <div class="modal-field">
+          <label>Catégorie</label>
+          <input type="text" id="mCat" placeholder="ex: Froid">
+        </div>
+        <div class="modal-field">
+          <label>Produit *</label>
+          <input type="text" id="mProduct" placeholder="ex: Saumon gravlax">
+        </div>
+        <div class="modal-field" style="grid-column:1/-1">
+          <label>Saveur / Sous-produit</label>
+          <input type="text" id="mFlavor" placeholder="ex: Aneth et citron">
+        </div>
+        <div class="modal-field">
+          <label>DLC (valeur)</label>
+          <input type="number" id="mDLC" placeholder="48" min="1">
+        </div>
+        <div class="modal-field">
+          <label>Unité DLC</label>
+          <select id="mUnit">
+            <option value="heures">heures</option>
+            <option value="jours">jours</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label>Température</label>
+          <input type="text" id="mTemp" placeholder="ex: 0-4°C">
+        </div>
+        <div class="modal-field" style="grid-column:1/-1">
+          <label>Allergènes</label>
+          <input type="text" id="mAllergens" placeholder="ex: Poisson, Gluten">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeManual()">Annuler</button>
+        <button class="btn btn-primary" onclick="addManualProduct()">Ajouter</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PIN -->
+<div class="modal-wrap" id="pinWrap" onclick="closePinOutside(event)">
+  <div class="modal" style="max-width:320px">
+    <div class="modal-header">
+      <h2>🔒 Code PIN requis</h2>
+      <button class="modal-close" onclick="closePin()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="text-align:center;font-size:13px;color:var(--text-muted);margin-bottom:4px">Saisis le code PIN pour modifier cette DLC</p>
+      <div class="pin-dots" id="pinDots">
+        <div class="pin-dot" id="dot0"></div>
+        <div class="pin-dot" id="dot1"></div>
+        <div class="pin-dot" id="dot2"></div>
+        <div class="pin-dot" id="dot3"></div>
+      </div>
+      <div class="pin-error" id="pinError"></div>
+      <div class="pin-pad">
+        <button class="pin-key" onclick="pinKey('1')">1</button>
+        <button class="pin-key" onclick="pinKey('2')">2</button>
+        <button class="pin-key" onclick="pinKey('3')">3</button>
+        <button class="pin-key" onclick="pinKey('4')">4</button>
+        <button class="pin-key" onclick="pinKey('5')">5</button>
+        <button class="pin-key" onclick="pinKey('6')">6</button>
+        <button class="pin-key" onclick="pinKey('7')">7</button>
+        <button class="pin-key" onclick="pinKey('8')">8</button>
+        <button class="pin-key" onclick="pinKey('9')">9</button>
+        <button class="pin-key" onclick="pinKey('⌫')" style="font-size:20px">⌫</button>
+        <button class="pin-key" onclick="pinKey('0')">0</button>
+        <button class="pin-key" onclick="pinKey('✓')" style="background:var(--navy);color:var(--white);border-color:var(--navy)">✓</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ÉDITION DLC -->
+<div class="modal-wrap" id="editWrap" onclick="closeEditOutside(event)">
+  <div class="modal" id="editModal">
+    <div class="modal-header">
+      <h2>✏️ Modifier la DLC</h2>
+      <button class="modal-close" onclick="closeEdit()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="editProductName" style="font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:var(--navy);margin-bottom:4px"></div>
+      <div id="editProductFlavor" style="font-size:13px;color:var(--copper);margin-bottom:16px"></div>
+      <div class="edit-field-grid">
+        <div class="modal-field">
+          <label>DLC (valeur)</label>
+          <input type="number" id="editDLC" min="1" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;font-family:'DM Sans',sans-serif">
+        </div>
+        <div class="modal-field">
+          <label>Unité</label>
+          <select id="editUnit" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif">
+            <option value="heures">heures</option>
+            <option value="jours">jours</option>
+          </select>
+        </div>
+        <div class="modal-field" style="grid-column:1/-1">
+          <label>Température de conservation</label>
+          <input type="text" id="editTemp" placeholder="ex: 0-4°C" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeEdit()">Annuler</button>
+        <button class="btn btn-primary" onclick="saveEdit()">💾 Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PARAMÈTRES -->
+<div class="modal-wrap" id="settingsWrap" onclick="closeSettingsOutside(event)">
+  <div class="modal modal-wide" id="settingsModal">
+    <div class="modal-header">
+      <h2>⚙️ Paramètres</h2>
+      <button class="modal-close" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="settings-tabs">
+        <button class="settings-tab active" onclick="switchTab('employees')">👥 Employés</button>
+        <button class="settings-tab" onclick="switchTab('printer')">🖨️ Imprimante</button>
+        <button class="settings-tab" onclick="switchTab('security')">🔒 Sécurité</button>
+      </div>
+
+      <!-- ONGLET EMPLOYÉS -->
+      <div class="settings-panel active" id="panel-employees">
+        <div class="employee-list" id="employeeList"></div>
+        <div class="add-employee-row">
+          <input type="text" id="newEmployeeName" placeholder="Nom de l'employé…" onkeydown="if(event.key==='Enter') addEmployee()">
+          <button class="btn btn-primary" onclick="addEmployee()">+ Ajouter</button>
+        </div>
+      </div>
+
+      <!-- ONGLET IMPRIMANTE -->
+      <div class="settings-panel" id="panel-printer">
+
+        <div class="printer-option" id="opt-ql800" onclick="selectPrinter('ql800')">
+          <div class="printer-option-header">
+            <input type="radio" name="printerType" id="radio-ql800" value="ql800">
+            <span class="printer-option-title">Brother QL-800 — USB</span>
+          </div>
+          <div class="printer-option-desc">Impression via Chrome (configuration actuelle). Le PC doit être branché à l'imprimante.</div>
+        </div>
+
+        <div class="printer-option" id="opt-ql810w" onclick="selectPrinter('ql810w')">
+          <div class="printer-option-header">
+            <input type="radio" name="printerType" id="radio-ql810w" value="ql810w">
+            <span class="printer-option-title">Brother QL-810W — WiFi</span>
+          </div>
+          <div class="printer-option-desc">Impression directe via réseau. Nécessite le serveur <strong>start.bat</strong> lancé sur le PC connecté à l'imprimante.</div>
+          <div class="printer-ip-row" id="ipRow">
+            <input type="text" id="printerIP" placeholder="IP du PC serveur (ex: 192.168.1.66)" oninput="saveIPLive()">
+            <button class="btn-test" onclick="testPrinterConnection()">🔌 Tester</button>
+          </div>
+          <div class="test-result" id="testResult"></div>
+        </div>
+
+        <!-- SÉLECTEUR ROULEAU -->
+        <div style="margin-top:16px;padding-top:16px;border-top:1.5px solid var(--border)">
+          <div style="font-weight:600;font-size:14px;margin-bottom:10px">🗞️ Rouleau installé</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer" id="roll-dk1201-label">
+              <input type="radio" name="rollType" id="roll-dk1201" value="dk1201" onchange="selectRoll('dk1201')" style="accent-color:var(--copper)">
+              <div>
+                <div style="font-weight:600;font-size:14px">DK-1201 — 29mm × 90mm prédécoupé</div>
+                <div style="font-size:12px;color:var(--text-muted)">400 étiquettes/rouleau — format actuel</div>
+              </div>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer" id="roll-dk2210-label">
+              <input type="radio" name="rollType" id="roll-dk2210" value="dk2210" onchange="selectRoll('dk2210')" style="accent-color:var(--copper)">
+              <div>
+                <div style="font-weight:600;font-size:14px">DK-2210 — 29mm continu</div>
+                <div style="font-size:12px;color:var(--text-muted)">30m/rouleau — longueur libre (coupeur auto)</div>
+              </div>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer" id="roll-dk2205-label">
+              <input type="radio" name="rollType" id="roll-dk2205" value="dk2205" onchange="selectRoll('dk2205')" style="accent-color:var(--copper)">
+              <div>
+                <div style="font-weight:600;font-size:14px">DK-2205 — 62mm continu</div>
+                <div style="font-size:12px;color:var(--text-muted)">30m/rouleau — large, très lisible</div>
+              </div>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer" id="roll-dk2251-label">
+              <input type="radio" name="rollType" id="roll-dk2251" value="dk2251" onchange="selectRoll('dk2251')" style="accent-color:var(--copper)">
+              <div>
+                <div style="font-weight:600;font-size:14px">DK-22251 — 62mm continu noir + rouge</div>
+                <div style="font-size:12px;color:var(--text-muted)">15m/rouleau — date limite en rouge</div>
+              </div>
+            </label>
+          </div>
+          <!-- Longueur pour rouleaux continus -->
+          <div id="rollLengthRow" style="display:none;margin-top:12px;align-items:center;gap:10px">
+            <label style="font-size:13px;font-weight:500;white-space:nowrap">Longueur étiquette :</label>
+            <input type="number" id="rollLength" value="60" min="30" max="200" style="width:80px;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;text-align:center" oninput="saveRollLengthLive()">
+            <span style="font-size:13px;color:var(--text-muted)">mm</span>
+          </div>
+        </div>
+
+        <div style="font-size:12px;color:var(--text-muted);margin-top:8px;line-height:1.6">
+          💡 L'IP à saisir est celle du <strong>PC sur lequel tourne start.bat</strong>, pas l'IP de l'imprimante.<br>
+          Sur ce PC → <code>ipconfig</code> dans cmd pour trouver son IP.
+        </div>
+
+      </div>
+
+      <!-- ONGLET SÉCURITÉ -->
+      <div class="settings-panel" id="panel-security">
+        <div class="pin-setting-row">
+          <label>🔑 Code PIN modification DLC</label>
+          <input type="password" id="settingsPIN" maxlength="6" placeholder="••••">
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);line-height:1.6">
+          Ce code est demandé aux équipiers avant toute modification d'une DLC.<br>
+          4 à 6 chiffres recommandés. Seul toi dois le connaître.
+        </p>
+      </div>
+
+      <div class="modal-actions" style="margin-top:20px">
+        <button class="btn btn-outline" onclick="closeSettings()">Fermer</button>
+        <button class="btn btn-primary" onclick="saveSettings()">💾 Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ZONE D'IMPRESSION -->
+<div id="printArea"></div>
+
+<script>
+/* === FIREBASE === */
+const firebaseConfig = { // 🧪 PROJET DE TEST menutest
+  apiKey: "AIzaSyCRZDRNtVF95yX7qYCvc__9NjGa41JTdMQ",
+  authDomain: "menutest-f4629.firebaseapp.com",
+  projectId: "menutest-f4629",
+  storageBucket: "menutest-f4629.firebasestorage.app",
+  messagingSenderId: "834088175472",
+  appId: "1:834088175472:web:d45de5bc283c205608b1b5"
+};
+
+let db = null;
+let DOC_REF = null;
+let CONFIG_REF = null;
+let firebaseReady = false;
+
+let appConfig = {
+  employees: ["Chef cuisine", "Commis 1", "Commis 2", "Thomas"],
+  printer: "ql800",
+  printerIP: "",
+  pin: "1234",
+  roll: "dk1201",
+  rollLength: 60
+};
+
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  DOC_REF = db.collection("etiquettes").doc("catalogue");
+  CONFIG_REF = db.collection("etiquettes").doc("config");
+  firebaseReady = true;
+} catch(e) {
+  console.warn("Firebase init échoué :", e);
+  setFbStatus(false, "Firebase non disponible — mode local uniquement");
+}
+
+function setFbStatus(ok, msg){
+  const dot = document.getElementById("fbDot");
+  const txt = document.getElementById("fbMsg");
+  const bar = document.getElementById("fbStatus");
+  bar.style.display = "flex";
+  dot.style.background = ok === true ? "#1a7a4a" : ok === false ? "#c0392b" : "#f0a500";
+  txt.textContent = msg;
+}
+
+async function loadFromFirestore(){
+  if(!firebaseReady){ setFbStatus(false, "Firebase non disponible — importez votre Excel"); return; }
+  setFbStatus(null, "Chargement depuis Firebase…");
+  try {
+    const snap = await DOC_REF.get();
+    if(snap.exists && snap.data().produits && snap.data().produits.length > 0){
+      allData = snap.data().produits;
+      buildCategoryFilter();
+      filterTable();
+      showGrid();
+      setFbStatus(true, allData.length + " produit(s) chargé(s) ✓");
+      if(snap.data().lastImport){
+        document.getElementById("fbLastImport").textContent = "📅 Dernier import : " + snap.data().lastImport;
+      }
+    } else {
+      setFbStatus(true, "Firebase connecté — aucun produit encore enregistré");
+    }
+  } catch(err){
+    setFbStatus(false, "Erreur lecture : " + err.message);
+  }
+}
+
+async function saveToFirestore(){
+  if(!firebaseReady) return;
+  setFbStatus(null, "Sauvegarde…");
+  const lastImport = new Date().toLocaleString("fr-FR");
+  try {
+    await DOC_REF.set({ produits: allData, lastImport });
+    setFbStatus(true, allData.length + " produit(s) sauvegardé(s) ✓");
+    document.getElementById("fbLastImport").textContent = "📅 Dernier import : " + lastImport;
+  } catch(err){
+    setFbStatus(false, "Erreur sauvegarde : " + err.message);
+  }
+}
+
+async function clearAll(){
+  if(!confirm("Vider toute la liste ? Cette action est irréversible.")) return;
+  allData = [];
+  filteredData = [];
+  if(firebaseReady){
+    try { await DOC_REF.set({ produits: [] }); } catch(e){}
+  }
+  document.getElementById("productGrid").innerHTML = "";
+  document.getElementById("productGrid").style.display = "none";
+  document.getElementById("toolbar").style.display = "none";
+  document.getElementById("emptyState").style.display = "";
+  document.getElementById("importGuide").style.display = "";
+  setFbStatus(true, "Liste vidée");
+}
+
+async function loadConfig(){
+  if(!firebaseReady) { populateEmployeeSelects(); return; }
+  try {
+    const snap = await CONFIG_REF.get();
+    if(snap.exists){
+      const d = snap.data();
+      if(d.employees && d.employees.length) appConfig.employees = d.employees;
+      if(d.printer) appConfig.printer = d.printer;
+      if(d.printerIP) appConfig.printerIP = d.printerIP;
+      if(d.pin) appConfig.pin = d.pin;
+      if(d.roll) appConfig.roll = d.roll;
+      if(d.rollLength) appConfig.rollLength = d.rollLength;
+    }
+  } catch(e){ console.warn("Config non chargée:", e); }
+  populateEmployeeSelects();
+}
+
+async function saveConfig(){
+  if(!firebaseReady) return;
+  try {
+    await CONFIG_REF.set(appConfig);
+  } catch(e){ console.warn("Config non sauvegardée:", e); }
+}
+
+function populateEmployeeSelects(){
+  const selects = ["employeeSelect","modalEmployee"];
+  selects.forEach(id => {
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    const current = sel.value;
+    sel.innerHTML = '<option value="">— Préparé par —</option>';
+    appConfig.employees.forEach(emp => {
+      const opt = document.createElement("option");
+      opt.value = emp; opt.textContent = emp;
+      sel.appendChild(opt);
+    });
+    if(current) sel.value = current;
+  });
+}
+
+/* === SETTINGS UI === */
+function openSettings(){
+  renderEmployeeList();
+  document.getElementById("radio-" + appConfig.printer).checked = true;
+  document.getElementById("opt-ql800").classList.toggle("selected", appConfig.printer === "ql800");
+  document.getElementById("opt-ql810w").classList.toggle("selected", appConfig.printer === "ql810w");
+  document.getElementById("ipRow").classList.toggle("visible", appConfig.printer === "ql810w");
+  document.getElementById("printerIP").value = appConfig.printerIP || "";
+  document.getElementById("settingsPIN").value = appConfig.pin || "";
+  // Rouleau
+  const rollId = "roll-" + (appConfig.roll || "dk1201");
+  const rollEl = document.getElementById(rollId);
+  if(rollEl) rollEl.checked = true;
+  updateRollLabels(appConfig.roll || "dk1201");
+  document.getElementById("rollLength").value = appConfig.rollLength || 60;
+  const isContinuous = ["dk2210","dk2205","dk2251"].includes(appConfig.roll);
+  document.getElementById("rollLengthRow").style.display = isContinuous ? "flex" : "none";
+  document.getElementById("testResult").className = "test-result";
+  switchTab("employees");
+  document.getElementById("settingsWrap").classList.add("open");
+}
+
+function closeSettings(){ document.getElementById("settingsWrap").classList.remove("open"); }
+function closeSettingsOutside(e){ if(e.target === document.getElementById("settingsWrap")) closeSettings(); }
+
+function switchTab(tab){
+  const tabs = ["employees","printer","security"];
+  document.querySelectorAll(".settings-tab").forEach((t,i) => t.classList.toggle("active", tabs[i] === tab));
+  tabs.forEach(t => {
+    const p = document.getElementById("panel-"+t);
+    if(p) p.classList.toggle("active", t === tab);
+  });
+}
+
+function renderEmployeeList(){
+  const list = document.getElementById("employeeList");
+  list.innerHTML = "";
+  if(!appConfig.employees.length){
+    list.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px">Aucun employé enregistré</div>';
+    return;
+  }
+  appConfig.employees.forEach((emp, i) => {
+    const div = document.createElement("div");
+    div.className = "employee-item";
+    div.innerHTML = `<span class="emp-name">👤 ${emp}</span><button class="btn-del" onclick="removeEmployee(${i})" title="Supprimer">✕</button>`;
+    list.appendChild(div);
+  });
+}
+
+function addEmployee(){
+  const input = document.getElementById("newEmployeeName");
+  const name = input.value.trim();
+  if(!name) return;
+  if(appConfig.employees.includes(name)){ alert("Cet employé existe déjà."); return; }
+  appConfig.employees.push(name);
+  input.value = "";
+  renderEmployeeList();
+  populateEmployeeSelects();
+}
+
+function removeEmployee(index){
+  appConfig.employees.splice(index, 1);
+  renderEmployeeList();
+  populateEmployeeSelects();
+}
+
+function selectPrinter(type){
+  appConfig.printer = type;
+  document.getElementById("radio-ql800").checked = type === "ql800";
+  document.getElementById("radio-ql810w").checked = type === "ql810w";
+  document.getElementById("opt-ql800").classList.toggle("selected", type === "ql800");
+  document.getElementById("opt-ql810w").classList.toggle("selected", type === "ql810w");
+  document.getElementById("ipRow").classList.toggle("visible", type === "ql810w");
+  document.getElementById("testResult").className = "test-result";
+}
+
+function saveIPLive(){
+  appConfig.printerIP = document.getElementById("printerIP").value.trim();
+}
+
+async function testPrinterConnection(){
+  const ip = document.getElementById("printerIP").value.trim();
+  const res = document.getElementById("testResult");
+  if(!ip){ res.className="test-result err"; res.textContent="Saisis l'IP du PC serveur d'abord."; return; }
+  res.className="test-result"; res.textContent="Test en cours…"; res.style.display="block";
+  try {
+    const response = await fetch(`http://${ip}:3000/ping`, { signal: AbortSignal.timeout(3000) });
+    if(response.ok){
+      res.className="test-result ok"; res.textContent="✓ Serveur détecté — prêt à imprimer !";
+    } else {
+      res.className="test-result err"; res.textContent="Serveur répond mais erreur " + response.status;
+    }
+  } catch(e){
+    res.className="test-result err"; res.textContent="✗ Serveur non détecté — vérifie que start.bat est lancé";
+  }
+}
+
+function selectRoll(type){
+  appConfig.roll = type;
+  updateRollLabels(type);
+  const isContinuous = ["dk2210","dk2205","dk2251"].includes(type);
+  document.getElementById("rollLengthRow").style.display = isContinuous ? "flex" : "none";
+}
+
+function updateRollLabels(type){
+  ["dk1201","dk2210","dk2205","dk2251"].forEach(r => {
+    const el = document.getElementById("roll-"+r+"-label");
+    if(el) el.style.borderColor = r === type ? "var(--copper)" : "var(--border)";
+  });
+}
+
+function saveRollLengthLive(){
+  appConfig.rollLength = parseInt(document.getElementById("rollLength").value) || 60;
+}
+
+async function saveSettings(){
+  appConfig.printerIP = document.getElementById("printerIP").value.trim();
+  appConfig.rollLength = parseInt(document.getElementById("rollLength").value) || 60;
+  const pinVal = document.getElementById("settingsPIN").value.trim();
+  if(pinVal) appConfig.pin = pinVal;
+  await saveConfig();
+  populateEmployeeSelects();
+  closeSettings();
+  setFbStatus(true, "Paramètres sauvegardés ✓");
+}
+
+let allData = [];
+let filteredData = [];
+let currentIndex = null;
+
+function importExcel(){
+  const file = document.getElementById("excelFile").files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const data = new Uint8Array(e.target.result);
+    const wb = XLSX.read(data, {type:'array'});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(ws);
+    if(json.length === 0){ alert("Fichier vide ou format incorrect."); return; }
+    allData = allData.concat(json);
+    buildCategoryFilter();
+    filterTable();
+    showGrid();
+    saveToFirestore();
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function showGrid(){
+  document.getElementById("emptyState").style.display = "none";
+  document.getElementById("importGuide").style.display = "none";
+  document.getElementById("toolbar").style.display = "flex";
+  document.getElementById("productGrid").style.display = "grid";
+}
+
+function buildCategoryFilter(){
+  const sel = document.getElementById("catFilter");
+  const cats = [...new Set(allData.map(r => r["Catégorie"] || "").filter(Boolean))];
+  sel.innerHTML = '<option value="">Toutes les catégories</option>';
+  cats.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c; opt.textContent = c;
+    sel.appendChild(opt);
+  });
+}
+
+function filterTable(){
+  const q = document.getElementById("searchInput").value.toLowerCase();
+  const cat = document.getElementById("catFilter").value;
+  filteredData = allData.filter(r => {
+    const prod = (r["Produit"] || "").toLowerCase();
+    const sub = (r["Sous-produit / Saveur"] || "").toLowerCase();
+    const matchQ = !q || prod.includes(q) || sub.includes(q);
+    const matchC = !cat || (r["Catégorie"] || "") === cat;
+    return matchQ && matchC;
+  });
+  renderGrid();
+}
+
+function catClass(cat){
+  if(!cat) return "cat-default";
+  const c = cat.toLowerCase();
+  if(c.includes("froid")) return "cat-froid";
+  if(c.includes("chaud")) return "cat-chaud";
+  if(c.includes("ambiant")) return "cat-ambiante";
+  if(c.includes("surgel")) return "cat-surgele";
+  if(c.includes("dessert")) return "cat-dessert";
+  if(c.includes("sauce")) return "cat-sauce";
+  return "cat-default";
+}
+
+function renderGrid(){
+  const grid = document.getElementById("productGrid");
+  const badge = document.getElementById("countBadge");
+  badge.textContent = filteredData.length + " produit" + (filteredData.length > 1 ? "s" : "");
+  grid.innerHTML = "";
+  filteredData.forEach((row, i) => {
+    const cat = row["Catégorie"] || "";
+    const prod = row["Produit"] || "—";
+    const flavor = row["Sous-produit / Saveur"] || "";
+    const dlc = row["DLC"] || "?";
+    const unit = row["Unité DLC"] || "";
+    const temp = row["Température"] || "—";
+    const allergens = row["Allergènes"] || "";
+    const allergenList = allergens ? allergens.split(/[,;]+/).map(a => a.trim()).filter(Boolean) : [];
+
+    const card = document.createElement("div");
+    card.className = "product-card";
+    card.innerHTML = `
+      <div class="card-header">
+        <div>
+          <div class="card-title">${prod}</div>
+          ${flavor ? `<div class="card-sub">${flavor}</div>` : ""}
+        </div>
+        ${cat ? `<span class="cat-badge ${catClass(cat)}">${cat}</span>` : ""}
+      </div>
+      <div class="card-body">
+        <div class="dlc-chip">
+          <div>
+            <div class="info-label">DLC</div>
+            <div style="display:flex;align-items:baseline;gap:6px">
+              <span class="dlc-number">${dlc}</span>
+              <span class="dlc-unit">${unit}</span>
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div class="info-label">Température</div>
+            <div class="info-val" style="font-size:13px">${temp}</div>
+          </div>
+        </div>
+        <div>
+          <div class="info-label" style="margin-bottom:4px">Allergènes</div>
+          ${allergenList.length
+            ? allergenList.map(a => `<span class="allergen-tag">${a}</span>`).join("")
+            : `<span class="allergen-none">Aucun allergène renseigné</span>`
+          }
+        </div>
+      </div>
+      <div class="card-footer">
+        <input type="number" class="qty-input" id="qty-${i}" value="1" min="1" max="20" title="Copies">
+        <span class="qty-label">copie(s)</span>
+        <button class="btn btn-print" style="margin-left:auto" onclick="openModal(${i})">
+          🖨️ Étiquette
+        </button>
+        <button class="btn-edit" onclick="requestEdit(${i})" title="Modifier la DLC">✏️</button>
+        <button class="btn-edit" onclick="requestDelete(${i})" title="Supprimer" style="color:#c0392b;border-color:#e0b0b0">🗑</button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function openModal(filteredIndex){
+  currentIndex = filteredIndex;
+  const row = filteredData[filteredIndex];
+  const emp = document.getElementById("employeeSelect").value;
+  document.getElementById("modalEmployee").value = emp;
+  const qtyEl = document.getElementById(`qty-${filteredIndex}`);
+  document.getElementById("modalQty").value = qtyEl ? qtyEl.value : "1";
+  const now = new Date();
+  const pad = n => String(n).padStart(2,"0");
+  const dtLocal = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  document.getElementById("modalDatetime").value = dtLocal;
+  updatePreview(row);
+  document.getElementById("modalWrap").classList.add("open");
+}
+
+function updatePreview(row){
+  const dtVal = document.getElementById("modalDatetime").value;
+  const prepDate = dtVal ? new Date(dtVal) : new Date();
+  const expiry = calculateExpiry(row["DLC"], row["Unité DLC"], prepDate);
+  const employee = document.getElementById("modalEmployee").value;
+  const allergens = row["Allergènes"] || "";
+  const preview = document.getElementById("labelPreview");
+  preview.innerHTML = `
+    <div class="lp-brand">🐚 Restaurant TEST</div>
+    <div class="lp-product">${row["Produit"] || "—"}</div>
+    ${row["Sous-produit / Saveur"] ? `<div class="lp-flavor">${row["Sous-produit / Saveur"]}</div>` : ""}
+    <div class="lp-row">
+      <span class="lp-key">Préparé le</span>
+      <span class="lp-value">${prepDate.toLocaleString("fr-FR")}</span>
+    </div>
+    <div class="lp-expiry">
+      <span class="lp-key">⚠ À utiliser avant</span>
+      <div class="lp-value">${expiry}</div>
+    </div>
+    <div class="lp-row">
+      <span class="lp-key">Température</span>
+      <span class="lp-value">${row["Température"] || "—"}</span>
+    </div>
+    ${allergens ? `<div class="lp-allergens">⚠ Allergènes : ${allergens}</div>` : ""}
+    ${employee ? `<div style="font-size:11px;color:var(--text-muted);margin-top:8px">Préparé par : ${employee}</div>` : ""}
+  `;
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  // Test : connexion anonyme (les règles Firestore exigent un utilisateur connecté)
+  try { if(firebaseReady) await firebase.auth().signInAnonymously(); } catch(e){ console.warn("Connexion anonyme impossible", e); }
+  loadFromFirestore();
+  loadConfig();
+  document.getElementById("modalEmployee").addEventListener("change", () => {
+    if(currentIndex !== null) updatePreview(filteredData[currentIndex]);
+  });
+  document.getElementById("modalDatetime").addEventListener("change", () => {
+    if(currentIndex !== null) updatePreview(filteredData[currentIndex]);
+  });
+});
+
+function closeModal(){
+  document.getElementById("modalWrap").classList.remove("open");
+  currentIndex = null;
+}
+
+function closeModalOutside(e){
+  if(e.target === document.getElementById("modalWrap")) closeModal();
+}
+
+function calculateExpiry(dlc, unit, baseDate){
+  const d = baseDate ? new Date(baseDate) : new Date();
+  const n = Number(dlc) || 0;
+  const u = (unit || "").toString().trim().toLowerCase();
+  if(u.includes("heure")) d.setHours(d.getHours() + n);
+  else if(u.includes("jour")) d.setDate(d.getDate() + n);
+  return d.toLocaleString("fr-FR");
+}
+
+function executePrint(){
+  const row = filteredData[currentIndex];
+  const qty = parseInt(document.getElementById("modalQty").value) || 1;
+  const employee = document.getElementById("modalEmployee").value;
+  const dtVal = document.getElementById("modalDatetime").value;
+  const prepDate = dtVal ? new Date(dtVal) : new Date();
+  const expiry = calculateExpiry(row["DLC"], row["Unité DLC"], prepDate);
+  const allergens = row["Allergènes"] || "";
+
+  closeModal();
+
+  if(appConfig.printer === "ql810w"){
+    printViaWifi(row, qty, employee, prepDate, expiry, allergens);
+  } else {
+    printViaChrome(row, qty, employee, prepDate, expiry, allergens);
+  }
+}
+
+function buildLabelBody(row, qty, employee, prepDate, expiry, allergens){
+  const allergenStr = allergens || "";
+  let html = "";
+  for(let i = 0; i < qty; i++){
+    html += `<div class="print-label">
+      <div class="pl-brand">Restaurant TEST<br>HACCP</div>
+      <div class="pl-product">${row["Produit"] || "—"}</div>
+      ${row["Sous-produit / Saveur"] ? `<div class="pl-flavor">${row["Sous-produit / Saveur"]}</div>` : ""}
+      <div class="pl-section">
+        <div class="pl-key">Préparé le</div>
+        <div class="pl-val">${prepDate.toLocaleString("fr-FR")}</div>
+      </div>
+      <div class="pl-expiry-box">
+        <div class="pl-key">⚠ À utiliser avant</div>
+        <div class="pl-val">${expiry}</div>
+      </div>
+      <div class="pl-section">
+        <div class="pl-key">Température</div>
+        <div class="pl-val">${row["Température"] || "—"}</div>
+      </div>
+      ${allergenStr ? `<div class="pl-allergens"><span class="pl-allergen-label">⚠ Allergènes :</span> ${allergenStr}</div>` : ""}
+      ${employee ? `<div class="pl-employee">Préparé par : ${employee}</div>` : ""}
+    </div>`;
+  }
+  return html;
+}
+
+async function printViaChrome(row, qty, employee, prepDate, expiry, allergens){
+  const labelHTML = buildLabelBody(row, qty, employee, prepDate, expiry, allergens);
+
+  // Dimensions selon le rouleau choisi
+  const roll = appConfig.roll || "dk1201";
+  const labelH = roll === "dk1201" ? "90.3mm" : (appConfig.rollLength || 60) + "mm";
+  const labelW = "29mm";
+
+  const printCSS = `
+* { margin:0; padding:0; box-sizing:border-box; }
+@page { size: ${labelW} ${labelH}; margin: 0; }
+body { width:${labelW}; }
+.print-label { width:${labelW}; height:${labelH}; padding:4mm 2mm 2mm 2mm; font-family:Arial,sans-serif; overflow:hidden; display:flex; flex-direction:column; gap:0.8mm; }
+.pl-brand { font-size:7pt; font-weight:bold; text-transform:uppercase; letter-spacing:0.06em; border-bottom:0.5pt solid #000; padding-bottom:1mm; }
+.pl-product { font-size:14pt; font-weight:bold; line-height:1.1; }
+.pl-flavor { font-size:10pt; font-style:italic; }
+.pl-section { margin-bottom:0.3mm; }
+.pl-key { font-size:7pt; text-transform:uppercase; letter-spacing:0.05em; color:#555; }
+.pl-val { font-size:10pt; font-weight:bold; line-height:1.2; }
+.pl-expiry-box { border:1pt solid #000; padding:1.2mm; margin:0.8mm 0; }
+.pl-expiry-box .pl-key { color:#000; font-size:7pt; }
+.pl-expiry-box .pl-val { font-size:11pt; }
+.pl-allergens { border-top:0.5pt dashed #aaa; padding-top:1mm; margin-top:auto; font-size:7.5pt; line-height:1.3; }
+.pl-allergen-label { font-weight:bold; }
+.pl-employee { border-top:0.5pt solid #ccc; padding-top:0.8mm; font-size:7.5pt; color:#555; }`;
+
+  // Envoyer au serveur local si disponible
+  try {
+    const res = await fetch(`http://${appConfig.printerIP || '192.168.1.66'}:3000/label`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ html: labelHTML, css: printCSS, width: labelW, height: labelH }),
+      signal: AbortSignal.timeout(2000)
+    });
+    if(res.ok){
+      window.open(`http://${appConfig.printerIP || '192.168.1.66'}:3000/label`, '_blank');
+      return;
+    }
+  } catch(e){
+    // Serveur non dispo — fallback popup
+  }
+
+  // Fallback : popup
+  const popup = window.open('', '_blank', 'width=200,height=400');
+  if(!popup){ alert("Autorise les popups pour ce site dans ton navigateur."); return; }
+  popup.document.write(`<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>${printCSS}</style></head>
+<body>${labelHTML}</body></html>`);
+  popup.document.close();
+  popup.focus();
+  setTimeout(() => { popup.print(); setTimeout(() => popup.close(), 1500); }, 300);
+}
+
+async function printViaWifi(row, qty, employee, prepDate, expiry, allergens){
+  if(!appConfig.printerIP){ alert("Configure l'adresse IP du PC serveur dans Paramètres → Imprimante."); return; }
+  const zpl = generateZPL(row, qty, employee, prepDate, expiry, allergens);
+  setFbStatus(null, "Envoi vers l'imprimante…");
+  try {
+    const res = await fetch(`http://${appConfig.printerIP}:3000/print`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ zpl })
+    });
+    if(res.ok){
+      setFbStatus(true, "✓ Étiquette(s) envoyée(s) à l'imprimante");
+    } else {
+      alert("Erreur impression : " + res.status + " — " + await res.text());
+    }
+  } catch(e){
+    alert("Impossible de contacter le serveur d'impression.\nVérifie que start.bat est lancé sur le PC.\n\n" + e.message);
+  }
+}
+
+function generateZPL(row, qty, employee, prepDate, expiry, allergens){
+  const roll = appConfig.roll || "dk1201";
+
+  // Dimensions selon le rouleau (203 dpi : 1mm = 8 points)
+  const configs = {
+    dk1201:  { pw: 232, ll: 720, wide: false },
+    dk2210:  { pw: 232, ll: (appConfig.rollLength || 60) * 8, wide: false },
+    dk2205:  { pw: 496, ll: (appConfig.rollLength || 60) * 8, wide: true  },
+    dk2251:  { pw: 496, ll: (appConfig.rollLength || 60) * 8, wide: true  }
+  };
+  const cfg = configs[roll] || configs.dk1201;
+  const pw = cfg.pw;
+  const ll = cfg.ll;
+  const red = roll === "dk2251";
+
+  const prod    = (row["Produit"] || "—").substring(0, cfg.wide ? 30 : 18).toUpperCase();
+  const flavor  = (row["Sous-produit / Saveur"] || "").substring(0, cfg.wide ? 40 : 22);
+  const temp    = (row["Température"] || "—").substring(0, 24);
+  const prepStr = prepDate.toLocaleString("fr-FR");
+  const allerg  = (allergens || "").substring(0, cfg.wide ? 60 : 40);
+  const emp     = (employee || "").substring(0, 24);
+
+  // Tailles de polices selon largeur
+  const f1 = cfg.wide ? 22 : 18; // entête
+  const f2 = cfg.wide ? 34 : 26; // produit
+  const f3 = cfg.wide ? 22 : 18; // saveur
+  const f4 = cfg.wide ? 20 : 16; // labels
+  const f5 = cfg.wide ? 28 : 20; // préparé le valeur
+  const f6 = cfg.wide ? 20 : 16; // à utiliser avant label
+  const f7 = cfg.wide ? 34 : 24; // date limite valeur
+  const f8 = cfg.wide ? 20 : 16; // temp/allergènes/employé
+
+  // Couleur date limite : rouge si DK-22251
+  const colorExp = red ? "^CF0,${f7}\n^FR" : "";
+
+  let zpl = "";
+  for(let i = 0; i < qty; i++){
+    zpl += `^XA
+^PON
+^PW${pw}
+^LL${ll}
+^LH0,0
+
+^FO8,10^A0N,${f1},${f1}^FDRestaurant TEST^FS
+^FO8,${10+f1+2}^A0N,${Math.round(f1*0.8)},${Math.round(f1*0.8)}^FDHACCP^FS
+^FO8,${10+f1*2+6}^GB${pw-16},2,2^FS
+
+^FO8,${10+f1*2+14}^A0N,${f2},${f2}^FD${prod}^FS
+${flavor ? `^FO8,${10+f1*2+14+f2+4}^A0N,${f3},${f3}^FD${flavor}^FS` : ""}
+
+^FO8,${10+f1*2+14+f2+(flavor?f3+8:4)+4}^GB${pw-16},1,1^FS
+^FO8,${10+f1*2+14+f2+(flavor?f3+8:4)+10}^A0N,${f4},${f4}^FDPrepare le:^FS
+^FO8,${10+f1*2+14+f2+(flavor?f3+8:4)+10+f4+2}^A0N,${f5},${f5}^FD${prepStr}^FS
+
+^FO8,${10+f1*2+14+f2+(flavor?f3+8:4)+10+f4+f5+16}^GB${pw-16},3,3^FS
+^FO8,${10+f1*2+14+f2+(flavor?f3+8:4)+10+f4+f5+22}^A0N,${f6},${f6}^FDA utiliser avant:^FS
+^FO8,${10+f1*2+14+f2+(flavor?f3+8:4)+10+f4+f5+f6+26}^A0N,${f7},${f7}${red?"^FR":""}^FD${expiry}^FS
+^FO8,${10+f1*2+14+f2+(flavor?f3+8:4)+10+f4+f5+f6+f7+30}^GB${pw-16},3,3^FS
+
+^FO8,${10+f1*2+14+f2+(flavor?f3+8:4)+10+f4+f5+f6+f7+38}^A0N,${f8},${f8}^FDTemp: ${temp}^FS
+${allerg ? `^FO8,${10+f1*2+14+f2+(flavor?f3+8:4)+10+f4+f5+f6+f7+38+f8+6}^A0N,${f8},${f8}^FDAllergenes: ${allerg}^FS` : ""}
+${emp ? `^FO8,${ll-f8-8}^GB${pw-16},1,1^FS\n^FO8,${ll-f8-2}^A0N,${f8},${f8}^FDPar: ${emp}^FS` : ""}
+
+^XZ
+`;
+  }
+  return zpl;
+}
+
+/* === PIN & ÉDITION DLC === */
+let pinBuffer = "";
+let pendingEditIndex = null;
+let pendingAction = "edit"; // "edit" ou "delete"
+
+function requestEdit(filteredIndex){
+  pendingEditIndex = filteredIndex;
+  pendingAction = "edit";
+  pinBuffer = "";
+  updatePinDots();
+  document.getElementById("pinError").textContent = "";
+  document.getElementById("pinWrap").classList.add("open");
+}
+
+function requestDelete(filteredIndex){
+  pendingEditIndex = filteredIndex;
+  pendingAction = "delete";
+  pinBuffer = "";
+  updatePinDots();
+  document.getElementById("pinError").textContent = "";
+  document.getElementById("pinWrap").classList.add("open");
+}
+
+function closePin(){
+  document.getElementById("pinWrap").classList.remove("open");
+  pinBuffer = "";
+  pendingEditIndex = null;
+}
+function closePinOutside(e){ if(e.target === document.getElementById("pinWrap")) closePin(); }
+
+function updatePinDots(){
+  const maxDots = Math.max(4, appConfig.pin ? appConfig.pin.length : 4);
+  for(let i = 0; i < 4; i++){
+    const dot = document.getElementById("dot"+i);
+    if(dot) dot.classList.toggle("filled", i < pinBuffer.length);
+  }
+}
+
+function pinKey(k){
+  if(k === "⌫"){
+    pinBuffer = pinBuffer.slice(0, -1);
+    updatePinDots();
+    document.getElementById("pinError").textContent = "";
+    return;
+  }
+  if(k === "✓"){
+    validatePin();
+    return;
+  }
+  if(pinBuffer.length >= 6) return;
+  pinBuffer += k;
+  updatePinDots();
+  if(pinBuffer.length === (appConfig.pin || "1234").length) validatePin();
+}
+
+function validatePin(){
+  if(pinBuffer === (appConfig.pin || "1234")){
+    const indexToAction = pendingEditIndex;
+    const action = pendingAction;
+    closePin();
+    if(action === "delete"){
+      deleteProduct(indexToAction);
+    } else {
+      openEdit(indexToAction);
+    }
+  } else {
+    document.getElementById("pinError").textContent = "Code incorrect, réessaie.";
+    pinBuffer = "";
+    updatePinDots();
+  }
+}
+
+function openEdit(filteredIndex){
+  const row = filteredData[filteredIndex];
+  pendingEditIndex = filteredIndex;
+  document.getElementById("editProductName").textContent = row["Produit"] || "—";
+  document.getElementById("editProductFlavor").textContent = row["Sous-produit / Saveur"] || "";
+  document.getElementById("editDLC").value = row["DLC"] || "";
+  const unit = (row["Unité DLC"] || "heures").toString().trim().toLowerCase();
+  document.getElementById("editUnit").value = unit.includes("jour") ? "jours" : "heures";
+  document.getElementById("editTemp").value = row["Température"] || "";
+  document.getElementById("editWrap").classList.add("open");
+}
+
+function closeEdit(){
+  document.getElementById("editWrap").classList.remove("open");
+  pendingEditIndex = null;
+}
+function closeEditOutside(e){ if(e.target === document.getElementById("editWrap")) closeEdit(); }
+
+async function saveEdit(){
+  const dlc = document.getElementById("editDLC").value;
+  const unit = document.getElementById("editUnit").value;
+  const temp = document.getElementById("editTemp").value.trim();
+  if(!dlc){ alert("La valeur DLC est obligatoire."); return; }
+
+  // Mettre à jour dans allData via filteredData
+  const row = filteredData[pendingEditIndex];
+  const allIndex = allData.findIndex(r =>
+    r["Produit"] === row["Produit"] &&
+    r["Sous-produit / Saveur"] === row["Sous-produit / Saveur"] &&
+    r["Catégorie"] === row["Catégorie"]
+  );
+  if(allIndex !== -1){
+    allData[allIndex]["DLC"] = dlc;
+    allData[allIndex]["Unité DLC"] = unit;
+    allData[allIndex]["Température"] = temp;
+  }
+
+  closeEdit();
+  filterTable();
+  await saveToFirestore();
+  setFbStatus(true, "DLC mise à jour et sauvegardée ✓");
+}
+
+async function deleteProduct(filteredIndex){
+  const row = filteredData[filteredIndex];
+  const nom = row["Produit"] || "ce produit";
+  if(!confirm(`Supprimer "${nom}" définitivement ?`)) return;
+
+  const allIndex = allData.findIndex(r =>
+    r["Produit"] === row["Produit"] &&
+    r["Sous-produit / Saveur"] === row["Sous-produit / Saveur"] &&
+    r["Catégorie"] === row["Catégorie"]
+  );
+  if(allIndex !== -1) allData.splice(allIndex, 1);
+
+  buildCategoryFilter();
+  filterTable();
+  await saveToFirestore();
+  setFbStatus(true, `"${nom}" supprimé ✓`);
+}
+
+function showAddManual(){
+  document.getElementById("manualWrap").classList.add("open");
+}
+function closeManual(){
+  document.getElementById("manualWrap").classList.remove("open");
+}
+function closeManualOutside(e){
+  if(e.target === document.getElementById("manualWrap")) closeManual();
+}
+function addManualProduct(){
+  const product = document.getElementById("mProduct").value.trim();
+  if(!product){ alert("Le champ Produit est obligatoire."); return; }
+  const row = {
+    "Catégorie": document.getElementById("mCat").value.trim(),
+    "Produit": product,
+    "Sous-produit / Saveur": document.getElementById("mFlavor").value.trim(),
+    "DLC": document.getElementById("mDLC").value,
+    "Unité DLC": document.getElementById("mUnit").value,
+    "Température": document.getElementById("mTemp").value.trim(),
+    "Allergènes": document.getElementById("mAllergens").value.trim(),
+  };
+  allData.push(row);
+  buildCategoryFilter();
+  filterTable();
+  showGrid();
+  saveToFirestore();
+  closeManual();
+  ["mCat","mProduct","mFlavor","mDLC","mTemp","mAllergens"].forEach(id => {
+    document.getElementById(id).value = "";
+  });
+}
+</script>
+
+
+</body>
+</html>
