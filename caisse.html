@@ -265,7 +265,7 @@ body.cuisine-plein{overflow:hidden}
 
 <!-- HEADER -->
 <div class="header">
-  <h1>🐚 <span id="motCaisse" onclick="tapMotCaisse()" style="cursor:default;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent">CAISSE</span> — Le Menu<span class="build-tag">v.21/10/2026 17:40 TEST</span></h1>
+  <h1>🐚 <span id="motCaisse" onclick="tapMotCaisse()" style="cursor:default;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent">CAISSE</span> — Le Menu<span class="build-tag">v.21/10/2026 22:20 TEST</span></h1>
   <div class="stats-row">
     <div class="stat"><div class="num" id="statNouv">0</div><div class="lbl">Nouvelles</div></div>
     <div class="stat"><div class="num" id="statAdd">0</div><div class="lbl">Additions</div></div>
@@ -555,7 +555,7 @@ body.cuisine-plein{overflow:hidden}
   </div>
 </div>
 
-<div class="version">v.21/10/2026 17:40 TEST — Le Menu Caisse</div>
+<div class="version">v.21/10/2026 22:20 TEST — Le Menu Caisse</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -1791,9 +1791,19 @@ function renderAlertes(){
   }).join('');
 }
 
+// « ✓ Vu » : l'alerte disparaît tout de suite de l'écran, puis l'état est enregistré.
+// Si l'enregistrement échoue, l'erreur est affichée (avant : échec silencieux → l'alerte revenait).
 async function acquitterAlerte(id){
-  await db.collection('alertes').doc(id).update({statut:'vue'});
-  showToast('✅ Alerte acquittée');
+  const a=allAlertes[id];
+  if(a){ a.statut='vue'; renderAlertes(); updateStats(); }
+  try{
+    await db.collection('alertes').doc(id).set({statut:'vue',vueA:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+    showToast('✅ Alerte acquittée');
+  }catch(e){
+    console.error('Acquittement alerte',e);
+    if(a){ a.statut='nouvelle'; renderAlertes(); updateStats(); }
+    showToast('❌ Alerte non enregistrée ('+(e.code||e.message)+') — reconnectez la caisse');
+  }
 }
 
 // ============================================================

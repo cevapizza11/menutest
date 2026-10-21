@@ -276,7 +276,7 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
   <div class="sec-title">🛒 Mon panier</div>
   <div class="sec-sub">Table <span id="panierTable"></span></div>
   <div id="panierItems"></div>
-  <div class="info-banner">🚶 Après validation, un serveur apporte votre commande. Direction le passage pour les moules !</div>
+  <div class="info-banner" id="bandeauPanier">🍽️ Après validation, un serveur vous apporte votre commande à table.</div>
   <button class="btn btn-or" id="btnCommander" onclick="intercepterCommande()">✅ Commander maintenant</button>
   <button class="btn btn-outline" onclick="showScreen('screenCarte')">← Continuer à commander</button>
   <button class="btn btn-rouge" onclick="intercepterAddition()">🧾 Demander l'addition</button>
@@ -291,11 +291,11 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
     <div class="big-emoji">✅</div>
     <h2 style="color:#D4AF37;font-size:22px;margin-bottom:8px">Commande envoyée !</h2>
     <p style="color:#aaa;font-size:13px;margin-bottom:16px">Table <strong id="confirmTable" style="color:#D4AF37"></strong></p>
+    <!-- Restaurant classique : service à table, le client reste assis -->
     <div class="steps-list">
-      <div class="step-item"><div class="step-num">1</div><div class="step-text">Un serveur prend en charge votre commande</div></div>
-      <div class="step-item"><div class="step-num">2</div><div class="step-text">Pour les moules → passage self-service : Moules → Sauce → Frites</div></div>
-      <div class="step-item"><div class="step-num">3</div><div class="step-text">C'est <strong>à volonté</strong> — revenez autant que vous voulez 😄</div></div>
-      <div class="step-item"><div class="step-num">4</div><div class="step-text">Recommandez depuis la carte à tout moment</div></div>
+      <div class="step-item"><div class="step-num">1</div><div class="step-text">Votre commande est transmise en cuisine et au bar</div></div>
+      <div class="step-item"><div class="step-num">2</div><div class="step-text">Un serveur vous l'apporte <strong>à table</strong> — restez installés 😊</div></div>
+      <div class="step-item"><div class="step-num">3</div><div class="step-text">Recommandez depuis la carte à tout moment</div></div>
     </div>
     <div id="recapCommandesEnvoyees"></div>
     <button class="btn btn-or" onclick="commanderEncore()">🍺 Commander autre chose</button>
@@ -393,7 +393,7 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
   </div>
 </div>
 
-<div class="version">v.21/10/2026 17:15 TEST — Le Menu</div>
+<div class="version">v.21/10/2026 22:20 TEST — Le Menu</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
