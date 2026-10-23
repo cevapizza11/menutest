@@ -293,7 +293,7 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
     <h2>⭐ Avis Google</h2>
     <div class="item-row">
       <div class="item-info" style="cursor:default"><div class="item-nom">Demander un avis Google</div>
-        <div class="item-detail" style="white-space:normal;line-height:1.5">Sur l'écran de l'addition, le client voit un encadré avec un bouton qui ouvre directement la page d'avis Google du restaurant.</div></div>
+        <div class="item-detail" style="white-space:normal;line-height:1.5">En fin de repas, quand l'addition est encaissée (le jeton de la table se ferme), le téléphone du client affiche « 🙏 Merci de votre visite ! » avec un bouton qui ouvre directement la page d'avis Google du restaurant.</div></div>
       <label class="toggle"><input type="checkbox" id="toggleAvisGoogle" onchange="majAvisGoogle('actif',this.checked)"><span class="toggle-slider"></span></label>
     </div>
     <div style="margin-top:10px">
@@ -306,7 +306,7 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
         <span id="avisGoogleStats" style="color:#D4AF37;font-size:12px;align-self:center"></span>
       </div>
       <div style="color:#777;font-size:11px;margin-top:10px;line-height:1.6">
-        <b>Règles actives :</b> l'encadré s'affiche sur l'écran de l'addition seulement si l'interrupteur est activé <b>et</b> qu'un lien est renseigné · il n'empêche jamais de payer · après un clic, il affiche « Merci 🙏 » pour cette table · chaque clic est compté (ci-dessus, mois en cours).<br>
+        <b>Règles actives :</b> l'encadré s'affiche sur l'écran « Merci de votre visite » (après l'encaissement) seulement si l'interrupteur est activé <b>et</b> qu'un lien est renseigné · interrupteur coupé = simple écran de remerciement · après un clic, il affiche « Merci pour votre avis 🙏 » · le téléphone reste sur cet écran même si le jeton est rouvert pour d'autres clients · chaque clic est compté (ci-dessus, mois en cours).<br>
         <b>Règles Google à respecter :</b> la même invitation pour tous les clients (ne pas demander d'abord s'ils sont satisfaits) et rien offert en échange d'un avis.<br>
         <b>Trouver le lien :</b> fiche Google Business Profile → « Demander des avis » → « Copier le lien ».
       </div>
@@ -511,7 +511,7 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
   </div>
 </div>
 
-<div class="version">v.23/10/2026 16:05 TEST — Le Menu Admin</div>
+<div class="version">v.23/10/2026 16:20 TEST — Le Menu Admin</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>

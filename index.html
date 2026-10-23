@@ -188,6 +188,21 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
 
 <!-- TABLE -->
 <!-- BLOCAGE JETON (accès protégé) -->
+<!-- FIN DE REPAS : affiché quand l'addition est encaissée (le jeton de la table se ferme) -->
+<div class="modal-overlay" id="screenFinRepas" style="z-index:950;background:#1A1A1A">
+  <div class="modal-box" style="text-align:center">
+    <div style="font-size:48px;margin-bottom:8px">🙏</div>
+    <h3 style="margin-bottom:8px">Merci de votre visite !</h3>
+    <div class="modal-sub" style="margin-bottom:4px">Votre addition est réglée. Toute l'équipe vous remercie et espère vous revoir très bientôt 😊</div>
+    <!-- ⭐ Avis Google (activable dans l'admin → Réglages → Avis Google) — affiché en fin de repas -->
+    <div id="encadreAvisGoogle" style="display:none;margin-top:16px;background:#fff;color:#202124;border-radius:14px;padding:14px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.25)">
+      <div style="font-size:22px;letter-spacing:2px;color:#FBBC05">★★★★★</div>
+      <div id="avisGoogleTexteClient" style="font-size:14px;font-weight:600;margin:6px 0 10px"></div>
+      <button id="btnAvisGoogle" onclick="ouvrirAvisGoogle()" style="width:100%;padding:12px;border:none;border-radius:10px;background:#1a73e8;color:#fff;font-weight:700;font-size:15px;cursor:pointer">✍️ Laisser un avis sur Google</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay visible" id="screenJetonBloque" style="z-index:900">
   <div class="modal-box" style="text-align:center">
     <div style="font-size:48px;margin-bottom:12px">🔒</div>
@@ -313,12 +328,6 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
     </div>
     <div id="commandesDetail"></div>
     <div class="info-banner" style="margin-top:12px">Un serveur arrive avec votre terminal de paiement 🙏<br>Merci de votre visite !</div>
-    <!-- ⭐ Avis Google (activable dans l'admin → Réglages → Avis Google) -->
-    <div id="encadreAvisGoogle" style="display:none;margin-top:12px;background:#fff;color:#202124;border-radius:14px;padding:14px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.25)">
-      <div style="font-size:22px;letter-spacing:2px;color:#FBBC05">★★★★★</div>
-      <div id="avisGoogleTexteClient" style="font-size:14px;font-weight:600;margin:6px 0 10px"></div>
-      <button id="btnAvisGoogle" onclick="ouvrirAvisGoogle()" style="width:100%;padding:12px;border:none;border-radius:10px;background:#1a73e8;color:#fff;font-weight:700;font-size:15px;cursor:pointer">✍️ Laisser un avis sur Google</button>
-    </div>
     <button class="btn btn-or" onclick="commanderEncore()" style="margin-top:8px">🍺 Commander autre chose</button>
     <button class="btn btn-gris" onclick="showScreen('screenConfirm')">← Retour</button>
   </div>
@@ -399,7 +408,7 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
   </div>
 </div>
 
-<div class="version">v.23/10/2026 16:05 TEST — Le Menu</div>
+<div class="version">v.23/10/2026 16:20 TEST — Le Menu</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -459,6 +468,20 @@ const urlParams=new URLSearchParams(window.location.search);
 const jetonToken=urlParams.get('j');
 let jetonEnCours=false; // évite de relancer showScreen('screenCouverts') à chaque tick du listener
 
+// Fin de repas (23/10/2026) : quand la caisse encaisse l'addition, elle ferme le jeton de la table.
+// Au lieu de « QR pas encore activé », le client voit « Merci de votre visite » (+ avis Google si activé).
+// La page reste sur cet écran même si le jeton est rouvert pour d'autres clients (il faut rescanner).
+let repasTermine=false;
+const CLE_FIN_REPAS='finRepas_'+(jetonToken||'');
+function finRepasRecente(){ try{ const t=+sessionStorage.getItem(CLE_FIN_REPAS)||0; return !!t && (Date.now()-t)<3*3600*1000; }catch(e){ return false; } }
+function afficherFinRepas(){
+  repasTermine=true;
+  try{ if(!finRepasRecente()) sessionStorage.setItem(CLE_FIN_REPAS, String(Date.now())); }catch(e){}
+  masquerBlocageJeton();
+  document.querySelectorAll('.modal-overlay.visible,.upsell-overlay.visible').forEach(el=>{ if(el.id!=='screenFinRepas') el.classList.remove('visible'); });
+  document.getElementById('screenFinRepas').classList.add('visible');
+  afficherAvisGoogle();
+}
 function afficherBlocageJeton(titre,texte){
   document.getElementById('jetonBloqueTitre').textContent=titre;
   document.getElementById('jetonBloqueTexte').textContent=texte;
@@ -472,11 +495,16 @@ if(!jetonToken){
   afficherBlocageJeton('Accès protégé','Merci de scanner le QR code présent sur votre table pour commander.');
 } else {
   db.collection('jetons').doc(jetonToken).onSnapshot(doc=>{
+    if(repasTermine) return; // repas terminé sur ce téléphone : on reste sur « Merci de votre visite »
     if(!doc.exists || doc.data().statut!=='actif'){
+      // Le jeton vient de se fermer pendant le repas (addition encaissée), ou fermé il y a peu → fin de repas
+      if(jetonEnCours || finRepasRecente()){ jetonEnCours=false; afficherFinRepas(); return; }
       jetonEnCours=false;
       afficherBlocageJeton('QR pas encore activé','Merci de patienter, un membre de l\'équipe va activer votre table dans un instant.');
       return;
     }
+    // Jeton actif : un nouveau repas commence (on oublie une éventuelle fin de repas précédente)
+    try{ sessionStorage.removeItem(CLE_FIN_REPAS); }catch(e){}
     // Jeton valide et actif → table assignée automatiquement, pas de saisie manuelle
     masquerBlocageJeton();
     const d=doc.data();
@@ -655,6 +683,7 @@ db.collection('config').doc('carte_v2').onSnapshot(doc=>{
   if(catActive) renderProduits(catActive);
   renderTabs();
   renderTuilesAccueil();
+  if(repasTermine) afficherAvisGoogle(); // la carte (réglage avis Google) peut arriver après l'écran de fin
 });
 
 // Écouter notifications caisse → téléphone client
