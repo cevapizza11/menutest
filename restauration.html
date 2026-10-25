@@ -21,7 +21,7 @@
 <body>
 <div class="bandeau">🧪 RESTAURANT DE TEST — la restauration écrit UNIQUEMENT dans la base de test « menutest »</div>
 <h1>♻️ Restauration d'une sauvegarde</h1>
-<div class="version">v.25/10/2026 12:30 TEST</div>
+<div class="version">v.25/10/2026 12:35 TEST</div>
 
 <div class="carte petit">
   Cette page recopie une <b>sauvegarde automatique</b> (fichier <i>Sauvegarde_Auto_…json</i>) dans la <b>base de test</b>, pour vérifier qu'une sauvegarde permet bien de tout remettre en place.<br>
@@ -82,19 +82,26 @@ document.getElementById('fichier').addEventListener('change', async e=>{
     sauvegarde = JSON.parse(await f.text());
     if(sauvegarde.format!=='firestore-rest' || !sauvegarde.projets) throw new Error('Ce n\'est pas un fichier de sauvegarde automatique (Sauvegarde_Auto_…json).');
     const sel=document.getElementById('projet');
-    sel.innerHTML = Object.entries(sauvegarde.projets).map(([id,p])=>`<option value="${id}">${p.nom} (${id})</option>`).join('');
-    sel.value = sauvegarde.projets.commandemoulesmile ? 'commandemoulesmile' : sel.options[0].value;
+    sel.innerHTML = '<option value="__tous__">🗂️ Toutes les applis (tous les projets)</option>' +
+      Object.entries(sauvegarde.projets).map(([id,p])=>`<option value="${id}">${p.nom} (${id})</option>`).join('');
+    sel.value = '__tous__';
     sel.disabled=false;
     log('📂 Sauvegarde du '+new Date(sauvegarde.creeLe).toLocaleString('fr-FR')+' chargée.');
     afficherDetail();
   }catch(err){ sauvegarde=null; alert('Fichier illisible : '+err.message); }
   majBouton();
 });
+function idsChoisis(){
+  const id=document.getElementById('projet').value;
+  return id==='__tous__' ? Object.keys(sauvegarde.projets) : [id];
+}
 function afficherDetail(){
   const id=document.getElementById('projet').value; if(!sauvegarde||!id) return;
-  const p=sauvegarde.projets[id];
-  const lignes=Object.entries(p.collections||{}).map(([c,docs])=>Array.isArray(docs)?(c+' : '+docs.length):(c+' : erreur'));
-  document.getElementById('detail').innerHTML='<b>Contenu :</b> '+lignes.join(' · ');
+  document.getElementById('detail').innerHTML=idsChoisis().map(pid=>{
+    const p=sauvegarde.projets[pid];
+    const lignes=Object.entries(p.collections||{}).map(([c,docs])=>Array.isArray(docs)?(c+' : '+docs.length):(c+' : erreur'));
+    return '<b>'+p.nom+' :</b> '+lignes.join(' · ');
+  }).join('<br>');
 }
 
 // Conversion du format de sauvegarde (Firestore REST) vers les valeurs de l'appli
@@ -115,12 +122,14 @@ function valeur(v){
 function champs(f){ const o={}; Object.keys(f).forEach(k=>o[k]=valeur(f[k])); return o; }
 
 async function restaurer(){
-  const id=document.getElementById('projet').value;
-  const p=sauvegarde.projets[id];
-  if(!confirm('Recopier « '+p.nom+' » dans la base de TEST menutest ?')) return;
+  const ids=idsChoisis();
+  if(!confirm('Recopier '+(ids.length>1?'TOUTES les applis ('+ids.length+' projets)':'« '+sauvegarde.projets[ids[0]].nom+' »')+' dans la base de TEST menutest ?')) return;
   const btn=document.getElementById('btnRestaurer'); btn.disabled=true;
   document.getElementById('journal').textContent='';
   let total=0, erreurs=0;
+  for(const pid of ids){
+  const p=sauvegarde.projets[pid];
+  log('▶ '+p.nom);
   for(const [c,docs] of Object.entries(p.collections||{})){
     if(!Array.isArray(docs)){ log('⏭️ '+c+' : ignorée (erreur dans la sauvegarde)'); continue; }
     try{
@@ -135,6 +144,7 @@ async function restaurer(){
       total+=docs.length;
       log('✓ '+c+' : '+docs.length+' document(s) restauré(s)');
     }catch(e){ erreurs++; log('❌ '+c+' : '+(e.code||e.message)); }
+  }
   }
   log('\n'+(erreurs?'⚠️':'✅')+' Terminé : '+total+' document(s) recopié(s) dans la base de test'+(erreurs?(' — '+erreurs+' collection(s) en erreur'):'')+'.');
   log('➡️ Ouvre maintenant la caisse / l\'admin / les stats de TEST pour vérifier que tout est revenu.');
