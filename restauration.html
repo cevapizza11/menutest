@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>[TEST] Restauration d'une sauvegarde</title>
+<style>
+  body{margin:0;background:#111;color:#eee;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;padding:16px}
+  .bandeau{background:#d6332a;color:#fff;font-weight:bold;text-align:center;border-radius:20px;padding:6px 12px;font-size:12px;margin-bottom:12px}
+  h1{color:#D4AF37;font-size:22px;margin:0 0 4px}
+  .version{font-size:11px;color:#999;margin-bottom:14px}
+  .carte{background:#1c1c1c;border:1px solid #333;border-radius:12px;padding:14px;margin-bottom:12px;max-width:820px}
+  .petit{font-size:12px;color:#aaa;line-height:1.6}
+  input,select{background:#2a2a2a;border:1px solid #444;border-radius:8px;color:#fff;padding:9px 10px;font-size:14px;margin:4px 0;max-width:100%}
+  button{border:none;border-radius:8px;padding:11px 14px;font-weight:700;cursor:pointer;font-size:14px;background:#D4AF37;color:#111}
+  button:disabled{opacity:.4;cursor:default}
+  #journal{background:#000;border:1px solid #333;border-radius:10px;padding:10px;font:12px/1.5 monospace;color:#9fd29f;white-space:pre-wrap;max-width:820px;min-height:40px}
+  label{display:block;margin:6px 0}
+</style>
+</head>
+<body>
+<div class="bandeau">🧪 RESTAURANT DE TEST — la restauration écrit UNIQUEMENT dans la base de test « menutest »</div>
+<h1>♻️ Restauration d'une sauvegarde</h1>
+<div class="version">v.25/10/2026 12:30 TEST</div>
+
+<div class="carte petit">
+  Cette page recopie une <b>sauvegarde automatique</b> (fichier <i>Sauvegarde_Auto_…json</i>) dans la <b>base de test</b>, pour vérifier qu'une sauvegarde permet bien de tout remettre en place.<br>
+  Chaque document est réécrit <b>à l'identique</b> (même identifiant, mêmes dates, mêmes nombres). Les documents de test qui ont le même identifiant sont remplacés ; les autres ne sont pas touchés.<br>
+  ⚠️ Cette page ne peut <b>pas</b> écrire dans les vraies bases : la cible est fixée sur <b>menutest</b>.
+</div>
+
+<div class="carte">
+  <div id="etatCompte" class="petit">Connexion…</div>
+  <div id="zoneLogin" style="display:none">
+    <input type="email" id="email" value="tmjumeaux@gmail.com"><br>
+    <input type="password" id="mdp" placeholder="Mot de passe du compte de test" onkeydown="if(event.key==='Enter')connexion()">
+    <button onclick="connexion()">🔓 Connexion</button>
+  </div>
+</div>
+
+<div class="carte">
+  <label>1. Fichier de sauvegarde : <input type="file" id="fichier" accept=".json,application/json"></label>
+  <label>2. Projet à restaurer : <select id="projet" disabled></select></label>
+  <div id="detail" class="petit"></div>
+  <label><input type="checkbox" id="confirm"> Je confirme : recopier ce projet dans la base de TEST</label>
+  <button id="btnRestaurer" disabled onclick="restaurer()">♻️ Restaurer dans la base de test</button>
+</div>
+
+<div id="journal">Prêt.</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+// Cible FIXE : projet de test (jamais une vraie base)
+const CIBLE = {apiKey:"AIzaSyCRZDRNtVF95yX7qYCvc__9NjGa41JTdMQ",authDomain:"menutest-f4629.firebaseapp.com",projectId:"menutest-f4629",storageBucket:"menutest-f4629.firebasestorage.app",messagingSenderId:"834088175472",appId:"1:834088175472:web:d45de5bc283c205608b1b5"};
+firebase.initializeApp(CIBLE);
+const db = firebase.firestore();
+let sauvegarde = null;
+
+function log(t){ const j=document.getElementById('journal'); j.textContent=(j.textContent==='Prêt.'?'':j.textContent+'\n')+t; j.scrollTop=j.scrollHeight; }
+function majBouton(){
+  document.getElementById('btnRestaurer').disabled = !(firebase.auth().currentUser && !firebase.auth().currentUser.isAnonymous && sauvegarde && document.getElementById('projet').value && document.getElementById('confirm').checked);
+}
+document.getElementById('confirm').addEventListener('change',majBouton);
+document.getElementById('projet').addEventListener('change',()=>{ afficherDetail(); majBouton(); });
+
+firebase.auth().onAuthStateChanged(u=>{
+  const ok=u&&!u.isAnonymous;
+  document.getElementById('etatCompte').innerHTML = ok?('✅ Connecté à la base de test : '+u.email):'🔒 Connecte-toi avec le compte de test (gérant).';
+  document.getElementById('zoneLogin').style.display = ok?'none':'block';
+  majBouton();
+});
+async function connexion(){
+  try{ await firebase.auth().signInWithEmailAndPassword(document.getElementById('email').value.trim(), document.getElementById('mdp').value); }
+  catch(e){ alert('Connexion refusée : '+(e.code||e.message)); }
+}
+
+document.getElementById('fichier').addEventListener('change', async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  try{
+    sauvegarde = JSON.parse(await f.text());
+    if(sauvegarde.format!=='firestore-rest' || !sauvegarde.projets) throw new Error('Ce n\'est pas un fichier de sauvegarde automatique (Sauvegarde_Auto_…json).');
+    const sel=document.getElementById('projet');
+    sel.innerHTML = Object.entries(sauvegarde.projets).map(([id,p])=>`<option value="${id}">${p.nom} (${id})</option>`).join('');
+    sel.value = sauvegarde.projets.commandemoulesmile ? 'commandemoulesmile' : sel.options[0].value;
+    sel.disabled=false;
+    log('📂 Sauvegarde du '+new Date(sauvegarde.creeLe).toLocaleString('fr-FR')+' chargée.');
+    afficherDetail();
+  }catch(err){ sauvegarde=null; alert('Fichier illisible : '+err.message); }
+  majBouton();
+});
+function afficherDetail(){
+  const id=document.getElementById('projet').value; if(!sauvegarde||!id) return;
+  const p=sauvegarde.projets[id];
+  const lignes=Object.entries(p.collections||{}).map(([c,docs])=>Array.isArray(docs)?(c+' : '+docs.length):(c+' : erreur'));
+  document.getElementById('detail').innerHTML='<b>Contenu :</b> '+lignes.join(' · ');
+}
+
+// Conversion du format de sauvegarde (Firestore REST) vers les valeurs de l'appli
+function valeur(v){
+  if('nullValue' in v) return null;
+  if('booleanValue' in v) return v.booleanValue;
+  if('integerValue' in v) return Number(v.integerValue);
+  if('doubleValue' in v) return Number(v.doubleValue);
+  if('stringValue' in v) return v.stringValue;
+  if('timestampValue' in v) return firebase.firestore.Timestamp.fromDate(new Date(v.timestampValue));
+  if('mapValue' in v) return champs(v.mapValue.fields||{});
+  if('arrayValue' in v) return (v.arrayValue.values||[]).map(valeur);
+  if('geoPointValue' in v) return new firebase.firestore.GeoPoint(v.geoPointValue.latitude||0, v.geoPointValue.longitude||0);
+  if('bytesValue' in v) return firebase.firestore.Blob.fromBase64String(v.bytesValue);
+  if('referenceValue' in v) return db.doc(v.referenceValue.split('/documents/')[1]);
+  return null;
+}
+function champs(f){ const o={}; Object.keys(f).forEach(k=>o[k]=valeur(f[k])); return o; }
+
+async function restaurer(){
+  const id=document.getElementById('projet').value;
+  const p=sauvegarde.projets[id];
+  if(!confirm('Recopier « '+p.nom+' » dans la base de TEST menutest ?')) return;
+  const btn=document.getElementById('btnRestaurer'); btn.disabled=true;
+  document.getElementById('journal').textContent='';
+  let total=0, erreurs=0;
+  for(const [c,docs] of Object.entries(p.collections||{})){
+    if(!Array.isArray(docs)){ log('⏭️ '+c+' : ignorée (erreur dans la sauvegarde)'); continue; }
+    try{
+      for(let i=0;i<docs.length;i+=400){
+        const b=db.batch();
+        docs.slice(i,i+400).forEach(d=>{
+          const chemin=d.name.split('/documents/')[1];   // ex. "historique/abc123"
+          b.set(db.doc(chemin), champs(d.fields||{}));
+        });
+        await b.commit();
+      }
+      total+=docs.length;
+      log('✓ '+c+' : '+docs.length+' document(s) restauré(s)');
+    }catch(e){ erreurs++; log('❌ '+c+' : '+(e.code||e.message)); }
+  }
+  log('\n'+(erreurs?'⚠️':'✅')+' Terminé : '+total+' document(s) recopié(s) dans la base de test'+(erreurs?(' — '+erreurs+' collection(s) en erreur'):'')+'.');
+  log('➡️ Ouvre maintenant la caisse / l\'admin / les stats de TEST pour vérifier que tout est revenu.');
+  btn.disabled=false; majBouton();
+}
+</script>
+</body>
+</html>
