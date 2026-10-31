@@ -281,6 +281,23 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
   </div>
 
   <div class="section" style="margin-top:14px">
+    <h2>🍻 Relance boisson « On remet ça ? »</h2>
+    <div class="item-row">
+      <div class="item-info" style="cursor:default">
+        <div class="item-nom">Proposer de reprendre la même boisson</div>
+        <div class="item-detail">Un seul popup par table et par repas, avec les boissons de la 1re commande (même marque, même taille)</div>
+      </div>
+      <label class="toggle"><input type="checkbox" id="relanceActif" onchange="majRelance('actif',this.checked)"><span class="toggle-slider"></span></label>
+    </div>
+    <div class="item-row"><div class="item-info" style="cursor:default"><div class="item-nom">Verre (bière 25 cl, soft, verre de vin, sirop)</div><div class="item-detail">minutes après la commande</div></div><input type="number" min="1" max="120" id="relanceVerre" onchange="majRelance('verre',this.value)" style="width:70px;padding:8px;border-radius:8px;border:1px solid #444;background:#111;color:#fff;text-align:center"></div>
+    <div class="item-row"><div class="item-info" style="cursor:default"><div class="item-nom">Bière 50 cl</div><div class="item-detail">minutes après la commande</div></div><input type="number" min="1" max="120" id="relanceBiere50" onchange="majRelance('biere50',this.value)" style="width:70px;padding:8px;border-radius:8px;border:1px solid #444;background:#111;color:#fff;text-align:center"></div>
+    <div class="item-row"><div class="item-info" style="cursor:default"><div class="item-nom">Cocktail (spritz, mojito, mule…)</div><div class="item-detail">minutes après la commande</div></div><input type="number" min="1" max="120" id="relanceCocktail" onchange="majRelance('cocktail',this.value)" style="width:70px;padding:8px;border-radius:8px;border:1px solid #444;background:#111;color:#fff;text-align:center"></div>
+    <div class="item-row"><div class="item-info" style="cursor:default"><div class="item-nom">Bouteille de vin</div><div class="item-detail">minutes après la commande</div></div><input type="number" min="1" max="180" id="relanceBouteille" onchange="majRelance('bouteille',this.value)" style="width:70px;padding:8px;border-radius:8px;border:1px solid #444;background:#111;color:#fff;text-align:center"></div>
+    <div class="item-row"><div class="item-info" style="cursor:default"><div class="item-nom">Fenêtre d'affichage</div><div class="item-detail">minutes après l'heure prévue ; au-delà, plus de popup (repas sans doute fini)</div></div><input type="number" min="1" max="180" id="relanceFenetre" onchange="majRelance('fenetre',this.value)" style="width:70px;padding:8px;border-radius:8px;border:1px solid #444;background:#111;color:#fff;text-align:center"></div>
+    <div id="relanceExplication" style="font-size:12px;color:#aaa;line-height:1.6;margin-top:10px"></div>
+  </div>
+
+  <div class="section" style="margin-top:14px">
     <h2>🍽️ Type de restaurant</h2>
     <div class="item-row">
       <div class="item-info" style="cursor:default"><div class="item-nom">Restaurant à volonté</div>
@@ -511,7 +528,7 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
   </div>
 </div>
 
-<div class="version">v.23/10/2026 16:20 TEST — Le Menu Admin</div>
+<div class="version">v.31/10/2026 16:55 TEST — Le Menu Admin</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -1145,6 +1162,7 @@ function confirmerImport(){
     newCarte.dessertsMenu=carte.dessertsMenu;
     newCarte.aVolonte=carte.aVolonte; // réglage du restaurant, jamais écrasé par l'import
     newCarte.avisGoogle=carte.avisGoogle; // idem : réglage « Avis Google »
+    newCarte.relanceBoisson=carte.relanceBoisson; // réglage « Relance boisson », jamais écrasé par l'import
 
     // Réappliquer l'ordre des catégories personnalisé par l'admin (sinon l'import
     // reconstruit toujours dans l'ordre fixe de CATS et écrase le réordonnancement)
@@ -1694,11 +1712,51 @@ function renderReglages(){
     </div>`;
   }).join('');
 
+  renderRelanceBoisson();
   chargerMappingHiboutik();
   renderConsignesService();
   renderFamillesSuggestionAddition();
   renderSuggestionAddition();
   renderMenuAdoOptions();
+}
+
+
+// ============================================================
+// RELANCE BOISSON « On remet ça ? » (appli client)
+// ============================================================
+const RELANCE_DEFAUT={actif:true,verre:20,biere50:30,cocktail:25,bouteille:50,fenetre:40};
+function reglagesRelanceAdmin(){ return Object.assign({},RELANCE_DEFAUT,(carte&&carte.relanceBoisson)||{}); }
+function renderRelanceBoisson(){
+  if(!carte) return;
+  const r=reglagesRelanceAdmin();
+  document.getElementById('relanceActif').checked=r.actif!==false;
+  document.getElementById('relanceVerre').value=r.verre;
+  document.getElementById('relanceBiere50').value=r.biere50;
+  document.getElementById('relanceCocktail').value=r.cocktail;
+  document.getElementById('relanceBouteille').value=r.bouteille;
+  document.getElementById('relanceFenetre').value=r.fenetre;
+  document.getElementById('relanceExplication').innerHTML=
+    `<b style="color:#D4AF37">Règles actives${r.actif===false?' (relance désactivée)':''} :</b><br>`+
+    `• Délais après la 1re commande de boissons : verre <b>${r.verre} min</b> · bière 50 cl <b>${r.biere50} min</b> · cocktail <b>${r.cocktail} min</b> · bouteille de vin <b>${r.bouteille} min</b>. Si la table a pris plusieurs types, c'est le délai le plus court qui compte.<br>`+
+    `• Fenêtre d'affichage : <b>${r.fenetre} min</b> après l'heure prévue, puis plus de popup.<br>`+
+    `• <b>1 seul popup</b> par table et par repas (par téléphone).<br>`+
+    `• Pas de popup si la table a déjà recommandé des boissons d'elle-même, après la demande d'addition, en mode repas employé, ni par-dessus un autre popup.<br>`+
+    `• Boissons concernées : celles des catégories regroupées dans la tuile « Apéro / Boissons », sauf les boissons chaudes ; les boissons offertes (0 €) sont ignorées.<br>`+
+    `• Vérification toutes les <b>30 secondes</b> quand l'appli est ouverte.`;
+}
+function majRelance(cle,val){
+  if(!carte) return;
+  const r=reglagesRelanceAdmin();
+  if(cle==='actif') r.actif=!!val;
+  else{
+    const n=parseInt(val,10);
+    if(!n||n<1){ showToast('⚠️ Saisissez un nombre de minutes'); renderRelanceBoisson(); return; }
+    r[cle]=n;
+  }
+  carte.relanceBoisson=r;
+  sauvegarder();
+  renderRelanceBoisson();
+  showToast(cle==='actif'?(val?'✅ Relance boisson activée':'✅ Relance boisson désactivée'):'✅ Délai enregistré');
 }
 
 function renderOrdreCategories(){

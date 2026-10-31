@@ -383,6 +383,17 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
   </div>
 </div>
 
+<!-- MODAL RELANCE BOISSON « On remet ça ? » (une seule fois par table et par repas) -->
+<div class="modal-overlay" id="modalRelanceBoisson" style="z-index:650">
+  <div class="modal-box">
+    <h3>On remet ça ? 🍻</h3>
+    <p style="text-align:center;color:#aaa;font-size:12px;margin-bottom:12px">Touchez + pour reprendre la même boisson, servie à table</p>
+    <div class="modal-list" id="relanceBoissonList"></div>
+    <button id="relanceBoissonValider" onclick="validerRelanceBoisson()" style="width:100%;margin:14px 0 8px;padding:14px;border:none;border-radius:12px;background:#D4AF37;color:#111;font-size:15px;font-weight:bold;cursor:pointer" disabled>Commander</button>
+    <button class="modal-close" onclick="fermerRelanceBoisson()">Non merci</button>
+  </div>
+</div>
+
 <!-- MODAL CHOIX MENU ADO 6-17 ANS -->
 <!-- POPUP SUGGESTION FORMULE (non-bloquant) -->
 <div class="modal-overlay" id="modalSuggestionFormule">
@@ -408,7 +419,7 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
   </div>
 </div>
 
-<div class="version">v.23/10/2026 20:10 TEST — Le Menu</div>
+<div class="version">v.31/10/2026 16:55 TEST — Le Menu</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -1315,14 +1326,17 @@ function ecouterMesCommandes(){
     let points=0;
     const commandes=[];
     snap.forEach(doc=>{
-      const d=doc.data();
+      const d=doc.data({serverTimestamps:'estimate'});
       if(d.statut==='regle') return;
       total+=d.total||0;
       points+=d.totalPoints||(d.items||[]).reduce((s,it)=>s+(it.points||0),0);
-      if((d.items||[]).length) commandes.push({id:doc.id,heure:d.heure||'--:--',items:d.items||[],total:d.total||0});
+      // ts + statut : utilisés par la relance boisson « On remet ça ? »
+      const ts=(d.timestamp&&d.timestamp.toMillis)?d.timestamp.toMillis():Date.now();
+      if((d.items||[]).length) commandes.push({id:doc.id,heure:d.heure||'--:--',items:d.items||[],total:d.total||0,ts,statut:d.statut||''});
     });
     commandes.sort((a,b)=>a.heure.localeCompare(b.heure));
     totalDejaCommande=total;
+    setTimeout(verifierRelanceBoisson,500);
     pointsEnvoyes=points;
     mesCommandesEnvoyees=commandes;
     updateTotalBadgeHeader();
@@ -1802,6 +1816,7 @@ function ouvrirAvisGoogle(){
 }
 
 async function demanderAddition(){
+  relanceAdditionDemandee=true; // plus de relance boisson après la demande d'addition
   document.getElementById('additionTable').textContent=tableNum;
   afficherAvisGoogle();
   try{
@@ -1879,6 +1894,163 @@ async function demanderAddition(){
 
 
 
+
+// ============================================================
+// RELANCE BOISSON « On remet ça ? »
+// Un seul popup par table et par repas, qui reprend les boissons de la PREMIÈRE
+// commande contenant des boissons (même marque, même taille, même prix).
+// Déclenché quand la boisson la plus rapide à boire devrait être finie.
+// Réglages (admin → Réglages → Relance boisson) : carte.relanceBoisson
+// ============================================================
+const RELANCE_DEFAUT={actif:true,verre:20,biere50:30,cocktail:25,bouteille:50,fenetre:40};
+let relanceAdditionDemandee=false;
+let relanceLignes=[];        // [{cle,item,qteInit,qte}]
+let relanceCommandeRef=null; // id de la 1re commande boissons concernée
+
+function reglagesRelance(){
+  const c=carte||carteDefaut;
+  return Object.assign({},RELANCE_DEFAUT,c.relanceBoisson||{});
+}
+// Catégories considérées comme boissons (même réglage que la tuile « Apéro / Boissons »), sans les boissons chaudes
+function categoriesBoissonsRelance(){
+  const c=carte||carteDefaut;
+  return getGroupeAperoIds(c).filter(id=>id!=='chauds');
+}
+function categorieDuProduit(idProduit){
+  const c=carte||carteDefaut;
+  const base=idBaseProduit(idProduit);
+  const cat=(c.categories||[]).find(k=>(k.produits||[]).some(p=>p.id===base));
+  return cat?cat.id:null;
+}
+// Type de boisson → délai : verre (bière 25 cl, soft, verre de vin, sirop), bière 50 cl, cocktail, bouteille
+function typeBoisson(item,catId){
+  const txt=((item.nom||'')+' '+(item.choix||'')+' '+(item.desc||'')).toLowerCase();
+  if(/bouteille|magnum|\b75\s?cl/.test(txt)) return 'bouteille';
+  if(catId==='cocktails'||catId==='sangria'||/spritz|mojito|mule|cocktail/.test(txt)) return 'cocktail';
+  if(/\b50\s?cl|pinte/.test(txt)) return 'biere50';
+  return 'verre';
+}
+function lignesBoissons(commande){
+  const cats=categoriesBoissonsRelance();
+  return (commande.items||[]).map(it=>({it,cat:categorieDuProduit(it.id)}))
+    .filter(x=>x.cat&&cats.includes(x.cat)&&(x.it.prix||0)>0);
+}
+function cleRelance(){ return 'relanceBoisson_'+(jetonToken||'')+'_'+(tableNum||''); }
+
+function verifierRelanceBoisson(){
+  try{
+    const r=reglagesRelance();
+    if(!r.actif||modeEmploye||!tableNum||relanceAdditionDemandee) return;
+    if(typeof finRepasRecente==='function'&&finRepasRecente()) return;
+    if(document.visibilityState!=='visible') return;
+    if(document.getElementById('modalRelanceBoisson').classList.contains('visible')) return;
+    // Pas pendant qu'un autre popup est ouvert
+    if(document.querySelector('.modal-overlay.visible,.upsell-overlay.visible')) return;
+    const cmds=(mesCommandesEnvoyees||[]).slice().sort((a,b)=>(a.ts||0)-(b.ts||0));
+    if(cmds.some(c=>c.statut==='en_addition')) return; // addition en cours
+    const avecBoissons=cmds.filter(c=>lignesBoissons(c).length);
+    if(!avecBoissons.length) return;
+    // La table a déjà recommandé des boissons d'elle-même → inutile de relancer
+    if(avecBoissons.length>1) return;
+    const premiere=avecBoissons[0];
+    // Déjà montré (ou refusé) pour ce repas sur cet appareil
+    let deja=null; try{ deja=localStorage.getItem(cleRelance()); }catch(e){}
+    if(deja===premiere.id) return;
+    const lignes=lignesBoissons(premiere);
+    const delaiMin=Math.min(...lignes.map(x=>Number(r[typeBoisson(x.it,x.cat)])||RELANCE_DEFAUT.verre));
+    const echeance=(premiere.ts||Date.now())+delaiMin*60000;
+    const maintenant=Date.now();
+    if(maintenant<echeance) return;
+    if(maintenant>echeance+(Number(r.fenetre)||RELANCE_DEFAUT.fenetre)*60000) return; // trop tard : repas sans doute fini
+    ouvrirRelanceBoisson(premiere,lignes);
+  }catch(e){ console.warn('relance boisson',e); }
+}
+
+function ouvrirRelanceBoisson(commande,lignes){
+  relanceCommandeRef=commande.id;
+  try{ localStorage.setItem(cleRelance(),commande.id); }catch(e){}
+  // Regroupe les boissons identiques (même produit, mêmes choix, même prix)
+  const groupes={};
+  lignes.forEach(({it})=>{
+    const cle=[idBaseProduit(it.id),it.choix||'',it.prix].join('|');
+    if(!groupes[cle]) groupes[cle]={cle,item:it,qteInit:0,qte:0};
+    groupes[cle].qteInit++;
+  });
+  relanceLignes=Object.values(groupes);
+  renderRelanceBoisson();
+  document.getElementById('modalRelanceBoisson').classList.add('visible');
+}
+
+function renderRelanceBoisson(){
+  const fmt=v=>v.toFixed(2).replace('.',',')+' €';
+  document.getElementById('relanceBoissonList').innerHTML=relanceLignes.map((l,i)=>{
+    const it=l.item;
+    return `<div class="modal-item" style="cursor:default">
+      <div style="min-width:0">
+        <div class="mnom">${it.nom}${l.qteInit>1?` <span style="color:#888;font-weight:normal">(×${l.qteInit} la 1re fois)</span>`:''}</div>
+        ${it.choix?`<div class="mdesc">${it.choix}</div>`:''}
+        <div class="mdesc" style="color:#D4AF37">${fmt(it.prix)}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        ${l.qte>0?`<button class="qty-btn qty-minus" onclick="changerQteRelance(${i},-1)">−</button><span class="qty-num">${l.qte}</span>`:''}
+        <button class="qty-btn qty-plus" onclick="changerQteRelance(${i},1)">+</button>
+      </div>
+    </div>`;
+  }).join('');
+  const nb=relanceLignes.reduce((s,l)=>s+l.qte,0);
+  const total=relanceLignes.reduce((s,l)=>s+l.qte*l.item.prix,0);
+  const btn=document.getElementById('relanceBoissonValider');
+  btn.disabled=nb===0;
+  btn.style.opacity=nb===0?'.45':'1';
+  btn.textContent=nb===0?'Commander':`Commander ${nb} boisson${nb>1?'s':''} — ${fmt(total)}`;
+}
+
+function changerQteRelance(i,delta){
+  const l=relanceLignes[i]; if(!l) return;
+  l.qte=Math.max(0,Math.min(20,l.qte+delta));
+  renderRelanceBoisson();
+}
+
+function fermerRelanceBoisson(){
+  document.getElementById('modalRelanceBoisson').classList.remove('visible');
+  relanceLignes=[];
+}
+
+async function validerRelanceBoisson(){
+  const choisis=[];
+  relanceLignes.forEach(l=>{ for(let k=0;k<l.qte;k++) choisis.push(l.item); });
+  if(!choisis.length) return;
+  const btn=document.getElementById('relanceBoissonValider');
+  btn.disabled=true; btn.textContent='Envoi…';
+  const items=choisis.map(it=>({id:it.id,nom:it.nom,desc:it.desc||'',choix:it.choix||'',prix:it.prix,points:it.points||0}));
+  const total=items.reduce((s,it)=>s+(it.prix||0),0);
+  try{
+    // Même format qu'une commande normale (validerCommande)
+    await db.collection('commandes').add({
+      table:tableNum,
+      jeton:jetonToken||null,
+      couverts:nbCouverts||null,
+      nbAdultes:nbAdultes!=null?nbAdultes:null,
+      nbEnfants:nbEnfants!=null?nbEnfants:0,
+      items,
+      total,
+      totalPoints:0,
+      timestamp:firebase.firestore.FieldValue.serverTimestamp(),
+      statut:'nouvelle',
+      heure:new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})
+    });
+    fermerRelanceBoisson();
+    showToast('✅ C\'est commandé ! On vous l\'apporte 🍻');
+    ecouterMesCommandes();
+  }catch(e){
+    console.error(e);
+    btn.disabled=false; renderRelanceBoisson();
+    showToast('❌ Erreur réseau — réessayez');
+  }
+}
+
+setInterval(verifierRelanceBoisson,30000);
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') setTimeout(verifierRelanceBoisson,800); });
 
 // ============================================================
 // POPUP CONFIRMATION ÂGE ENFANT
