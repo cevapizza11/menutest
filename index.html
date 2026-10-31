@@ -437,7 +437,7 @@ body{font-family:Arial,sans-serif;background:#1A1A1A;color:#fff;min-height:100vh
   </div>
 </div>
 
-<div class="version">v.31/10/2026 18:05 TEST — Le Menu</div>
+<div class="version">v.31/10/2026 18:10 TEST — Le Menu</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -2049,7 +2049,11 @@ function reglagesRelance(){
 // Catégories considérées comme boissons (même réglage que la tuile « Apéro / Boissons »), sans les boissons chaudes
 function categoriesBoissonsRelance(){
   const c=carte||carteDefaut;
-  return getGroupeAperoIds(c).filter(id=>id!=='chauds');
+  // Tuile « Apéro / Boissons » + catégories boissons standard (au cas où le réglage de la tuile
+  // vient d'une autre carte importée avant), sans les boissons chaudes
+  const ids=new Set([...getGroupeAperoIds(c),...GROUPE_BOISSONS_IDS_DEFAUT]);
+  ids.delete('chauds');
+  return [...ids];
 }
 function categorieDuProduit(idProduit){
   const c=carte||carteDefaut;
