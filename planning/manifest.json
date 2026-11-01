@@ -4,8 +4,8 @@
   "description": "Planification du personnel — Le Menu",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0EA5E9",
-  "theme_color": "#0EA5E9",
+  "background_color":"#0A0C11",
+  "theme_color":"#0A0C11",
   "orientation": "portrait-primary",
   "icons": [
     {

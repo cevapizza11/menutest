@@ -280,15 +280,15 @@ const ETABLISSEMENTS = {
     cle: 'smoke',
     nom: 'Le Menu',
     vars: {
-      '--terracotta':     '#22863a',
+      '--terracotta':     '#AEEABC',
       '--terracotta-dark':'#176929',
-      '--ivoire':         '#f4f6f4',
+      '--ivoire':         '#161A23',
       '--ivoire-dark':    '#e0e8e1',
       '--teal':           '#1a7a3c',
       '--teal-dark':      '#0f4f26',
       '--teal-light':     '#28a745',
-      '--ink':            '#1a1a1a',
-      '--ink-soft':       '#4a5a4a',
+      '--ink':            '#EDEEF2',
+      '--ink-soft':       '#EDEEF2',
       '--border':         '#c8dbc8',
       '--shadow':         '0 2px 10px rgba(10,30,15,0.10)',
       '--shadow-lg':      '0 8px 28px rgba(10,30,15,0.16)',
@@ -305,13 +305,13 @@ const ETABLISSEMENTS = {
     vars: {
       '--terracotta':     '#b8860b',
       '--terracotta-dark':'#8b6508',
-      '--ivoire':         '#fdf9f0',
-      '--ivoire-dark':    '#f5edd8',
+      '--ivoire':         '#161A23',
+      '--ivoire-dark':    '#36342B',
       '--teal':           '#c8960c',
       '--teal-dark':      '#a07808',
       '--teal-light':     '#d4a017',
-      '--ink':            '#1a1a1a',
-      '--ink-soft':       '#4a4030',
+      '--ink':            '#EDEEF2',
+      '--ink-soft':       '#E0D1B8',
       '--border':         '#e8d8a0',
       '--shadow':         '0 2px 10px rgba(0,0,0,0.10)',
       '--shadow-lg':      '0 8px 28px rgba(0,0,0,0.18)',
@@ -953,8 +953,8 @@ const Auth = {
       el.innerHTML = `
         <div class="login-box">
           <div class="login-logo"></div>
-          <h2 style="color:#fff; margin-bottom:6px;">Comptage Caisse</h2>
-          <p style="color:#bcd6d4; font-size:13px; margin-bottom:20px;">
+          <h2 style="color:var(--text); margin-bottom:6px;">Comptage Caisse</h2>
+          <p style="color:var(--faint); font-size:13px; margin-bottom:20px;">
             Aucun employé n'est encore configuré.<br>Ajoute-en au moins un dans Réglages.
           </p>
           <button class="btn btn-primary" onclick="Auth.accesSansCompte()">Continuer sans code (réglages)</button>
@@ -969,7 +969,7 @@ const Auth = {
       el.innerHTML = `
         <div class="login-box">
           <div class="login-logo"></div>
-          <h2 style="color:#fff; margin-bottom:18px;">Qui es-tu ?</h2>
+          <h2 style="color:var(--text); margin-bottom:18px;">Qui es-tu ?</h2>
           <div class="login-employe-list">${boutons}</div>
         </div>`;
       return;
@@ -985,8 +985,8 @@ const Auth = {
     el.innerHTML = `
       <div class="login-box">
         <div class="login-logo"></div>
-        <h2 style="color:#fff; margin-bottom:4px;">${this.employeChoisi}</h2>
-        <p style="color:#bcd6d4; font-size:13px; margin-bottom:18px;">Entre ton code à 4 chiffres</p>
+        <h2 style="color:var(--text); margin-bottom:4px;">${this.employeChoisi}</h2>
+        <p style="color:var(--faint); font-size:13px; margin-bottom:18px;">Entre ton code à 4 chiffres</p>
         <div class="pin-dots">${dots}</div>
         <div class="pin-pad">${pad}</div>
         <button class="link-btn-light" onclick="Auth.retourListe()">← Changer de personne</button>
@@ -1491,11 +1491,11 @@ function renderEcranNouveau() {
       <div class="field-row">
         <div>
           <label>Date</label>
-          <input type="text" value="${formatDate(d.date)}" readonly onclick="Draft.openDatePicker()" style="background:#fafaf7;">
+          <input type="text" value="${formatDate(d.date)}" readonly onclick="Draft.openDatePicker()" style="background:var(--bg);">
         </div>
         <div>
           <label>Heure</label>
-          <input type="text" value="${d.heure}" readonly style="background:#fafaf7;">
+          <input type="text" value="${d.heure}" readonly style="background:var(--bg);">
         </div>
       </div>
       <label>Type de comptage</label>
@@ -1569,7 +1569,7 @@ function renderEcranNouveau() {
       <label>Fond de caisse de départ (€)</label>
       <input type="number" inputmode="decimal" step="0.01" value="${d.fondDeCaisse || ''}"
              placeholder="0,00"
-             ${fondVerrouille ? 'readonly style="background:#fafaf7; color:var(--ink-soft);"' : ''}
+             ${fondVerrouille ? 'readonly style="background:var(--bg); color:var(--ink-soft);"' : ''}
              onchange="Draft.setField('fondDeCaisse', this.value)">
       <div class="helper-text" style="${fondVerrouille ? '' : 'margin-top:-8px;'}">
         ${fondVerrouille
@@ -1617,7 +1617,7 @@ function renderEcranNouveau() {
     </div>` : ''}
 
     ${d.type === 'cloture' ? `
-    <div class="ecart-box" style="border-color:var(--teal-light); background:#eef6f5;">
+    <div class="ecart-box" style="border-color:var(--teal-light); background:var(--bg);">
       <span class="lbl" style="color:var(--teal-dark);">💰 À retirer pour la banque/coffre</span>
       <span class="val" style="color:var(--teal-dark);">${formatMontant(Math.max(0, total - State.montantCibleFondCaisse))}</span>
     </div>
@@ -1924,7 +1924,7 @@ function renderEcranTickets() {
         </div>
       </div>
       <label>Date</label>
-      <input type="text" value="${formatDate(ctx.date)}" readonly onclick="Tickets.openDatePicker()" style="background:#fafaf7;">
+      <input type="text" value="${formatDate(ctx.date)}" readonly onclick="Tickets.openDatePicker()" style="background:var(--bg);">
     </div>
 
     ${State.etablissement === 'moule' ? `
@@ -1947,7 +1947,7 @@ function renderEcranTickets() {
     </div>
 
     ${MODES_PAIEMENT.map((m, i) => `
-    <div class="total-banner" style="background:${['var(--teal-dark)','var(--terracotta-dark)','#6b5b95','#2d8659','#8a5a44'][i % 5]};">
+    <div class="total-banner" style="background:${['var(--teal-dark)','var(--terracotta-dark)','var(--surface-3)','var(--green-deep)','var(--amber)'][i % 5]};">
       <span class="lbl">Total ${m.label}</span>
       <span class="val">${formatMontant(totaux[m.cle] || 0)}</span>
     </div>`).join('')}
@@ -2071,7 +2071,7 @@ function renderEcranPetiteCaisse() {
   const photoPreview = d.justificatifBase64 ? `
     <div style="position:relative; margin-bottom:14px;">
       <img src="${d.justificatifBase64}" style="width:100%; border-radius:10px; border:1px solid var(--border);">
-      <button class="btn-icon" style="position:absolute; top:8px; right:8px; background:rgba(182,64,47,0.9); color:#fff;" onclick="PetiteCaisse.retirerPhoto()">✕</button>
+      <button class="btn-icon" style="position:absolute; top:8px; right:8px; background:rgba(182,64,47,0.9); color:var(--text);" onclick="PetiteCaisse.retirerPhoto()">✕</button>
     </div>` : `
     <button class="btn btn-secondary" style="margin-bottom:14px;" onclick="document.getElementById('petiteCaissePhotoInput').click()">📷 Photographier le ticket de caisse</button>
     <input type="file" id="petiteCaissePhotoInput" accept="image/*" capture="environment" style="display:none;" onchange="PetiteCaisse.choisirPhoto(this)">`;
@@ -2256,7 +2256,7 @@ function renderEcranHistorique() {
     <div class="card">
       <div class="card-title">🖨️ Rapport journalier</div>
       <label>Date</label>
-      <input type="text" value="${formatDate(State.rapportDate)}" readonly onclick="Hist.openRapportDatePicker()" style="background:#fafaf7;">
+      <input type="text" value="${formatDate(State.rapportDate)}" readonly onclick="Hist.openRapportDatePicker()" style="background:var(--bg);">
       <button class="btn btn-primary" onclick="Hist.genererRapportGlobal()">📊 Rapport global (toutes caisses)</button>
       <div class="divider-text" style="margin:14px 0 8px;">ou par caisse</div>
       <select id="rapportCaisseSelect" style="margin-bottom:10px;">${optionsCaissesRapport}</select>
@@ -2267,13 +2267,13 @@ function renderEcranHistorique() {
 
   const depots = montantsADeposerPour(State.rapportDate);
   const carteDepot = `
-    <div class="card" style="border-color:var(--teal-light); background:#f5faf9;">
+    <div class="card" style="border-color:var(--teal-light); background:var(--bg);">
       <div class="card-title" style="color:var(--teal-dark);">💰 À déposer au coffre/banque — ${formatDate(State.rapportDate)}</div>
       ${depots.nbClotures === 0 ? `
         <div class="helper-text" style="margin-bottom:0;">Aucune clôture enregistrée pour cette date. Change la date ci-dessus (carte Rapport journalier) pour voir un autre jour.</div>
       ` : `
         ${depots.parCaisse.map(d => `
-          <div class="hist-item" style="cursor:default; background:#fff;">
+          <div class="hist-item" style="cursor:default; background:var(--surface);">
             <div class="hist-main">
               <div class="hist-titre">${d.caisse}</div>
               <div class="hist-meta">${d.heure || ''} · Total compté ${formatMontant(d.totalCompte)}</div>
@@ -2326,7 +2326,7 @@ function renderEcranHistorique() {
       ? Math.max(0, (c.total || 0) - State.montantCibleFondCaisse)
       : null;
     const badgeDepot = aDeposer !== null
-      ? `<span class="hist-badge" style="background:#eef6f5; color:var(--teal-dark); font-weight:700;">💰 ${formatMontant(aDeposer)}</span>`
+      ? `<span class="hist-badge" style="background:var(--bg); color:var(--teal-dark); font-weight:700;">💰 ${formatMontant(aDeposer)}</span>`
       : '';
     return `
       <div class="hist-item" onclick="Hist.ouvrirDetail('${c.id}')">
@@ -2657,15 +2657,15 @@ function renderEcranStats() {
     <div class="card">
       <div class="card-title">Répartition</div>
       <div style="display:flex; gap:10px;">
-        <div style="flex:1; text-align:center; padding:10px; background:#eef6ef; border-radius:10px;">
+        <div style="flex:1; text-align:center; padding:10px; background:var(--bg); border-radius:10px;">
           <div style="font-size:22px; font-weight:700; color:var(--ecart-ok);">${nbOk}</div>
           <div style="font-size:11px; color:var(--ink-soft);">justes</div>
         </div>
-        <div style="flex:1; text-align:center; padding:10px; background:#fbf3e1; border-radius:10px;">
+        <div style="flex:1; text-align:center; padding:10px; background:var(--bg); border-radius:10px;">
           <div style="font-size:22px; font-weight:700; color:var(--ecart-warn);">${nbWarn}</div>
           <div style="font-size:11px; color:var(--ink-soft);">petits écarts</div>
         </div>
-        <div style="flex:1; text-align:center; padding:10px; background:#fbece9; border-radius:10px;">
+        <div style="flex:1; text-align:center; padding:10px; background:var(--bg); border-radius:10px;">
           <div style="font-size:22px; font-weight:700; color:var(--ecart-bad);">${nbBad}</div>
           <div style="font-size:11px; color:var(--ink-soft);">écarts importants</div>
         </div>
@@ -2728,10 +2728,10 @@ function renderListeEmployes() {
     <div style="padding:8px 0; border-bottom:1px solid var(--border);">
       <div class="denom-row" style="padding:0 0 6px;">
         <input type="text" value="${e.nom}" placeholder="Nom" style="margin-bottom:0; flex:2;"
-          ${isSuperAdmin ? `onchange="Reglages.modifierEmploye(${i}, 'nom', this.value)"` : 'readonly style="margin-bottom:0; flex:2; background:#fafaf7;"'}>
+          ${isSuperAdmin ? `onchange="Reglages.modifierEmploye(${i}, 'nom', this.value)"` : 'readonly style="margin-bottom:0; flex:2; background:var(--bg);"'}>
         <input type="text" inputmode="numeric" maxlength="4" value="${isSuperAdmin ? e.pin : '••••'}" placeholder="PIN"
           style="margin-bottom:0; flex:1; text-align:center;"
-          ${isSuperAdmin ? `onchange="Reglages.modifierEmploye(${i}, 'pin', this.value)"` : 'readonly style="background:#fafaf7;"'}>
+          ${isSuperAdmin ? `onchange="Reglages.modifierEmploye(${i}, 'pin', this.value)"` : 'readonly style="background:var(--bg);"'}>
         ${isSuperAdmin ? `
           <button class="btn-icon admin-toggle ${e.admin ? 'active' : ''}" title="${e.admin ? 'Administrateur' : 'Donner les droits administrateur'}" onclick="Reglages.toggleAdmin(${i})">${e.superAdmin ? '⭐' : e.admin ? '👑' : '🔒'}</button>
           <button class="btn-icon ${e.superAdmin ? 'active' : ''}" title="${e.superAdmin ? 'Super-admin — retirer' : 'Donner les droits super-admin'}" style="margin-left:4px;" onclick="Reglages.toggleSuperAdmin(${i})">⭐</button>
@@ -3000,11 +3000,11 @@ const Export = {
       const ecartsAutres = MODES_PAIEMENT.filter(m => !m.compteEspeces).map(m => {
         const ec = c[m.champEcart];
         if (ec === null || ec === undefined) return '';
-        return `<tr><td style="padding-left:18px; font-size:12.5px; color:#6b6258;">Écart ${m.label}</td><td style="text-align:right; font-size:12.5px; color:${statutEcart(ec, State.seuilEcartAlerte)==='ok'?'#2d7d4f':'#b6402f'};">${formatMontantSigne(ec)}</td></tr>`;
+        return `<tr><td style="padding-left:18px; font-size:12.5px; color:var(--text-2);">Écart ${m.label}</td><td style="text-align:right; font-size:12.5px; color:${statutEcart(ec, State.seuilEcartAlerte)==='ok'?'var(--green)':'var(--red)'};">${formatMontantSigne(ec)}</td></tr>`;
       }).join('');
       return `
         <tr><td>Clôture ${c.heure || ''} (${c.service})</td><td style="text-align:right;">${formatMontant(c.total)}</td></tr>
-        <tr><td style="padding-left:18px; font-size:12.5px; color:#6b6258;">Écart espèces</td><td style="text-align:right; font-size:12.5px; color:${statut==='ok'?'#2d7d4f':'#b6402f'};">${c.ecart!==null&&c.ecart!==undefined?formatMontantSigne(c.ecart):'—'}</td></tr>
+        <tr><td style="padding-left:18px; font-size:12.5px; color:var(--text-2);">Écart espèces</td><td style="text-align:right; font-size:12.5px; color:${statut==='ok'?'var(--green)':'var(--red)'};">${c.ecart!==null&&c.ecart!==undefined?formatMontantSigne(c.ecart):'—'}</td></tr>
         ${ecartsAutres}
       `;
     }).join('');
@@ -3016,7 +3016,7 @@ const Export = {
     const ticketsTries = [...d.ticketsJour].sort((a,b) => (a.createdAt||0) - (b.createdAt||0));
     const ligneTicket = (t) => {
       const info = modeInfo(t.mode);
-      return `<tr><td style="padding-left:10px; color:#6b6258;">${t.heure || ''} ${info.icone}${t.employe ? ' ' + t.employe.slice(0,4) : ''}</td><td style="text-align:right; color:#6b6258;">${formatMontant(t.montant)}</td></tr>`;
+      return `<tr><td style="padding-left:10px; color:var(--text-2);">${t.heure || ''} ${info.icone}${t.employe ? ' ' + t.employe.slice(0,4) : ''}</td><td style="text-align:right; color:var(--text-2);">${formatMontant(t.montant)}</td></tr>`;
     };
     const milieu = Math.ceil(ticketsTries.length / 2);
     const colonne1 = ticketsTries.slice(0, milieu).map(ligneTicket).join('');
@@ -3027,7 +3027,7 @@ const Export = {
         <h2>${d.caisse}</h2>
 
         ${d.ouvertures.length === 0 && d.clotures.length === 0 ? `
-          <div style="font-size:11px; color:#6b6258; font-style:italic;">Aucun comptage enregistré ce jour pour cette caisse.</div>
+          <div style="font-size:11px; color:var(--text-2); font-style:italic;">Aucun comptage enregistré ce jour pour cette caisse.</div>
         ` : `
           <table class="pdf-table">
             ${ligneOuverture}
@@ -3118,7 +3118,7 @@ const Export = {
     const photoHtml = s.justificatifBase64 ? `
       <div style="margin-top:18px;">
         <div class="section-title">Justificatif</div>
-        <img src="${s.justificatifBase64}" style="width:100%; max-width:300px; border:1px solid #e2d9c8; border-radius:6px;">
+        <img src="${s.justificatifBase64}" style="width:100%; max-width:300px; border:1px solid var(--gold-soft); border-radius:6px;">
       </div>` : '';
 
     const win = window.open('', '_blank');
@@ -3249,7 +3249,7 @@ const Export = {
         <tr><td>Fond de caisse de départ</td><td style="text-align:right;">${formatMontant(c.fondDeCaisse||0)}</td></tr>
         <tr><td>CA théorique espèces</td><td style="text-align:right;">${formatMontant(c.caTheorique||0)}</td></tr>
         <tr style="font-weight:700;"><td>Total attendu (espèces)</td><td style="text-align:right;">${formatMontant((c.fondDeCaisse||0)+(c.caTheorique||0))}</td></tr>
-        <tr style="font-weight:700; color:${statut==='ok'?'#2d7d4f':statut==='warn'?'#c19a2e':'#b6402f'};">
+        <tr style="font-weight:700; color:${statut==='ok'?'var(--green)':statut==='warn'?'var(--gold)':'var(--red)'};">
           <td>ÉCART ESPÈCES</td><td style="text-align:right;">${formatMontantSigne(c.ecart)}</td>
         </tr>
       </table>` : '';
@@ -3261,7 +3261,7 @@ const Export = {
       return `
       <table class="pdf-table" style="margin-top:10px;">
         <tr><td>Relevé ${m.label}</td><td style="text-align:right;">${formatMontant(c[m.champTheorique]||0)}</td></tr>
-        <tr style="font-weight:700; color:${st==='ok'?'#2d7d4f':st==='warn'?'#c19a2e':'#b6402f'};">
+        <tr style="font-weight:700; color:${st==='ok'?'var(--green)':st==='warn'?'var(--gold)':'var(--red)'};">
           <td>ÉCART ${m.label.toUpperCase()}</td><td style="text-align:right;">${formatMontantSigne(ec)}</td>
         </tr>
       </table>`;
@@ -3272,13 +3272,13 @@ const Export = {
       <table class="pdf-table">
         ${MODES_PAIEMENT.filter(m => (c.zHiboutik[m.cle] || 0) !== 0 || Math.abs((c.ecartsHiboutik || {})[m.cle] || 0) >= 0.01).map(m => `
           <tr><td>${m.icone} ${m.label} — Z ${formatMontant(c.zHiboutik[m.cle] || 0)}</td><td style="text-align:right;">${formatMontantSigne((c.ecartsHiboutik || {})[m.cle] || 0)}</td></tr>`).join('')}
-        <tr style="font-weight:700; color:${statutEcart(c.ecartHiboutikTotal, State.seuilEcartAlerte)==='ok'?'#2d7d4f':'#b6402f'};">
+        <tr style="font-weight:700; color:${statutEcart(c.ecartHiboutikTotal, State.seuilEcartAlerte)==='ok'?'var(--green)':'var(--red)'};">
           <td>ÉCART HIBOUTIK / APPLI (Z ${formatMontant(c.totalZHiboutik || 0)})</td><td style="text-align:right;">${formatMontantSigne(c.ecartHiboutikTotal)}</td>
         </tr>
       </table>` : '';
 
     const commentaireHtml = c.commentaire ? `
-      <div style="margin-top:16px; padding:12px; background:#f7f2ea; border-radius:8px; font-size:13px;">
+      <div style="margin-top:16px; padding:12px; background:var(--bg); border-radius:8px; font-size:13px;">
         <strong>Commentaire :</strong> ${c.commentaire}
       </div>` : '';
 
@@ -3318,7 +3318,7 @@ const Export = {
     `).join('');
     const ligneTicketDetail = (t) => {
       const info = modeInfo(t.mode);
-      return `<tr><td style="padding-left:10px; color:#6b6258;">${t.heure || ''} ${info.icone}${t.employe ? ' ' + t.employe.slice(0,6) : ''}</td><td style="text-align:right; color:#6b6258;">${formatMontant(t.montant)}</td></tr>`;
+      return `<tr><td style="padding-left:10px; color:var(--text-2);">${t.heure || ''} ${info.icone}${t.employe ? ' ' + t.employe.slice(0,6) : ''}</td><td style="text-align:right; color:var(--text-2);">${formatMontant(t.montant)}</td></tr>`;
     };
     const milieuTickets = Math.ceil(ticketsTries.length / 2);
     const colonneTickets1 = ticketsTries.slice(0, milieuTickets).map(ligneTicketDetail).join('');

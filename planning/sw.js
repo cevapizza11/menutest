@@ -1,5 +1,5 @@
 // Le Menu – Planning · Service Worker
-const CACHE = 'menutest-planning-v2';
+const CACHE = 'menutest-planning-v3';
 const CORE = ['./', './index.html', './manifest.json'];
 
 self.addEventListener('install', e => {
