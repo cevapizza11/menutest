@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>[TEST] Le Menu — Imprimer la carte</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--or:#B8860B;--noir:#1a1a1a;--gris:#666;--bg:#eee9df}
+*{box-sizing:border-box}
+body{margin:0;font-family:Lato,Arial,sans-serif;background:var(--bg);color:var(--noir)}
+.app{display:flex;gap:18px;padding:16px;align-items:flex-start}
+.panneau{width:350px;flex:none;background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 10px #0002;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto}
+.panneau h2{font:700 16px Playfair Display,serif;margin:0 0 10px}
+.panneau h3{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--or);margin:16px 0 6px;border-top:1px solid #ddd;padding-top:12px}
+.panneau label{display:block;font-size:13px;margin:5px 0}
+.panneau input[type=text],.panneau select,.panneau textarea{width:100%;font:inherit;font-size:13px;padding:6px;border:1px solid #ccc;border-radius:6px}
+.panneau textarea{min-height:58px;resize:vertical}
+.btn{display:block;width:100%;padding:12px;border:0;border-radius:8px;background:var(--noir);color:#fff;font:700 15px Lato,sans-serif;cursor:pointer;margin:8px 0}
+.btn.sec{background:#f1ece0;color:var(--noir);font-size:13px;padding:9px}
+.etat{font-size:12px;padding:6px 8px;border-radius:6px;background:#f1ece0;margin:4px 0}
+.etat.ok{background:#dff3df}.etat.warn{background:#fdecc8}.etat.err{background:#ffd9d9;color:#900}
+.mention{border:1px solid #e3dccb;border-radius:8px;padding:6px 8px;margin:6px 0}
+.mention b{font-size:12px}
+.aide{font-size:11.5px;color:var(--gris);line-height:1.4}
+.rub{display:grid;grid-template-columns:1fr 112px;gap:4px 6px;align-items:center;border:1px solid #e3dccb;border-radius:8px;padding:6px 8px;margin:5px 0;font-size:13px}
+.rub select{padding:4px!important;font-size:12px!important}
+.rub .alc{grid-column:1/3;font-size:11.5px;color:var(--gris);margin:0}
+.logoBox{display:flex;align-items:center;gap:10px;margin:6px 0}
+.logoBox img{width:54px;height:54px;object-fit:contain;border:1px solid #ddd;border-radius:6px;background:#fafafa}
+.zone{flex:1;display:flex;flex-direction:column;gap:18px;align-items:center;min-width:0}
+/* ===== Feuille A4 ===== */
+.page{width:210mm;height:297mm;background:#fffdf8;box-shadow:0 3px 14px #0003;padding:11mm 12mm 9mm;display:flex;flex-direction:column;overflow:hidden;position:relative;border:1.2mm solid var(--noir);outline:.4mm solid var(--or);outline-offset:-2.6mm}
+.entete{display:flex;align-items:center;justify-content:center;gap:5mm;margin-bottom:3mm}
+.entete img{height:27mm;width:27mm;object-fit:contain}
+.entete .t{text-align:center}
+.entete .t h1{font:700 27pt "Playfair Display",Georgia,serif;margin:0;letter-spacing:.04em;color:var(--noir)}
+.entete .t p{margin:1mm 0 0;font-size:9.5pt;letter-spacing:.2em;text-transform:uppercase;color:var(--or);font-weight:700}
+.corps{flex:1;min-height:0;overflow:hidden;column-count:2;column-gap:9mm;column-rule:.2mm solid #d9cfae;font-size:9.6pt;line-height:1.25}
+.cat{break-inside:avoid;margin-bottom:3.6mm}
+.cat>h2{font:700 13pt "Playfair Display",Georgia,serif;color:var(--noir);margin:0 0 1.6mm;padding-bottom:.8mm;border-bottom:.5mm solid var(--or);letter-spacing:.03em}
+.cat h4{margin:2mm 0 .8mm;font-size:8.6pt;text-transform:uppercase;letter-spacing:.12em;color:var(--or)}
+.l{display:flex;align-items:baseline;gap:1.5mm;margin:.9mm 0;break-inside:avoid}
+.l .n{font-weight:700}
+.l .p{margin-left:auto;font-weight:700;white-space:nowrap}
+.l .pts{flex:1;border-bottom:.25mm dotted #999;transform:translateY(-1mm);min-width:3mm}
+.d{font-size:8.2pt;color:#555;margin:-.3mm 0 1mm;font-style:italic}
+.sup{font-size:8.2pt;color:#333;margin:-.2mm 0 1mm;padding-left:3mm;line-height:1.3}
+.sup b{font-weight:700}
+.sup .px{white-space:nowrap;font-weight:700}
+.v{display:flex;gap:1.5mm;font-size:9pt;padding-left:3mm;margin:.3mm 0}
+.v .pts{flex:1;border-bottom:.25mm dotted #bbb;transform:translateY(-1mm)}
+.v .p{font-weight:700;white-space:nowrap}
+.sauces{font-size:8.8pt;line-height:1.35}
+.infos{margin-top:2mm;border-top:.4mm solid var(--or);padding-top:2mm;font-size:7.4pt;line-height:1.3;color:#333}
+.infos p{margin:.8mm 0}
+.infos .grand{font-size:8.6pt;font-weight:700;text-align:center;color:var(--noir)}
+.infos .manque{background:#ffd9d9;color:#a00;font-weight:700}
+.pied{margin-top:1.5mm;text-align:center;font-size:7pt;color:#777}
+.vide{color:#a00;font-style:italic}
+.numpage{position:absolute;right:6mm;bottom:3.4mm;font-size:6.5pt;color:#999}
+.deborde{position:absolute;left:0;right:0;top:0;background:#c00;color:#fff;text-align:center;font:700 11pt Lato,sans-serif;padding:2mm}
+/* ===== Impression ===== */
+@page{size:A4;margin:0}
+@media print{
+ html,body{background:#fff}
+ .panneau,.deborde{display:none!important}
+ .app{display:block;padding:0}
+ .zone{display:block}
+ .page{box-shadow:none;margin:0;page-break-after:always;break-after:page}
+ .page:last-child{page-break-after:auto}
+ .manque{background:none!important}
+ *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+@media (max-width:1000px){.app{flex-direction:column}.panneau{width:100%;position:static;max-height:none}.zone{width:100%;overflow:auto;align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="app">
+ <aside class="panneau" id="panneau">
+  <h2>🖨️ Imprimer la carte</h2>
+  <div class="aide" style="margin-bottom:6px">v.12/11/2026 10:46 TEST — Le Menu</div>
+  <div id="etat" class="etat">Chargement de la carte…</div>
+  <div id="etatPages" class="etat" style="display:none"></div>
+  <button class="btn" id="btnImprimer" onclick="window.print()">🖨️ Imprimer (A4)</button>
+  <button class="btn sec" onclick="telechargerExcel()">📥 Télécharger la carte en Excel</button>
+  <button class="btn sec" onclick="chargerCarte()">🔄 Recharger la carte depuis l'application</button>
+  <p class="aide">Les prix et les produits viennent de la carte de l'admin (seuls les produits <b>actifs</b> des catégories <b>actives</b> sont imprimés). Dans la fenêtre d'impression : papier A4, <b>marges : aucune</b>, cocher « Graphiques d'arrière-plan ». Les réglages de cette page sont gardés sur cet appareil.</p>
+
+  <h3>Le restaurant</h3>
+  <label>Nom du restaurant (titre)<input type="text" id="titre" oninput="maj()"></label>
+  <label>Sous-titre (ex. Cuisine maison)<input type="text" id="sousTitre" oninput="maj()"></label>
+  <label>Pied de page (société, ville…)<input type="text" id="pied" oninput="maj()"></label>
+  <label><input type="checkbox" id="optDate" checked onchange="maj()"> Afficher « Carte mise à jour le … »</label>
+  <div class="logoBox"><img id="apercuLogo" alt="" style="display:none"><div style="flex:1">
+   <label class="btn sec" style="margin:0;text-align:center">🖼️ Choisir le logo<input type="file" id="fichierLogo" accept="image/*" style="display:none" onchange="chargerLogo(this)"></label>
+   <button class="btn sec" style="margin:4px 0 0" onclick="cfg.logo='';maj();majApercuLogo()">Sans logo</button>
+  </div></div>
+
+  <h3>Affichage des prix</h3>
+  <label>Format
+   <select id="optPrix" onchange="maj()">
+    <option value="2">19,90 €</option><option value="2n">19,90</option><option value="auto">19,9 €</option><option value="0">20 € (arrondi, si prix entiers)</option>
+   </select></label>
+
+  <h3>Options & suppléments</h3>
+  <label><input type="checkbox" id="optSupplements" checked onchange="maj()"> Suppléments payants sous chaque produit</label>
+  <label><input type="checkbox" id="optChoixGratuits" checked onchange="maj()"> Choix inclus (sans supplément)</label>
+  <p class="aide"><b>Règles :</b> les options viennent de l'admin (onglet Options). Seuls les choix <b>actifs</b> sont imprimés. Un choix avec supplément est imprimé avec son prix (« + 0,50 € ») : le client doit connaître le prix total avant de commander, à laisser coché. Les choix à 0 € sont imprimés en « au choix ». Les choix « Sans… / Pas de… » ne sont pas imprimés. Si la rubrique « Sauces » est imprimée, les sauces ne sont pas répétées sous chaque plat.</p>
+  <div id="etatOptions" class="aide"></div>
+
+  <h3>Rubriques et pages</h3>
+  <p class="aide">Les rubriques suivent l'ordre des catégories de l'admin. Choisis pour chacune la page 1, la page 2 ou « ne pas imprimer ». Les boissons alcoolisées sont repérées par leur nom et mises en page 2 par défaut : la mention alcool s'imprime sur les pages qui en contiennent. Si une page est trop pleine, un bandeau rouge te prévient.</p>
+  <div id="listeCats"></div>
+
+  <h3>Mentions obligatoires</h3>
+  <p class="aide">Coche / modifie le texte. Les mentions en <span style="color:#a00;font-weight:700">[crochets]</span> sont à compléter avant impression.</p>
+  <div id="listeMentions"></div>
+  <p class="aide">⚠️ Ces textes sont des modèles courants (prix nets service compris, allergènes, alcool, médiation…). Fais-les vérifier par l'expert-comptable ou la DDPP du restaurant : ce ne sont pas des conseils juridiques.</p>
+  <button class="btn sec" onclick="reinit()">↩️ Remettre les réglages par défaut</button>
+ </aside>
+ <main class="zone" id="zone"></main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script>
+// Projet Firebase du restaurant (à remplacer par celui du restaurant client lors de l'installation)
+const firebaseConfig={apiKey:"AIzaSyCRZDRNtVF95yX7qYCvc__9NjGa41JTdMQ",authDomain:"menutest-f4629.firebaseapp.com",projectId:"menutest-f4629",storageBucket:"menutest-f4629.firebasestorage.app",messagingSenderId:"834088175472",appId:"1:834088175472:web:d45de5bc283c205608b1b5"};
+try{if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);}catch(e){}
+
+// Repérage des boissons alcoolisées (nom ou identifiant de la catégorie)
+const RE_ALCOOL=/(bi[eè]re|\bvins?\b|vins_|cocktail|sangria|digestif|ap[ée]ritif|\bap[ée]ro|alcool|spiritueux|whisk|rhum|vodka|\bgin\b|champagne|pastis|liqueur|cidre|cognac|armagnac|\bbar\b)/i;
+const MENTIONS_DEFAUT=[
+ {id:'prix',ou:'toutes',on:true,verrou:true,grand:true,titre:'Prix nets / service compris',
+  texte:'Prix nets, service compris, TTC, en euros.'},
+ {id:'allergenes',ou:'premiere',on:true,titre:'Allergènes',
+  texte:"Nos plats peuvent contenir ou avoir été en contact avec l'un des 14 allergènes à déclaration obligatoire (gluten, crustacés, œufs, poissons, lait, céleri, moutarde, mollusques, sulfites…). Le détail de chaque plat est disponible sur simple demande auprès de notre équipe."},
+ {id:'eau',ou:'premiere',on:true,titre:"Carafe d'eau",
+  texte:"Une carafe d'eau fraîche est mise gratuitement à votre disposition."},
+ {id:'origine',ou:'premiere',on:false,titre:'Origine des viandes',
+  texte:'Origine des viandes : [à compléter, ex. volaille : origine UE].'},
+ {id:'maison',ou:'premiere',on:false,titre:'Fait maison',
+  texte:'« Fait maison » : [indiquer les plats élaborés sur place à partir de produits bruts].'},
+ {id:'alcool',ou:'alcool',on:true,titre:'Alcool (pages avec alcool)',
+  texte:"L'abus d'alcool est dangereux pour la santé, à consommer avec modération. La vente d'alcool aux mineurs de moins de 18 ans est interdite. Pas d'alcool pendant la grossesse."},
+ {id:'mediateur',ou:'derniere',on:true,titre:'Médiateur de la consommation',
+  texte:'Médiation de la consommation : en cas de litige, vous pouvez recourir gratuitement au médiateur [nom, adresse et site web du médiateur à compléter].'}
+];
+const DEFAUT={prix:'2',supplements:true,choixGratuits:true,date:true,
+ titre:'[Nom du restaurant]',sousTitre:'',pied:'',logo:'',
+ pages:{},alcool:{},mentions:{}};
+const KEY='lemenu_carte_impression_v1';
+let carte=null,cfg=null,dateCarte=null,nbPages=1;
+
+function chargerCfg(){
+ try{cfg=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){cfg=null}
+ if(!cfg) cfg=JSON.parse(JSON.stringify(DEFAUT));
+ ['pages','alcool','mentions'].forEach(k=>{cfg[k]=cfg[k]||{}});
+ Object.keys(DEFAUT).forEach(k=>{if(cfg[k]===undefined) cfg[k]=JSON.parse(JSON.stringify(DEFAUT[k]))});
+}
+function sauverCfg(){try{localStorage.setItem(KEY,JSON.stringify(cfg))}catch(e){
+ const e2=document.getElementById('etatPages');e2.style.display='';e2.className='etat warn';e2.textContent='⚠️ Réglages non enregistrés sur cet appareil (logo trop lourd ?).';}}
+function reinit(){if(!confirm('Remettre tous les réglages par défaut (nom, logo, pages, mentions) ?'))return;try{localStorage.removeItem(KEY)}catch(e){}chargerCfg();initPanneau();maj();}
+
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const manque=s=>esc(s).replace(/\[[^\]]*\]/g,x=>'<span class="manque">'+x+'</span>');
+function fmt(p){
+ p=Number(p)||0;
+ const m=cfg.prix;
+ if(m==='0') return Math.round(p)+' €';
+ if(m==='auto') return String(p).replace('.',',')+' €';
+ const s=p.toFixed(2).replace('.',',');
+ return m==='2n'?s:s+' €';
+}
+
+// ===== Logo : choisi sur l'appareil, réduit à 400 px, gardé avec les réglages =====
+function chargerLogo(inp){
+ const f=inp.files&&inp.files[0];if(!f) return;
+ const r=new FileReader();
+ r.onload=()=>{const img=new Image();img.onload=()=>{
+  const k=Math.min(1,400/Math.max(img.width,img.height));
+  const c=document.createElement('canvas');c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+  c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  cfg.logo=c.toDataURL('image/png');majApercuLogo();maj();
+ };img.src=r.result;};
+ r.readAsDataURL(f);inp.value='';
+}
+function majApercuLogo(){const i=document.getElementById('apercuLogo');if(cfg.logo){i.src=cfg.logo;i.style.display='';}else{i.removeAttribute('src');i.style.display='none';}}
+
+async function chargerCarte(){
+ const e=document.getElementById('etat');
+ e.className='etat';e.textContent='Chargement de la carte…';
+ try{
+  if(typeof firebase==='undefined') throw new Error('sdk');
+  // on attend que Firebase restaure la session ouverte dans l'admin (même site) avant de tenter une session anonyme
+  const u=await new Promise(res=>{const off=firebase.auth().onAuthStateChanged(x=>{off();res(x)});});
+  if(!u){await firebase.auth().signInAnonymously();}
+  const d=await firebase.firestore().collection('config').doc('carte_v2').get();
+  if(!d.exists||!(d.data().categories||[]).length) throw new Error('vide');
+  carte=d.data();
+  e.className='etat ok';e.textContent='✅ Carte en direct chargée ('+carte.categories.length+' catégories).';
+ }catch(err){
+  carte=null;
+  e.className='etat err';
+  e.textContent=err.message==='vide'?'⚠️ Aucune carte publiée : importe d\'abord la carte dans l\'admin.':'⚠️ Lecture de la carte impossible (connexion ou droits Firebase). Ouvre cette page depuis l\'admin connecté puis clique sur « Recharger ».';
+  document.getElementById('zone').innerHTML='';
+  return;
+ }
+ initPanneau();maj();
+}
+
+const sansEmoji=s=>String(s||'').replace(/^[^\p{L}\p{N}]+/u,'').trim();
+const actifs=c=>(c.produits||[]).filter(p=>p.actif!==false);
+const estAlcool=c=>RE_ALCOOL.test((c.id||'')+' '+sansEmoji(c.nom));
+// Menu enfant imprimé seulement si un produit de la carte est réglé « menu enfant gratuit » dans l'admin
+const carteAEnfant=()=>!!carte&&(carte.categories||[]).some(c=>(c.produits||[]).some(p=>p.regleEnfant==='gratuit'))&&(carte.enfantMenu||[]).some(x=>x.actif!==false);
+
+// Liste des rubriques imprimables, dans l'ordre de l'admin
+function rubriques(){
+ const act=carte.categoriesActives||{},out=[];
+ (carte.categories||[]).forEach(c=>{
+  if(act[c.id]===false) return;
+  if(!actifs(c).length) return;
+  out.push({id:c.id,titre:sansEmoji(c.nom)||c.id,c,type:c.id==='sauces'?'sauces':'cat'});
+ });
+ if(carteAEnfant()){
+  // placé juste après la 1re catégorie de plats
+  const i=out.findIndex(r=>r.type==='cat'&&!estAlcool(r.c));
+  out.splice(i<0?out.length:i+1,0,{id:'__enfant',titre:'Menu enfant',c:null,type:'enfant'});
+ }
+ return out;
+}
+const alcoolDe=r=>r.c?(cfg.alcool[r.id]!==undefined?cfg.alcool[r.id]:estAlcool(r.c)):false;
+const pageDe=r=>cfg.pages[r.id]!==undefined?cfg.pages[r.id]:(alcoolDe(r)?'2':'1');
+
+function initPanneau(){
+ document.getElementById('optPrix').value=cfg.prix;
+ document.getElementById('optSupplements').checked=cfg.supplements;
+ document.getElementById('optChoixGratuits').checked=cfg.choixGratuits;
+ document.getElementById('optDate').checked=cfg.date;
+ document.getElementById('titre').value=cfg.titre;
+ document.getElementById('sousTitre').value=cfg.sousTitre;
+ document.getElementById('pied').value=cfg.pied;
+ majApercuLogo();
+ const L=document.getElementById('listeCats');L.innerHTML='';
+ rubriques().forEach(r=>{
+  const n=r.c?actifs(r.c).length:(carte.enfantMenu||[]).filter(x=>x.actif!==false).length;
+  const p=pageDe(r);
+  const div=document.createElement('div');div.className='rub';
+  div.innerHTML='<span>'+esc(r.titre)+' <span class="aide">('+n+')</span></span>'+
+   '<select><option value="1"'+(p==='1'?' selected':'')+'>Page 1</option><option value="2"'+(p==='2'?' selected':'')+'>Page 2</option><option value="0"'+(p==='0'?' selected':'')+'>Ne pas imprimer</option></select>'+
+   (r.c&&r.type==='cat'?'<label class="alc"><input type="checkbox"'+(alcoolDe(r)?' checked':'')+'> contient de l\'alcool</label>':'');
+  div.querySelector('select').onchange=ev=>{cfg.pages[r.id]=ev.target.value;maj();};
+  const cb=div.querySelector('.alc input');if(cb) cb.onchange=ev=>{cfg.alcool[r.id]=ev.target.checked;maj();};
+  L.appendChild(div);
+ });
+ const M=document.getElementById('listeMentions');M.innerHTML='';
+ MENTIONS_DEFAUT.forEach(m=>{
+  const s=cfg.mentions[m.id]||(cfg.mentions[m.id]={on:m.on,texte:m.texte});
+  const div=document.createElement('div');div.className='mention';
+  div.innerHTML='<label><input type="checkbox" '+(s.on?'checked':'')+(m.verrou?' disabled':'')+'> <b>'+esc(m.titre)+'</b>'+(m.verrou?' <span class="aide">(obligatoire)</span>':'')+'</label><textarea>'+esc(s.texte)+'</textarea>';
+  div.querySelector('input').onchange=ev=>{s.on=ev.target.checked;maj();};
+  div.querySelector('textarea').oninput=ev=>{s.texte=ev.target.value;maj();};
+  M.appendChild(div);
+ });
+}
+
+const norm=s=>String(s||'').toLowerCase().replace(/\s+/g,'');
+// ===== Options d'un produit (familles d'options de l'admin : sauce, coulis, croquant, cuisson…) =====
+// Même lecture que l'appli client : carte.optionsProduits[idProduit] = étapes, carte.famillesOptions[idFamille].options = choix.
+function optionsDuProduit(p){
+ const etapes=((carte.optionsProduits||{})[p.id]||[]).slice().sort((a,b)=>(a.etape||0)-(b.etape||0));
+ const fam=carte.famillesOptions||{}, out=[];
+ etapes.forEach(e=>{
+  const f=fam[e.idFamille]; if(!f) return;
+  const opts=(f.options||[]).filter(o=>o.actif!==false&&o.nom).slice().sort((a,b)=>(a.ordre||9999)-(b.ordre||9999));
+  if(!opts.length) return;
+  out.push({nom:sansEmoji(f.nom)||f.nom||e.idFamille,
+   payants:opts.filter(o=>Number(o.supplement)>0),
+   gratuits:opts.filter(o=>!(Number(o.supplement)>0)&&!/^(sans|pas de|aucun)/i.test(String(o.nom).trim()))});
+ });
+ return out;
+}
+function nbProduitsAvecSupplement(){
+ let n=0;(carte.categories||[]).forEach(c=>actifs(c).forEach(p=>{if(optionsDuProduit(p).some(f=>f.payants.length))n++;}));
+ return n;
+}
+let saucesImprimees=false;
+function blocOptions(p){
+ let h='';
+ optionsDuProduit(p).forEach(f=>{
+  if(cfg.supplements&&f.payants.length){
+   const prixUnique=f.payants.every(o=>Number(o.supplement)===Number(f.payants[0].supplement));
+   if(prixUnique) h+='<div class="sup"><b>'+esc(f.nom)+'</b> <span class="px">(+ '+fmt(f.payants[0].supplement)+')</span> : '+f.payants.map(o=>esc(o.nom)).join(' · ')+'</div>';
+   else h+='<div class="sup"><b>'+esc(f.nom)+'</b> : '+f.payants.map(o=>esc(o.nom)+' <span class="px">+ '+fmt(o.supplement)+'</span>').join(' · ')+'</div>';
+  }
+  // Sauces : pas répétées sous chaque plat quand la rubrique « Sauces » est imprimée
+  if(cfg.choixGratuits&&f.gratuits.length&&!(saucesImprimees&&/sauce/i.test(f.nom)))
+   h+='<div class="sup"><b>'+esc(f.nom)+'</b> au choix'+(f.payants.length?' (sans supplément)':'')+' : '+f.gratuits.map(o=>esc(o.nom)).join(' · ')+'</div>';
+ });
+ return h;
+}
+function ligne(p){
+ const prix=Number(p.prix)||0;
+ const ptxt=prix===0?'':fmt(prix);
+ const desc=(p.desc||'').trim();
+ const volume=/^\d+([,.]\d+)?\s?(cl|l)$/i.test(desc);
+ const dejaDansNom=desc&&norm(p.nom).indexOf(norm(desc))>=0;
+ let nom=esc(p.nom);
+ if(volume&&!dejaDansNom) nom+=' <span style="font-weight:400;color:#555;font-size:8.4pt">'+esc(desc)+'</span>';
+ let h='<div class="l"><span class="n">'+nom+'</span>'+(ptxt?'<span class="pts"></span><span class="p">'+ptxt+'</span>':'')+'</div>';
+ if(desc.length>1&&desc.toLowerCase()!=='na'&&!volume&&!dejaDansNom) h+='<div class="d">'+esc(desc)+'</div>';
+ return h;
+}
+function blocCategorie(r){
+ const c=r.c,prods=actifs(c);if(!prods.length) return '';
+ // regrouper par sous-catégorie, puis par nom (variantes de format : 25 cl / 50 cl…)
+ const subs=[];
+ prods.forEach(p=>{const k=p.subcat||'';let s=subs.find(x=>x.k===k);if(!s){s={k,noms:[]};subs.push(s)}
+  let g=s.noms.find(x=>x.nom===p.nom);if(!g){g={nom:p.nom,items:[]};s.noms.push(g)}g.items.push(p);});
+ let h='<section class="cat"><h2>'+esc(r.titre)+'</h2>';
+ const afficherSub=subs.length>1||(subs[0]&&subs[0].k&&subs[0].k!==(c.nom||''));
+ subs.forEach(s=>{
+  if(afficherSub&&s.k) h+='<h4>'+esc(s.k)+'</h4>';
+  s.noms.forEach(g=>{
+   if(g.items.length===1){h+=ligne(g.items[0])+blocOptions(g.items[0]);}
+   else{
+    h+='<div class="l"><span class="n">'+esc(g.nom)+'</span></div>';
+    g.items.forEach(p=>{h+='<div class="v"><span>'+esc(p.desc||'')+'</span><span class="pts"></span><span class="p">'+fmt(p.prix)+'</span></div>';});
+    h+=blocOptions(g.items[0]);
+   }
+  });
+ });
+ return h+'</section>';
+}
+function blocSauces(r){
+ const s=actifs(r.c).filter(x=>x.nom&&!/^(sans|pas de)/i.test(x.nom.trim()));
+ if(!s.length) return '';
+ const payantes=s.some(x=>Number(x.prix)>0);
+ if(payantes) return blocCategorie(r);
+ return '<section class="cat"><h2>'+esc(r.titre)+'</h2><div class="sauces">Au choix : '+s.map(x=>'<b>'+esc(x.nom)+'</b>').join(' · ')+'.</div></section>';
+}
+function blocEnfant(){
+ const e=(carte.enfantMenu||[]).filter(x=>x.actif!==false);
+ if(!e.length) return '';
+ return '<section class="cat"><h2>Menu enfant</h2><div class="sauces">Au choix : '+e.map(x=>'<b>'+esc(x.nom)+'</b>'+(x.desc?' <span style="color:#555">('+esc(x.desc)+')</span>':'')).join(' · ')+'.</div></section>';
+}
+function mentionsPage(n,alcoolSurPage){
+ let h='';
+ MENTIONS_DEFAUT.forEach(m=>{
+  const s=cfg.mentions[m.id];if(!s||!(s.on||m.verrou))return;
+  const ok=m.ou==='toutes'||(m.ou==='premiere'&&n===1)||(m.ou==='derniere'&&n===nbPages)||(m.ou==='alcool'&&alcoolSurPage);
+  if(!ok) return;
+  h+='<p'+(m.grand?' class="grand"':'')+'>'+manque(s.texte)+'</p>';
+ });
+ return h;
+}
+function page(n,contenu,alcool){
+ return '<div class="page" data-n="'+n+'"><div class="entete">'+(cfg.logo?'<img src="'+cfg.logo+'" alt="">':'')+'<div class="t"><h1>'+manque(cfg.titre)+'</h1>'+(cfg.sousTitre?'<p>'+esc(cfg.sousTitre)+'</p>':'')+'</div></div>'+
+  '<div class="corps">'+contenu+'</div>'+
+  '<div class="infos">'+mentionsPage(n,alcool)+'</div>'+
+  '<div class="pied">'+esc(cfg.pied)+(cfg.date?(cfg.pied?' — ':'')+'Carte mise à jour le '+dateCarte:'')+'</div>'+(nbPages>1?'<span class="numpage">'+n+'/'+nbPages+'</span>':'')+'</div>';
+}
+function maj(){
+ if(!carte) return;
+ cfg.prix=document.getElementById('optPrix').value;
+ cfg.supplements=document.getElementById('optSupplements').checked;
+ cfg.choixGratuits=document.getElementById('optChoixGratuits').checked;
+ cfg.date=document.getElementById('optDate').checked;
+ cfg.titre=document.getElementById('titre').value;
+ cfg.sousTitre=document.getElementById('sousTitre').value;
+ cfg.pied=document.getElementById('pied').value;
+ sauverCfg();
+ dateCarte=new Date().toLocaleDateString('fr-FR');
+ const rs=rubriques();
+ saucesImprimees=rs.some(r=>r.type==='sauces'&&pageDe(r)!=='0');
+ const P={'1':'','2':''},A={'1':false,'2':false};
+ rs.forEach(r=>{
+  const p=pageDe(r);if(p==='0') return;
+  const b=r.type==='enfant'?blocEnfant():r.type==='sauces'?blocSauces(r):blocCategorie(r);
+  if(!b) return;
+  P[p]+=b;if(alcoolDe(r))A[p]=true;
+ });
+ // 1 seule page si rien en page 2 (et inversement)
+ let pages=[];
+ if(P['1']) pages.push({c:P['1'],a:A['1']});
+ if(P['2']) pages.push({c:P['2'],a:A['2']});
+ if(!pages.length) pages.push({c:'<p class="vide">Aucun produit à imprimer.</p>',a:false});
+ nbPages=pages.length;
+ const eo=document.getElementById('etatOptions');
+ if(eo){const n=nbProduitsAvecSupplement();
+  eo.innerHTML=n?'✅ '+n+' produit'+(n>1?'s':'')+' avec supplément payant dans la carte.':'Aucun supplément payant dans la carte publiée.';}
+ document.getElementById('zone').innerHTML=pages.map((x,i)=>page(i+1,x.c,x.a)).join('');
+ document.getElementById('btnImprimer').textContent='🖨️ Imprimer (A4, '+nbPages+' page'+(nbPages>1?'s':'')+')';
+ verifierDebordement();
+}
+// Bandeau rouge si le contenu d'une page dépasse la feuille A4
+function verifierDebordement(){
+ requestAnimationFrame(()=>{
+  const trop=[];
+  document.querySelectorAll('.page').forEach(pg=>{
+   const c=pg.querySelector('.corps');
+   const last=c.lastElementChild;
+   let deb=c.scrollWidth>c.clientWidth+2||c.scrollHeight>c.clientHeight+2;
+   if(!deb&&last){const rc=c.getBoundingClientRect(),rl=last.getBoundingClientRect();deb=rl.right>rc.right+2||rl.bottom>rc.bottom+2;}
+   if(deb){trop.push(pg.dataset.n);const b=document.createElement('div');b.className='deborde';b.textContent='⚠️ Page trop pleine : une partie ne sera pas imprimée';pg.appendChild(b);}
+  });
+  const e=document.getElementById('etatPages');
+  if(trop.length){e.style.display='';e.className='etat warn';e.innerHTML='⚠️ Page'+(trop.length>1?'s ':' ')+trop.join(' et ')+' trop pleine'+(trop.length>1?'s':'')+'. Passe des rubriques en page 2, décoche des options, ou mets « ne pas imprimer » sur une rubrique.';}
+  else{e.style.display='none';}
+ });
+}
+function telechargerExcel(){
+ if(!carte) return;
+ if(typeof XLSX==='undefined'){alert("La bibliothèque Excel n'a pas pu se charger (connexion ?).");return;}
+ const rows=[['Rubrique','Sous-catégorie','Produit','Description / format','Prix (€ TTC, service compris)']];
+ rubriques().forEach(r=>{
+  if(pageDe(r)==='0') return;
+  if(r.type==='enfant'){(carte.enfantMenu||[]).filter(x=>x.actif!==false).forEach(x=>rows.push(['Menu enfant','',x.nom||'',x.desc||'','']));return;}
+  actifs(r.c).forEach(p=>{
+   const d=(p.desc||'').trim();
+   rows.push([r.titre,p.subcat||'',p.nom||'',d.toLowerCase()==='na'?'':d,Number(p.prix)||0]);
+   if(cfg.supplements) optionsDuProduit(p).forEach(f=>f.payants.forEach(o=>rows.push([r.titre,'Supplément',(p.nom||'')+' — '+f.nom+' : '+o.nom,'en plus du prix du produit',Number(o.supplement)||0])));
+  });
+ });
+ const ws=XLSX.utils.aoa_to_sheet(rows);
+ ws['!cols']=[{wch:22},{wch:16},{wch:34},{wch:50},{wch:16}];
+ for(let i=1;i<rows.length;i++){const a=ws['E'+(i+1)];if(a&&typeof a.v==='number'){a.t='n';a.z='#,##0.00 "€"';}}
+ const mentions=[['Mentions obligatoires']];
+ MENTIONS_DEFAUT.forEach(m=>{const s=cfg.mentions[m.id];if(s&&(s.on||m.verrou))mentions.push([s.texte]);});
+ const wm=XLSX.utils.aoa_to_sheet(mentions);wm['!cols']=[{wch:130}];
+ const wb=XLSX.utils.book_new();
+ XLSX.utils.book_append_sheet(wb,ws,'Carte');
+ XLSX.utils.book_append_sheet(wb,wm,'Mentions');
+ const d=new Date(),z=n=>String(n).padStart(2,'0');
+ const nom=(sansEmoji(cfg.titre).replace(/[\[\]]/g,'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,''))||'Restaurant';
+ XLSX.writeFile(wb,'Carte_'+nom+'_'+d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())+'.xlsx');
+}
+chargerCfg();
+chargerCarte();
+</script>
+</body>
+</html>

@@ -367,7 +367,7 @@ input[type=file]::file-selector-button{background:var(--surface-3);color:var(--t
   </div>
   <h1>Admin — Le Menu</h1>
   <div class="header-right">
-    <span class="build" title="Version déployée">v.01/11/2026 19:10</span>
+    <span class="build" title="Version déployée">v.12/11/2026 10:46</span>
     <button class="save-btn" onclick="sauvegarder()">Publier</button>
   </div>
 </div>
@@ -793,14 +793,32 @@ input[type=file]::file-selector-button{background:var(--surface-3);color:var(--t
   </div>
 
   <div class="section" style="margin-top:14px">
+    <h2>🖨️ Imprimer la carte du restaurant</h2>
+    <div style="color:var(--text-2);font-size:12px;margin-bottom:12px;line-height:1.6">
+      Édite la carte A4 (1 ou 2 pages) à partir de la carte publiée, avec les prix affichés aux clients et les mentions obligatoires :<br>
+      • nom du restaurant, sous-titre, logo et pied de page réglables dans la page (gardés sur l'appareil)<br>
+      • rubriques dans l'ordre des catégories de l'admin, chacune en page 1, page 2 ou non imprimée ; boissons alcoolisées repérées et mises en page 2 par défaut<br>
+      • bandeau rouge si une page est trop pleine<br>
+      • prix nets, service compris, TTC<br>
+      • suppléments payants des options (croquant, coulis, cuisson…) imprimés sous chaque produit avec leur prix ; choix à 0 € imprimés en « au choix »<br>
+      • allergènes (14) disponibles sur demande · carafe d'eau gratuite (1re page)<br>
+      • alcool : abus dangereux pour la santé, interdit aux mineurs, grossesse (pages avec alcool)<br>
+      • médiateur de la consommation (dernière page, à compléter dans la page)<br>
+      Seuls les produits <strong>actifs</strong> des catégories <strong>actives</strong> sont imprimés. Un bouton permet aussi de télécharger la carte en Excel.
+    </div>
+    <a href="carte-imprimable.html" target="_blank" class="lien-card">🖨️ Ouvrir la page d'impression de la carte</a>
+  </div>
+
+  <div class="section" style="margin-top:14px">
     <h2>🔗 Liens</h2>
     <a href="index.html" target="_blank" class="lien-card">🐚 App client</a>
     <a href="caisse.html" target="_blank" class="lien-card">💰 Écran caisse</a>
     <a href="qrcodes.html" target="_blank" class="lien-card">📱 QR codes tables</a>
+    <a href="carte-imprimable.html" target="_blank" class="lien-card">🖨️ Imprimer la carte</a>
   </div>
 </div>
 
-<div class="version">v.01/11/2026 19:10 TEST — Le Menu · Console carte</div>
+<div class="version">v.12/11/2026 10:46 TEST — Le Menu · Console carte</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
